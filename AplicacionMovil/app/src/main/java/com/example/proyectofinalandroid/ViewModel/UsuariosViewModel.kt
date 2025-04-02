@@ -4,16 +4,16 @@ package com.example.proyectofinalandroid.ViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectofinalandroid.Model.Usuarios
-import com.example.proyectofinalandroid.repository.UsuarioRepository
+import com.example.proyectofinalandroid.Repository.UsuariosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class UsuarioViewModel : ViewModel() {
-    private val repository = UsuarioRepository()
+class UsuariosViewModel : ViewModel() {
+    private val repository = UsuariosRepository()
 
-    private val _usuario = MutableStateFlow<Usuario?>(null)
-    val usuario: StateFlow<Usuario?> = _usuario
+    private val _usuario = MutableStateFlow<Usuarios?>(null)
+    val usuario: StateFlow<Usuarios?> = _usuario
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -47,7 +47,7 @@ class UsuarioViewModel : ViewModel() {
         }
     }
 
-    fun registerUsuario(newUser: Usuario) {
+    fun registerUsuario(newUser: Usuarios) {
         viewModelScope.launch {
             try {
                 val creado = repository.registerWithoutToken(newUser)

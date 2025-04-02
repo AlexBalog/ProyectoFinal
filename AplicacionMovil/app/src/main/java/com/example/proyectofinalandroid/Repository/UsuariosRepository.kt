@@ -31,14 +31,14 @@ class UsuariosRepository {
         return response.isSuccessful
     }
 
-    suspend fun getOneByEmail(email: String, contrasena: String, token: String): Usuario? {
+    suspend fun getOneByEmail(email: String, contrasena: String, token: String): Usuarios? {
         val request = mapOf("email" to email, "contrasena" to contrasena)
         val response = api.getOneByEmail("Bearer $token", request)
         return if (response.isSuccessful) response.body() else null
     }
 
     // Método para registrar usuario sin token
-    suspend fun registerWithoutToken(usuario: Usuario): Usuario? {
+    suspend fun registerWithoutToken(usuario: Usuarios): Usuarios? {
         val response = api.registerWithoutToken(usuario)
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"

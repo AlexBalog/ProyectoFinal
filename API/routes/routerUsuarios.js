@@ -40,49 +40,20 @@ router.post('/new', /*verifyToken,*/ async (req, res) => {
   });
 
 // UPDATE: Actualiza un usuario basado en el dni proporcionado (ruta protegida) - La uso para modificar usuarios en WPF
-router.patch('/update', verifyToken, async (req, res) => {
+router.patch('/update', /*verifyToken,*/ async (req, res) => {
   try {
-    const { dni } = req.body;
-    if (!dni) {
+    const id = req.body._id;
+    if (!id) {
       return res.status(400).json({ message: "Falta el campo 'dni'" });
     }
 
     // Se crea un objeto para almacenar solo los campos que se enviaron en el request
     const updateFields = {};
 
-    // Si se envía el nombre, se añade al objeto
-    if (req.body.nombre !== undefined) {
-      updateFields.nombre = req.body.nombre;
-    }
-    // Si se envía el apellido, se añade al objeto
-    if (req.body.apellido !== undefined) {
-      updateFields.apellido = req.body.apellido;
-    }
-    // Si se envía el rol, se añade al objeto
-    if (req.body.rol !== undefined) {
-      updateFields.rol = req.body.rol;
-    }
-    // Si se envía la fecha de nacimiento, se añade al objeto
-    if (req.body.fecha_nac !== undefined) {
-      updateFields.fecha_nac = req.body.fecha_nac;
-    }
-    // Si se envía la ciudad, se añade al objeto
-    if (req.body.ciudad !== undefined) {
-      updateFields.ciudad = req.body.ciudad;
-    }
-    // Si se envía el sexo, se añade al objeto
-    if (req.body.sexo !== undefined) {
-      updateFields.sexo = req.body.sexo;
-    }
-    // Si se envía la imagen, se añade al objeto
-    if (req.body.imagen !== undefined) {
-      updateFields.imagen = req.body.imagen;
-    }
-    // Si se envía el email, se añade al objeto
     if (req.body.email !== undefined) {
       updateFields.email = req.body.email;
     }
-    // Si se envía la contraseña, se cifra (si es necesario) y se añade al objeto
+
     if (req.body.contrasena !== undefined) {
       let contrasena = req.body.contrasena;
       // Si la contraseña no está cifrada, se cifra
@@ -93,6 +64,62 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.contrasena = contrasena;
     }
 
+    if (req.body.fecha_nac !== undefined) {
+      updateFields.fecha_nac = req.body.fecha_nac;
+    }
+
+    if (req.body.nombre !== undefined) {
+      updateFields.nombre = req.body.nombre;
+    }
+
+    if (req.body.apellido !== undefined) {
+      updateFields.apellido = req.body.apellido;
+    }
+
+    if (req.body.foto !== undefined) {
+      updateFields.foto = req.body.foto;
+    }
+
+    if (req.body.sexo !== undefined) {
+      updateFields.sexo = req.body.sexo;
+    }
+
+    if (req.body.IMC !== undefined) {
+      updateFields.IMC = req.body.IMC;
+    }
+
+    if (rq.body.altura !== undefined) {
+      updateFields.altura = req.body.altura;
+    }
+
+    if (rq.body.peso !== undefined) {
+      updateFields.peso = req.body.peso;
+    }
+
+    if (rq.body.objetivo_peso !== undefined) {
+      updateFields.objetivo_peso = req.body.objetivo_peso;
+    }
+
+    if (rq.body.objetivo_tiem !== undefined) {
+      updateFields.objetivo_tiem = req.body.objetivo_tiem;
+    }
+
+    if (rq.body.objetivo_cal !== undefined) {
+      updateFields.objetivo_cal = req.body.objetivo_cal;
+    }
+
+    if (rq.body.ent_fav !== undefined) {
+      updateFields.ent_fav = req.body.ent_fav;
+    }
+
+    if (req.body.plan !== undefined) {
+      updateFields.plan = req.body.plan;
+    }
+
+    if (req.body.formulario !== undefined) {
+      updateFields.formulario = req.body.formulario;
+    }  
+
     // Si no se envía ningún campo para actualizar, se informa
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ message: "No se proporcionaron campos para actualizar" });
@@ -100,7 +127,7 @@ router.patch('/update', verifyToken, async (req, res) => {
 
     // Se realiza la actualización solo de los campos proporcionados
     const resultado = await UsuariosSchema.updateOne(
-      { dni },
+      { id },
       { $set: updateFields }
     );
 
@@ -150,8 +177,8 @@ router.post('/getOneEmail', verifyToken, async (req, res) => {
   // GET ONE DNI
   router.post('/getOneDni', verifyToken, async (req, res) => {
     try {
-      const { dni } = req.body;
-      const usuarioDB = await UsuariosSchema.findOne({dni });
+      const id = req.body._id;
+      const usuarioDB = await UsuariosSchema.findOne({ id });
       if (!usuarioDB) {
         return res.status(404).json({ message: "Documento no encontrado" });
       }
