@@ -5,7 +5,7 @@ const verifyToken = require('../middlewares/authMiddleware'); // Middleware para
 const router = express.Router();
 
 // GET ALL: Obtiene todos los documentos de usuarios (ruta protegida) - La uso para cargar la lista de usuarios sin filtrar en WPF
-router.get('/getAll', verifyToken, async (req, res) => {
+router.get('/getAll', /*verifyToken,*/ async (req, res) => {
     try {
         const data = await UsuariosSchema.find();
         res.status(200).json(data);

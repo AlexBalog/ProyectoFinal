@@ -1,6 +1,7 @@
 package com.example.proyectofinalandroid.ViewModel
 
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectofinalandroid.Model.Usuarios
@@ -22,6 +23,7 @@ class UsuariosViewModel : ViewModel() {
         viewModelScope.launch {
             val loginResponse = repository.login(email, contrasena)
             if (loginResponse != null) {
+                Log.d("falloVM2", "$loginResponse")
                 val usuarioLogueado = repository.getOneByEmail(email, contrasena, loginResponse.token)
                 if (usuarioLogueado != null) {
                     usuarioLogueado.token = loginResponse.token

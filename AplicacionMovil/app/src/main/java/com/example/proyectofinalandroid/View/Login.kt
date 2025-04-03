@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.View
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
