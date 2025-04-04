@@ -12,11 +12,11 @@ interface UsuariosApi {
     suspend fun login(@Body credentials: Map<String, String>): Response<LoginResponse>
 
     // Endpoint para obtener todos los usuarios (requiere token)
-    @GET("user/getAll")
+    @GET("usuarios/getAll")
     suspend fun getAllUsuarios(@Header("Authorization") auth: String): Response<List<Usuarios>>
 
     // Endpoint para actualizar usuario (requiere token)
-    @PATCH("user/update")
+    @PATCH("usuarios/update")
     suspend fun updateUsuario(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
@@ -30,13 +30,13 @@ interface UsuariosApi {
     ): Response<Map<String, String>>
 
     // Endpoint para obtener un usuario por email (requiere token)
-    @POST("user/getOneEmail")
+    @POST("usuarios/getOneEmail")
     suspend fun getOneByEmail(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Usuarios>
 
     // Endpoint para registrar usuario sin token
-    @POST("user/register")
+    @POST("usuarios/register")
     suspend fun registerWithoutToken(@Body usuario: Usuarios): Response<Usuarios>
 }

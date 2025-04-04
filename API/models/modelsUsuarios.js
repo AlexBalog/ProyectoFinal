@@ -10,7 +10,6 @@ const UsuariosSchema = mongoose.Schema({
         type: String
     },
     fecha_nac: {
-        required: true,
         type: Date
     }, 
     nombre: {
@@ -22,11 +21,9 @@ const UsuariosSchema = mongoose.Schema({
         type: String
     }, 
     foto: {
-        required: true,
         type: String
     },
     sexo: {
-        required: true,
         type: String
     },
     IMC: {

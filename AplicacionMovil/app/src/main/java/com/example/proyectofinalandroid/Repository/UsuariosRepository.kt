@@ -2,11 +2,11 @@ package com.example.proyectofinalandroid.Repository
 
 import android.util.Log
 import com.example.proyectofinalandroid.Model.Usuarios
-import com.example.proyectofinalandroid.Remote.RetrofitClient
 import com.example.proyectofinalandroid.Model.LoginResponse
+import com.example.proyectofinalandroid.Remote.UsuariosApi
+import javax.inject.Inject
 
-class UsuariosRepository {
-    private val api = RetrofitClient.instance
+class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
 
     suspend fun login(email: String, contrasena: String): LoginResponse? {
         val credentials = mapOf("email" to email, "contrasena" to contrasena)

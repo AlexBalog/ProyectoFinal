@@ -221,12 +221,10 @@ router.post('/getFilterInter',verifyToken, async (req, res) => {
 /*registro para android*/
 router.post('/register', async (req, res) => {
     try {
-      const { dni, email, contrasena } = req.body;
+      const { email, contrasena } = req.body;
       
       // Verificar si ya existe un usuario con el mismo DNI o Email
-      const existingUser = await UsuariosSchema.findOne({
-        $or: [{ dni: dni }, { email: email }]
-      });
+      const existingUser = await UsuariosSchema.findOne({ email: email });
       
       if (existingUser) {
         return res.status(400).json({ message: "El usuario con ese DNI o Email ya existe" });
@@ -238,16 +236,10 @@ router.post('/register', async (req, res) => {
       
       // Crear el usuario forzando el rol "cliente"
       const data = new UsuariosSchema({
-        dni: req.body.dni,
         nombre: req.body.nombre,
         apellido: req.body.apellido,
-        rol: "cliente", // Se asigna siempre "cliente"
         email: req.body.email,
-        contrasena: hashedPassword, // Guardamos la contraseña cifrada
-        fecha_nac: req.body.fecha_nac,
-        ciudad: req.body.ciudad,
-        sexo: req.body.sexo,
-        imagen: req.body.imagen // Se asigna siempre una imagen por defecto, si aplica
+        contrasena: hashedPassword // Guardamos la contraseña cifrada
       });
       
       const dataToSave = await data.save();
