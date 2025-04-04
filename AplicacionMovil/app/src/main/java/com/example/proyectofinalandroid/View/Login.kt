@@ -222,6 +222,7 @@ fun LoginScreen(
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
                             ),
+                            textStyle = TextStyle(color = Color.White),
                             isError = email.isNotEmpty() && !isEmailValid(email)
                         )
 
@@ -271,6 +272,7 @@ fun LoginScreen(
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
                             ),
+                            textStyle = TextStyle(color = Color.White),
                             isError = password.isNotEmpty() && !isPasswordValid(password)
                         )
 

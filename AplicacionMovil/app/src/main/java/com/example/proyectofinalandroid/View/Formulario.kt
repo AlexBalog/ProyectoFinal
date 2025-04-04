@@ -2,6 +2,7 @@ package com.example.proyectofinalandroid.View
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,9 +30,7 @@ import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Scale
-import androidx.compose.material.icons.filled.SettingsAccessibility
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,7 +41,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -53,12 +51,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import kotlinx.coroutines.CoroutineScope
@@ -68,8 +64,6 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.math.pow
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +77,14 @@ fun FormularioScreen(
     var sexo by remember { mutableStateOf("") }
     var altura by remember { mutableStateOf("") }
     var peso by remember { mutableStateOf("") }
-    var imc by remember { mutableStateOf("") }
     var objetivoPeso by remember { mutableStateOf("") }
     var objetivoTiempo by remember { mutableStateOf("") }
-    var objetivoCalorias by remember { mutableStateOf("") }
+
+    // Estados de error para validación
+    var alturaError by remember { mutableStateOf<String?>(null) }
+    var pesoError by remember { mutableStateOf<String?>(null) }
+    var objetivoPesoError by remember { mutableStateOf<String?>(null) }
+    var objetivoTiempoError by remember { mutableStateOf<String?>(null) }
 
     // Estados para la UI
     var isLoading by remember { mutableStateOf(false) }
@@ -130,67 +128,82 @@ fun FormularioScreen(
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 
-    // Función para calcular IMC
-    fun calcularIMC() {
-        if (altura.isNotEmpty() && peso.isNotEmpty()) {
-            val alturaMetros = altura.toFloat() / 100
-            val pesoKg = peso.toFloat()
-            val imcCalculado = pesoKg / (alturaMetros * alturaMetros)
-            imc = ((imcCalculado * 10).roundToInt() / 10.0f).toString()
+    // Funciones de validación
+    fun validateAltura(value: String): String? {
+        return when {
+            value.isEmpty() -> null
+            value.toIntOrNull() == null -> "Ingrese un número válido"
+            value.toInt() < 50 -> "La altura mínima es 50 cm"
+            value.toInt() > 250 -> "La altura máxima es 250 cm"
+            else -> null
         }
     }
 
-    // Función para convertir fecha de nacimiento a edad
-    fun fechaNacimientoAEdad(fecha: String): Int {
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        val fechaNac = LocalDate.parse(fecha, formatter)
-        return LocalDate.now().year - fechaNac.year
+    fun validatePeso(value: String): String? {
+        return when {
+            value.isEmpty() -> null
+            value.toFloatOrNull() == null -> "Ingrese un número válido"
+            value.toFloat() < 30 -> "El peso mínimo es 30 kg"
+            value.toFloat() > 300 -> "El peso máximo es 300 kg"
+            else -> null
+        }
     }
 
-    // Función para calcular calorías objetivo diarias
-    fun calcularCalorias() {
-        if (peso.isNotEmpty() && altura.isNotEmpty() && fechaNacimiento.isNotEmpty() && sexo.isNotEmpty()) {
-            val pesoKg = peso.toFloat()
-            val alturaMetros = altura.toFloat()
-            val edad = fechaNacimientoAEdad(fechaNacimiento)
+    fun validateObjetivoPeso(value: String): String? {
+        return when {
+            value.isEmpty() -> null
+            value.toFloatOrNull() == null -> "Ingrese un número válido"
+            value.toFloat() < 30 -> "El peso mínimo es 30 kg"
+            value.toFloat() > 300 -> "El peso máximo es 300 kg"
+            else -> null
+        }
+    }
 
-            // Fórmula de Harris-Benedict
-            val tmb = if (sexo == "Masculino") {
-                (88.362 + (13.397 * pesoKg) + (4.799 * alturaMetros) - (5.677 * edad)).roundToInt()
-            } else {
-                (447.593 + (9.247 * pesoKg) + (3.098 * alturaMetros) - (4.330 * edad)).roundToInt()
-            }
-
-            // Ajuste según objetivo (si quiere perder o ganar peso)
-            val caloriasObjetivo = when {
-                objetivoPeso.isNotEmpty() && objetivoPeso.toFloat() < peso.toFloat() -> (tmb * 0.8).roundToInt() // Déficit calórico
-                objetivoPeso.isNotEmpty() && objetivoPeso.toFloat() > peso.toFloat() -> (tmb * 1.2).roundToInt() // Superávit calórico
-                else -> tmb // Mantenimiento
-            }
-
-            objetivoCalorias = caloriasObjetivo.toString()
+    fun validateObjetivoTiempo(value: String): String? {
+        return when {
+            value.isEmpty() -> null
+            value.toIntOrNull() == null -> "Ingrese un número válido"
+            value.toInt() < 1 -> "Mínimo 1 semana"
+            value.toInt() > 52 -> "Máximo 52 semanas (1 año)"
+            else -> null
         }
     }
 
     // Función para guardar el formulario
     suspend fun guardarFormulario() {
-        isLoading = true
+        // Validar todos los campos antes de guardar
+        val validAltura = validateAltura(altura)
+        val validPeso = validatePeso(peso)
+        val validObjetivoPeso = validateObjetivoPeso(objetivoPeso)
+        val validObjetivoTiempo = validateObjetivoTiempo(objetivoTiempo)
 
-        // Aquí se guardarían los datos en la base de datos o ViewModel
-        val fotoBase64 = fotoPerfil?.let { convertImageToBase64(it) } ?: ""
+        alturaError = validAltura
+        pesoError = validPeso
+        objetivoPesoError = validObjetivoPeso
+        objetivoTiempoError = validObjetivoTiempo
 
-        // Simular guardado
-        try {
-            // Aquí llamaríamos a la función correspondiente del ViewModel
-            // usuariosViewModel.guardarPerfil(...)
+        // Solo proceder si no hay errores
+        if (validAltura == null && validPeso == null &&
+            validObjetivoPeso == null && validObjetivoTiempo == null) {
 
-            delay(1000) // Simular tiempo de guardado
-            navController.navigate("vistaBuscador") {
-                popUpTo("profileForm") { inclusive = true }
+            isLoading = true
+
+            // Aquí se guardarían los datos en la base de datos o ViewModel
+            val fotoBase64 = fotoPerfil?.let { convertImageToBase64(it) } ?: ""
+
+            // Simular guardado
+            try {
+                // Aquí llamaríamos a la función correspondiente del ViewModel
+                // usuariosViewModel.guardarPerfil(...)
+
+                delay(1000) // Simular tiempo de guardado
+                navController.navigate("vistaBuscador") {
+                    popUpTo("profileForm") { inclusive = true }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al guardar: ${e.message}", Toast.LENGTH_LONG).show()
+                isLoading = false
             }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error al guardar: ${e.message}", Toast.LENGTH_LONG).show()
-            isLoading = false
         }
     }
 
@@ -214,30 +227,30 @@ fun FormularioScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp) // Increased vertical padding
                 .align(Alignment.TopCenter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo pequeño
+            // Logo más grande
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo FitSphere",
                 modifier = Modifier
-                    .size(50.dp)
-                    .padding(4.dp)
+                    .size(70.dp) // Increased size from 50dp to 70dp
+                    .padding(4.dp, 8.dp, 0.dp, 0.dp)
             )
 
-            // Nombre de la empresa
+            // Nombre de la empresa (centrado verticalmente)
             Text(
                 text = "FitSphere",
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
+                    fontSize = 28.sp, // Increased font size to match larger logo
                     fontFamily = FontFamily.Default,
                     shadow = Shadow(
                         color = Color(0xFF7B1FA2),
-                        blurRadius = 4f,
+                        blurRadius = 12f,
                         offset = androidx.compose.ui.geometry.Offset(1f, 1f)
                     ),
                     brush = Brush.linearGradient(
@@ -247,11 +260,11 @@ fun FormularioScreen(
                         )
                     ),
                 ),
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(top = 4.dp)
             )
 
             // Espacio para equilibrar el layout
-            Spacer(modifier = Modifier.width(50.dp))
+            Spacer(modifier = Modifier.width(50.dp)) // Match logo width
         }
 
         // Contenido principal animado
@@ -263,7 +276,7 @@ fun FormularioScreen(
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 70.dp) // Dejar espacio para el header
+                .padding(top = 100.dp) // Increased space for the header
                 .align(Alignment.TopCenter)
         ) {
             Column(
@@ -339,35 +352,51 @@ fun FormularioScreen(
                             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                         )
 
-                        // Fecha de nacimiento
-                        OutlinedTextField(
-                            value = fechaNacimiento,
-                            onValueChange = { },
-                            label = { Text("Fecha de nacimiento", color = Color.Gray) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.CalendarMonth,
-                                    contentDescription = "Fecha",
-                                    tint = Color(0xFFAB47BC)
-                                )
-                            },
-                            readOnly = true,
+                        // DatePicker
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { showDatePicker = true }
-                                .padding(bottom = 12.dp),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFAB47BC),
-                                selectionColors = TextSelectionColors(
-                                    handleColor = Color(0xFFAB47BC),
-                                    backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
+                                .padding(bottom = 12.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = fechaNacimiento,
+                                onValueChange = { /* No permitir escritura directa */ },
+                                label = { Text("Fecha de nacimiento", color = Color.Gray) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription = "Fecha",
+                                        tint = Color(0xFFAB47BC)
+                                    )
+                                },
+                                readOnly = true,
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                colors = TextFieldDefaults.outlinedTextFieldColors(
+                                    focusedBorderColor = Color(0xFFAB47BC),
+                                    unfocusedBorderColor = Color.Gray,
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    cursorColor = Color(0xFFAB47BC),
+                                    selectionColors = TextSelectionColors(
+                                        handleColor = Color(0xFFAB47BC),
+                                        backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
+                                    )
                                 )
                             )
-                        )
+
+                            // Overlay transparente que captura los clics en todo el campo
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null // Sin indicación visual de clic
+                                    ) {
+                                        showDatePicker = true
+                                    }
+                            )
+                        }
 
                         // Selección de sexo
                         Column(
@@ -430,12 +459,15 @@ fun FormularioScreen(
                             }
                         }
 
-                        // Altura
+                        // Altura con validación
                         OutlinedTextField(
                             value = altura,
                             onValueChange = {
-                                altura = it.filter { char -> char.isDigit() }
-                                calcularIMC()
+                                // Solo permitir hasta 3 dígitos
+                                if (it.length <= 3 && it.all { char -> char.isDigit() }) {
+                                    altura = it
+                                    alturaError = validateAltura(it)
+                                }
                             },
                             label = { Text("Altura (cm)", color = Color.Gray) },
                             leadingIcon = {
@@ -450,8 +482,8 @@ fun FormularioScreen(
                                 .fillMaxWidth()
                                 .padding(bottom = 12.dp),
                             colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
+                                focusedBorderColor = if (alturaError == null) Color(0xFFAB47BC) else Color.Red,
+                                unfocusedBorderColor = if (alturaError == null) Color.Gray else Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFAB47BC),
@@ -459,16 +491,30 @@ fun FormularioScreen(
                                     handleColor = Color(0xFFAB47BC),
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
-                            )
+                            ),
+                            textStyle = TextStyle(color = Color.White),
+                            isError = alturaError != null,
+                            supportingText = {
+                                if (alturaError != null) {
+                                    Text(
+                                        text = alturaError!!,
+                                        color = Color.Red,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
                         )
 
-                        // Peso
+                        // Peso con validación
                         OutlinedTextField(
                             value = peso,
                             onValueChange = {
-                                peso = it.filter { char -> char.isDigit() || char == '.' }
-                                calcularIMC()
-                                calcularCalorias()
+                                // Permitir números con un punto decimal
+                                val regex = Regex("^\\d{0,3}(\\.\\d{0,1})?\$")
+                                if (it.isEmpty() || regex.matches(it)) {
+                                    peso = it
+                                    pesoError = validatePeso(it)
+                                }
                             },
                             label = { Text("Peso (kg)", color = Color.Gray) },
                             leadingIcon = {
@@ -483,8 +529,8 @@ fun FormularioScreen(
                                 .fillMaxWidth()
                                 .padding(bottom = 12.dp),
                             colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
+                                focusedBorderColor = if (pesoError == null) Color(0xFFAB47BC) else Color.Red,
+                                unfocusedBorderColor = if (pesoError == null) Color.Gray else Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFAB47BC),
@@ -492,41 +538,30 @@ fun FormularioScreen(
                                     handleColor = Color(0xFFAB47BC),
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
-                            )
+                            ),
+                            textStyle = TextStyle(color = Color.White),
+                            isError = pesoError != null,
+                            supportingText = {
+                                if (pesoError != null) {
+                                    Text(
+                                        text = pesoError!!,
+                                        color = Color.Red,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
                         )
 
-                        // IMC (calculado)
-                        OutlinedTextField(
-                            value = imc,
-                            onValueChange = { },
-                            label = { Text("IMC", color = Color.Gray) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.SettingsAccessibility,
-                                    contentDescription = "IMC",
-                                    tint = Color(0xFFAB47BC)
-                                )
-                            },
-                            readOnly = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                disabledBorderColor = Color.Gray,
-                                disabledTextColor = Color.LightGray
-                            )
-                        )
-
-                        // Objetivo de peso
+                        // Objetivo de peso con validación
                         OutlinedTextField(
                             value = objetivoPeso,
                             onValueChange = {
-                                objetivoPeso = it.filter { char -> char.isDigit() || char == '.' }
-                                calcularCalorias()
+                                // Permitir números con un punto decimal
+                                val regex = Regex("^\\d{0,3}(\\.\\d{0,1})?\$")
+                                if (it.isEmpty() || regex.matches(it)) {
+                                    objetivoPeso = it
+                                    objetivoPesoError = validateObjetivoPeso(it)
+                                }
                             },
                             label = { Text("Objetivo de peso (kg)", color = Color.Gray) },
                             leadingIcon = {
@@ -541,8 +576,8 @@ fun FormularioScreen(
                                 .fillMaxWidth()
                                 .padding(bottom = 12.dp),
                             colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
+                                focusedBorderColor = if (objetivoPesoError == null) Color(0xFFAB47BC) else Color.Red,
+                                unfocusedBorderColor = if (objetivoPesoError == null) Color.Gray else Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFAB47BC),
@@ -550,13 +585,30 @@ fun FormularioScreen(
                                     handleColor = Color(0xFFAB47BC),
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
-                            )
+                            ),
+                            textStyle = TextStyle(color = Color.White),
+                            isError = objetivoPesoError != null,
+                            supportingText = {
+                                if (objetivoPesoError != null) {
+                                    Text(
+                                        text = objetivoPesoError!!,
+                                        color = Color.Red,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
                         )
 
-                        // Objetivo de tiempo (semanas)
+                        // Objetivo de tiempo (semanas) con validación
                         OutlinedTextField(
                             value = objetivoTiempo,
-                            onValueChange = { objetivoTiempo = it.filter { char -> char.isDigit() } },
+                            onValueChange = {
+                                // Permitir hasta 2 dígitos (máximo 52 semanas)
+                                if (it.length <= 2 && it.all { char -> char.isDigit() }) {
+                                    objetivoTiempo = it
+                                    objetivoTiempoError = validateObjetivoTiempo(it)
+                                }
+                            },
                             label = { Text("Objetivo de tiempo (semanas)", color = Color.Gray) },
                             leadingIcon = {
                                 Icon(
@@ -568,10 +620,10 @@ fun FormularioScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 12.dp),
+                                .padding(bottom = 20.dp),
                             colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
+                                focusedBorderColor = if (objetivoTiempoError == null) Color(0xFFAB47BC) else Color.Red,
+                                unfocusedBorderColor = if (objetivoTiempoError == null) Color.Gray else Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFAB47BC),
@@ -579,33 +631,18 @@ fun FormularioScreen(
                                     handleColor = Color(0xFFAB47BC),
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
-                            )
-                        )
-
-                        // Objetivo de calorías (calculado)
-                        OutlinedTextField(
-                            value = objetivoCalorias,
-                            onValueChange = { },
-                            label = { Text("Objetivo de calorías (diarias)", color = Color.Gray) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.WbSunny,
-                                    contentDescription = "Calorías",
-                                    tint = Color(0xFFAB47BC)
-                                )
-                            },
-                            readOnly = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 20.dp),
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                disabledBorderColor = Color.Gray,
-                                disabledTextColor = Color.LightGray
-                            )
+                            ),
+                            textStyle = TextStyle(color = Color.White),
+                            isError = objetivoTiempoError != null,
+                            supportingText = {
+                                if (objetivoTiempoError != null) {
+                                    Text(
+                                        text = objetivoTiempoError!!,
+                                        color = Color.Red,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
                         )
 
                         // Botones de acción
@@ -687,7 +724,6 @@ fun FormularioScreen(
                             .atZone(java.time.ZoneId.systemDefault())
                             .toLocalDate()
                         fechaNacimiento = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                        calcularCalorias()
                     }
                     showDatePicker = false
                 }) {
@@ -723,11 +759,6 @@ fun FormularioScreen(
                     titleContentColor = Color.White,
                     headlineContentColor = Color.White,
                     weekdayContentColor = Color.Gray,
-                    subheadContentColor = Color.LightGray,
-                    yearContentColor = Color.White,
-                    currentYearContentColor = Color(0xFFAB47BC),
-                    selectedYearContentColor = Color.White,
-                    selectedYearContainerColor = Color(0xFF7B1FA2),
                     dayContentColor = Color.White,
                     selectedDayContentColor = Color.White,
                     selectedDayContainerColor = Color(0xFF7B1FA2),
@@ -738,3 +769,4 @@ fun FormularioScreen(
         }
     }
 }
+
