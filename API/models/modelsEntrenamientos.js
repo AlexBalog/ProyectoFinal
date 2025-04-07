@@ -13,6 +13,15 @@ const EntrenamientosSchema = mongoose.Schema({
     likes: {
         type: Number,
         default: 0
+    },
+    ejercicios: {
+        required: true,
+        type: [String],
+        default: []
+    },
+    creador: {
+        required: true,
+        type: String
     }
 })
 

@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
@@ -152,7 +151,7 @@ fun RegisterScreen(
             isLoading = false
             Toast.makeText(context, "¡Bienvenido ${usuario?.nombre}! Registro exitoso", Toast.LENGTH_LONG).show()
             navController.currentBackStackEntry?.savedStateHandle?.set("usuario", usuario)
-            navController.navigate("vistaBuscador") {
+            navController.navigate("login") {
                 popUpTo("RegisterUser") { inclusive = true }
             }
         }
@@ -285,6 +284,7 @@ fun RegisterScreen(
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
                             ),
+                            textStyle = TextStyle(color = Color.White),
                             isError = isError && !isNombreValid()
                         )
 
@@ -321,6 +321,7 @@ fun RegisterScreen(
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
                             ),
+                            textStyle = TextStyle(color = Color.White),
                             isError = isError && !isApellidoValid()
                         )
 
@@ -357,6 +358,7 @@ fun RegisterScreen(
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
                             ),
+                            textStyle = TextStyle(color = Color.White),
                             isError = isError && !isEmailValid()
                         )
 
@@ -406,6 +408,7 @@ fun RegisterScreen(
                                     backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
                                 )
                             ),
+                            textStyle = TextStyle(color = Color.White),
                             isError = isError && !isPasswordValid()
                         )
 

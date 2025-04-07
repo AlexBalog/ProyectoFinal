@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const ModelUser = require('../models/modelsEntrenamientos'); 
+const ModelEntrenamiento = require('../models/modelsEntrenamientos'); 
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
-    const data = await ModelUser.find();
+    const data = await ModelEntrenamiento.find();
     res.status(200).json(data);
     }
     catch(error){
@@ -15,7 +15,7 @@ router.get('/getAll', async (req, res) => {
 router.post('/getOne', async (req, res) => {
     try{
     const id = req.body._id;
-    const habitacionesDB = await ModelUser.findOne({ _id: id });
+    const habitacionesDB = await ModelEntrenamiento.findOne({ _id: id });
     if (!habitacionesDB) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
@@ -30,7 +30,7 @@ router.post('/getOne', async (req, res) => {
     router.get('/getOne', async (req, res) => {
         try{
         const id = req.query._id;
-        const habitacionesDB = await ModelUser.findOne({ _id: id });
+        const habitacionesDB = await ModelEntrenamiento.findOne({ _id: id });
         console.log(habitacionesDB);
         if (!habitacionesDB) {
             return res.status(404).json({ message: 'Documento no encontrado' });
@@ -48,7 +48,7 @@ router.post('/getOne', async (req, res) => {
 
 router.get('/getOne/:id', async (req, res) => {
     try {
-        const habitacion = await ModelUser.findOne({ _id: req.params.id });
+        const habitacion = await ModelEntrenamiento.findOne({ _id: req.params.id });
         if (!habitacion) {
             return res.status(404).json({ message: 'Habitación no encontrada' });
         }
@@ -63,7 +63,7 @@ router.get('/getOne/:id', async (req, res) => {
 router.get('/getOneHuespedes/:id', async (req, res) => {
     try {
         const { numHuespedes } = req.query;
-        const habitacion = await ModelUser.findOne({ 
+        const habitacion = await ModelEntrenamiento.findOne({ 
             _id: req.params.id, 
             ...(numHuespedes && { huespedes: { $gte: parseInt(numHuespedes) } }) 
         });
@@ -93,7 +93,7 @@ router.get('/getFilterHuespedes', async (req, res) => {
             condiciones.cuna = req.query.cuna;
         }
         condiciones.baja = false
-        const data = await ModelUser.find(condiciones);
+        const data = await ModelEntrenamiento.find(condiciones);
         
         if (data.length === 0) {
             return res.status(404).json({ message: 'No hay habitaciones disponibles para ese número de huéspedes' });
@@ -120,7 +120,7 @@ router.post('/getFilter2', async (req, res) => {
         if (req.body.baja) condiciones.baja = req.body.baja;
         if (req.body.camaExtra) condiciones.camaExtra = req.body.camaExtra;
         if (req.body.cuna) condiciones.cuna = req.body.cuna;
-        const data = await ModelUser.find(condiciones);
+        const data = await ModelEntrenamiento.find(condiciones);
         if (data.length === 0) {
             return res.status(404).json({ message: 'Documento no encontrado' });
         }
@@ -132,7 +132,7 @@ router.post('/getFilter2', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
-    const data = new ModelUser({
+    const data = new ModelEntrenamiento({
         nombre: req.body.nombre,
         huespedes: req.body.huespedes,
         descripcion: req.body.descripcion,
@@ -158,7 +158,7 @@ router.patch("/update", async (req, res) => {
     try {
     const id = req.body._id;
 
-    const resultado = await ModelUser.updateOne(
+    const resultado = await ModelEntrenamiento.updateOne(
     { _id: id }, { $set: {
         nombre: req.body.nombre,
         huespedes: req.body.huespedes,
@@ -186,7 +186,7 @@ router.patch("/update", async (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
     const id = req.body._id;
-    const data = await ModelUser.deleteOne({ _id: id })
+    const data = await ModelEntrenamiento.deleteOne({ _id: id })
     if (data.deletedCount === 0) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
@@ -209,7 +209,7 @@ router.delete('/delete', async (req, res) => {
     
             console.log("Condiciones de búsqueda:", condiciones); // Para depuración
     
-            const data = await ModelUser.find(condiciones);
+            const data = await ModelEntrenamiento.find(condiciones);
             const filteredData = data.filter(element => element.baja !== true);
             if (filteredData.length === 0) {
                 return res.status(404).json({ message: 'No se encontraron habitaciones' });

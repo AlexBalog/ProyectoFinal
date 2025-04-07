@@ -4,6 +4,12 @@ const UsuariosSchema = require('../models/modelsUsuarios');
 const verifyToken = require('../middlewares/authMiddleware'); // Middleware para validar el JWT
 const router = express.Router();
 
+const parseFecha = (fecha) => {
+  const [day, month, year] = fecha.split('/').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.toISOString();
+};
+
 // GET ALL: Obtiene todos los documentos de usuarios (ruta protegida) - La uso para cargar la lista de usuarios sin filtrar en WPF
 router.get('/getAll', /*verifyToken,*/ async (req, res) => {
     try {
@@ -40,11 +46,11 @@ router.post('/new', /*verifyToken,*/ async (req, res) => {
   });
 
 // UPDATE: Actualiza un usuario basado en el dni proporcionado (ruta protegida) - La uso para modificar usuarios en WPF
-router.patch('/update', /*verifyToken,*/ async (req, res) => {
+router.patch('/update', verifyToken, async (req, res) => {
   try {
     const id = req.body._id;
     if (!id) {
-      return res.status(400).json({ message: "Falta el campo 'dni'" });
+      return res.status(400).json({ message: "Falta el campo 'id'" });
     }
 
     // Se crea un objeto para almacenar solo los campos que se enviaron en el request
@@ -65,7 +71,7 @@ router.patch('/update', /*verifyToken,*/ async (req, res) => {
     }
 
     if (req.body.fecha_nac !== undefined) {
-      updateFields.fecha_nac = req.body.fecha_nac;
+      updateFields.fecha_nac = parseFecha(req.body.fecha_nac);
     }
 
     if (req.body.nombre !== undefined) {
@@ -88,27 +94,27 @@ router.patch('/update', /*verifyToken,*/ async (req, res) => {
       updateFields.IMC = req.body.IMC;
     }
 
-    if (rq.body.altura !== undefined) {
+    if (req.body.altura !== undefined) {
       updateFields.altura = req.body.altura;
     }
 
-    if (rq.body.peso !== undefined) {
+    if (req.body.peso !== undefined) {
       updateFields.peso = req.body.peso;
     }
 
-    if (rq.body.objetivo_peso !== undefined) {
+    if (req.body.objetivo_peso !== undefined) {
       updateFields.objetivo_peso = req.body.objetivo_peso;
     }
 
-    if (rq.body.objetivo_tiem !== undefined) {
+    if (req.body.objetivo_tiem !== undefined) {
       updateFields.objetivo_tiem = req.body.objetivo_tiem;
     }
 
-    if (rq.body.objetivo_cal !== undefined) {
+    if (req.body.objetivo_cal !== undefined) {
       updateFields.objetivo_cal = req.body.objetivo_cal;
     }
 
-    if (rq.body.ent_fav !== undefined) {
+    if (req.body.ent_fav !== undefined) {
       updateFields.ent_fav = req.body.ent_fav;
     }
 
@@ -124,10 +130,9 @@ router.patch('/update', /*verifyToken,*/ async (req, res) => {
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ message: "No se proporcionaron campos para actualizar" });
     }
-
     // Se realiza la actualización solo de los campos proporcionados
     const resultado = await UsuariosSchema.updateOne(
-      { id },
+      { _id: id },
       { $set: updateFields }
     );
 

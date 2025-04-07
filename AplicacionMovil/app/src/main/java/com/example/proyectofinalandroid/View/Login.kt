@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.View
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -55,12 +56,17 @@ import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import kotlinx.coroutines.delay
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     navController: NavController,
-    usuariosViewModel: UsuariosViewModel = hiltViewModel()
 ) {
+    val parentEntry = remember(navController) {
+        navController.getBackStackEntry("root")
+    }
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+
     // Estados locales
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -94,8 +100,14 @@ fun LoginScreen(
         if (usuario != null) {
             Toast.makeText(context, "Bienvenido ${usuario?.nombre}", Toast.LENGTH_LONG).show()
             navController.currentBackStackEntry?.savedStateHandle?.set("usuario", usuario)
-            navController.navigate("formulario") {
-                popUpTo("login") { inclusive = true }
+            if (usuario!!.formulario) {
+                navController.navigate("principal") {
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                navController.navigate("formulario") {
+                    popUpTo("login") { inclusive = true }
+                }
             }
         }
     }

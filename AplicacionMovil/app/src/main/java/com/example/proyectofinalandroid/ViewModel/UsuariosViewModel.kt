@@ -1,5 +1,7 @@
 package com.example.proyectofinalandroid.ViewModel
 
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectofinalandroid.Model.Usuarios
@@ -7,7 +9,10 @@ import com.example.proyectofinalandroid.Repository.UsuariosRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import androidx.compose.runtime.State
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,15 +52,17 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
         }
     }
 
-    fun updateUsuario(dni: String, updatedData: Map<String, String>) {
-        viewModelScope.launch {
+    suspend fun updateUsuario(updatedData: Map<String, String>): Boolean {
+        return withContext(Dispatchers.IO) {
             _usuario.value?.let { currentUser ->
-                val token = currentUser.token ?: return@launch // Si no hay token, no hacemos nada
-                val success = repository.updateUsuario(dni, updatedData, token)
+                val _id = currentUser._id
+                val token = currentUser.token ?: return@withContext false
+                val success = repository.updateUsuario(_id, updatedData, token)
                 if (!success) {
                     _errorMessage.value = "Error al actualizar el usuario"
                 }
-            }
+                return@withContext success
+            } ?: false
         }
     }
 

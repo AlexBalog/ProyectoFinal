@@ -1,9 +1,11 @@
 package com.example.proyectofinalandroid.View
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import android.util.Base64
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,13 +66,20 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.withContext
 
+
+@SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FormularioScreen(
-    navController: NavController,
-    usuariosViewModel: UsuariosViewModel = hiltViewModel()
-) {
+fun FormularioScreen(navController: NavController) {
+
+    val parentEntry = remember(navController) {
+        navController.getBackStackEntry("root")
+    }
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+
     // Estados para los campos del formulario
     var fotoPerfil by remember { mutableStateOf<Uri?>(null) }
     var fechaNacimiento by remember { mutableStateOf("") }
@@ -193,12 +202,22 @@ fun FormularioScreen(
 
             // Simular guardado
             try {
-                // Aquí llamaríamos a la función correspondiente del ViewModel
-                // usuariosViewModel.guardarPerfil(...)
-
-                delay(1000) // Simular tiempo de guardado
-                navController.navigate("vistaBuscador") {
-                    popUpTo("profileForm") { inclusive = true }
+                val datos = mutableMapOf<String, String>()
+                datos["foto"] = fotoBase64
+                datos["fecha_nac"] = fechaNacimiento
+                datos["sexo"] = sexo
+                datos["altura"] = altura
+                datos["peso"] = peso
+                datos["objetivo_peso"] = objetivoPeso
+                datos["objetivo_tiempo"] = objetivoTiempo
+                datos["formulario"] = true.toString()
+                val exito = withContext(Dispatchers.Main) {
+                    usuariosViewModel.updateUsuario(datos)
+                }
+                if(exito) {
+                    navController.navigate("principal") {
+                        popUpTo("profileForm") { inclusive = true }
+                    }
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Error al guardar: ${e.message}", Toast.LENGTH_LONG).show()
@@ -209,10 +228,7 @@ fun FormularioScreen(
 
     // Función para omitir formulario
     fun omitirFormulario() {
-        // Marcar el formulario como false en la base de datos
-        // usuariosViewModel.setFormularioCompletado(false)
-
-        navController.navigate("vistaBuscador") {
+        navController.navigate("principal") {
             popUpTo("profileForm") { inclusive = true }
         }
     }
@@ -653,13 +669,20 @@ fun FormularioScreen(
                             // Botón Rellenar más tarde
                             OutlinedButton(
                                 onClick = { omitirFormulario() },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 0.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = Color(0xFFAB47BC)
                                 ),
-                                border = BorderStroke(1.dp, Color(0xFFAB47BC))
+                                contentPadding = PaddingValues(horizontal = 0.dp),
+                                border = BorderStroke(0.dp, Color.Transparent)
                             ) {
-                                Text("Rellenar más tarde")
+                                Text(
+                                    text = "Rellenar más tarde",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
 
                             Spacer(modifier = Modifier.width(16.dp))
@@ -676,7 +699,7 @@ fun FormularioScreen(
                                     containerColor = Color(0xFF7B1FA2),
                                     disabledContainerColor = Color(0xFF7B1FA2).copy(alpha = 0.5f)
                                 ),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(20.dp),
                                 enabled = !isLoading
                             ) {
                                 if (isLoading) {

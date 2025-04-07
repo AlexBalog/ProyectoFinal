@@ -19,8 +19,8 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun updateUsuario(dni: String, updatedData: Map<String, String>, token: String): Boolean {
-        val request = mutableMapOf<String, String>("dni" to dni)
+    suspend fun updateUsuario(_id: String, updatedData: Map<String, String>, token: String): Boolean {
+        val request = mutableMapOf<String, String>("_id" to _id)
         request.putAll(updatedData)
         val response = api.updateUsuario("Bearer $token", request)
         return response.isSuccessful
