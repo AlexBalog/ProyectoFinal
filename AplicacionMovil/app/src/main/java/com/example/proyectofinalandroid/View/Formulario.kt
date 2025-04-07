@@ -1,10 +1,13 @@
 package com.example.proyectofinalandroid.View
 
+
+import android.content.Context
+import android.util.Base64
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -120,22 +123,27 @@ fun FormularioScreen(navController: NavController) {
 
     // Función para convertir imagen a Base64
     fun convertImageToBase64(uri: Uri): String {
-        val bitmap = ImageRequest.Builder(context)
-            .data(uri)
-            .build()
-            .context
-            .assets
-            .open(uri.path ?: "")
-            .use { it.readBytes() }
-            .let {
-                android.graphics.BitmapFactory.decodeByteArray(it, 0, it.size)
-            }
+        Log.d("FalloForm1", "x")
+
+        val inputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("No se pudo abrir el URI: $uri")
+
+        val bitmap = inputStream.use {
+            BitmapFactory.decodeStream(it)
+        }
+
+        Log.d("FalloForm2", "x")
 
         val outputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        Log.d("FalloForm3", "x")
+
         val byteArray = outputStream.toByteArray()
+        Log.d("FalloForm4", "${byteArray.size} bytes")
+
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
+
 
     // Funciones de validación
     fun validateAltura(value: String): String? {

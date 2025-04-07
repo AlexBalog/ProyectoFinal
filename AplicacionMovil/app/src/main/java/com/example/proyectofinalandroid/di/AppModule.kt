@@ -15,8 +15,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    private const val BASE_URL = "http://192.168.1.142:3000/"
 //    private const val BASE_URL = "http://10.0.2.2:3000/"
-    private const val BASE_URL = "http://172.20.0.22:3000/" // La IP del trabajo
+//    private const val BASE_URL = "http://172.20.0.22:3000/" // La IP del trabajo
 
     @Provides
     @Singleton
