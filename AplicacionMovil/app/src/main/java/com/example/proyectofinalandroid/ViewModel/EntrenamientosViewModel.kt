@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.ViewModel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +10,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.State
+import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Entrenamientos
+import com.example.proyectofinalandroid.Repository.EjerciciosRepository
 import com.example.proyectofinalandroid.Repository.EntrenamientosRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,10 +29,13 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private val _entrenamientos = MutableStateFlow<List<Entrenamientos>?>(null)
+    private val _entrenamientos = MutableStateFlow<List<Entrenamientos>?>(emptyList())
     val entrenamientos: StateFlow<List<Entrenamientos>?> get() = _entrenamientos
 
-    private fun getAllEntrenamientos() {
+    private val _entrenamiento = MutableStateFlow<Entrenamientos?>(null)
+    val entrenamiento: StateFlow<Entrenamientos?> get() = _entrenamiento
+
+    fun getAllEntrenamientos() {
         viewModelScope.launch {
             try {
                 _usuario.value?.let { currentUser ->
@@ -55,6 +61,51 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
                 if (!success) {
                     _errorMessage.value = "Error al actualizar el usuario"
                 }
+            }
+        }
+    }
+
+
+    private val _entrenamientoSeleccionado = MutableStateFlow<Entrenamientos?>(null)
+    val entrenamientoSeleccionado: StateFlow<Entrenamientos?> get() = _entrenamientoSeleccionado
+
+    fun getOneEjercicio(id: String) {
+        Log.d("Mensaje", "${id} cargado")
+        viewModelScope.launch {
+            _entrenamientoSeleccionado.value = repository.getOneEntrenamiento(id, _usuario.value?.token.toString())
+        }
+    }
+
+    fun getFilterEntrenamientos(filtros: Map<String, String>) {
+        viewModelScope.launch {
+            try {
+                val lista = repository.getFilterEntrenamientos(_usuario.value?.token.toString(), filtros)
+                if (lista != null) {
+                    _entrenamientos.value = lista
+                    Log.d("Habitaciones", "Datos filtrados cargados: $lista")
+                } else {
+                    _entrenamientos.value = emptyList()
+                    Log.d("Habitaciones", "No se encontraron habitaciones con esos filtros.")
+                }
+            } catch (e: Exception) {
+                Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
+                _entrenamientos.value = emptyList()
+            }
+        }
+    }
+
+    fun peticionEntrenamiento(nuevoEntrenamiento: Entrenamientos) {
+        viewModelScope.launch {
+            try {
+                val creado = repository.peticionEntrenamiento(nuevoEntrenamiento)
+                if (creado != null) {
+                    _entrenamiento.value = creado
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Error al crear el usuario"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
             }
         }
     }

@@ -7,12 +7,26 @@ import java.util.Date
 data class Entrenamientos(
     @SerializedName("_id")
     val _id: String,
+    @SerializedName("categoria")
+    val categoria: String,
+    @SerializedName("nombre")
+    val nombre: String,
+    @SerializedName("duracion")
+    val duracion: Number,
+    @SerializedName("foto")
+    val foto: String,
     @SerializedName("musculos")
     val musculos: Array<String> = arrayOf(),
     @SerializedName("likes")
-    val likes: String,
+    val likes: Number,
     @SerializedName("ejercicios")
     val ejercicios: Array<String> = arrayOf(),
     @SerializedName("creador")
-    val creador: String
+    val creador: String,
+    @SerializedName("aprobado")
+    val aprobado: Boolean,
+    @SerializedName("pedido")
+    val pedido: Boolean,
+    @SerializedName("motivoRechazo")
+    val motivoRechazo: String
 ) : Serializable

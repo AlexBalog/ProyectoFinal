@@ -177,23 +177,7 @@ router.post('/getOneEmail', verifyToken, async (req, res) => {
     }
   });
   
-
-
-  // GET ONE DNI
-  router.post('/getOneDni', verifyToken, async (req, res) => {
-    try {
-      const id = req.body._id;
-      const usuarioDB = await UsuariosSchema.findOne({ id });
-      if (!usuarioDB) {
-        return res.status(404).json({ message: "Documento no encontrado" });
-      }
-      res.status(200).json(usuarioDB);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  });
   
-
 // GET FILTER: Filtra usuarios para la API del intermodular (ruta protegida) - La uso para filtrar usuarios en la lista de WPF
 router.post('/getFilterInter',verifyToken, async (req, res) => {
     try {

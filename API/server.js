@@ -29,6 +29,8 @@ const routerEntrenar = require('./routes/routerEntrenar');   // Rutas de entrena
 const routerEntrenamientos = require('./routes/routerEntrenamientos');   // Rutas de entrenamientos
 const routerRealizarEjer = require('./routes/routerRealizarEjer');   // Rutas de realizarejer
 const authRouter = require('./routes/auth');   // Rutas de autenticación
+const routerEventos = require('./routes/routerEventos');   // Rutas de eventos
+const routerEventosUsuario = require('./routes/routerEventosUsuario');   // Rutas de eventos del usuario
 
 // Empleos
 app.use('/usuarios', routerUsuarios);
@@ -37,6 +39,8 @@ app.use('/entrenar', routerEntrenar);
 app.use('/entrenamientos', routerEntrenamientos);
 app.use('/realizarejer', routerRealizarEjer);
 app.use('/auth', authRouter);
+app.use('/eventos', routerEventos);
+app.use('/eventosusuario', routerEventosUsuario);
 
 // Define el puerto y arranca el servidor
 const PORT = process.env.PORT || 3000;

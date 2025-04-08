@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const modelEntrenar = require('../models/modelsEntrenar'); 
+const modelEventos = require('../models/modelsEventos'); 
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
-    const data = await modelEntrenar.find();
+    const data = await modelEventos.find();
     res.status(200).json(data);
     }
     catch(error){
@@ -12,10 +12,10 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOneEntrenar', async (req, res) => {
+router.post('/getOneEvento', async (req, res) => {
     try{
     const id = req.body._id;
-    const data = await modelEntrenar.findOne({ _id: id });
+    const data = await modelEventos.findOne({ _id: id });
     if (!data) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
@@ -27,28 +27,21 @@ router.post('/getOneEntrenar', async (req, res) => {
     });
 
 
-router.get('/getFilterEntrenar', async (req, res) => {
+router.get('/getFilterEventos', async (req, res) => {
     try {
         const condiciones = {};
 
-        if (req.body.duracion !== null) {
-            condiciones.duracion = req.body.duracion ;
+        if (req.body.nombre !== null && req.body.nombre.trim() !== "") {
+            condiciones.nombre = req.body.nombre;
         }
-
-        if (req.body.fechaMin !== undefined || req.body.fechaMax !== undefined) {
-            condiciones.fecha = {};
-            if (req.body.fechaMin !== undefined) condiciones.fecha.$gte = req.body.fechaMin;
-            if (req.body.fechaMax !== undefined) condiciones.fecha.$lte = req.body.fechaMax;
+        if (req.body.tipo !== null) {
+            condiciones.tipo = req.body.tipo;
         }
         
-        if (req.body.cod_usu !== null) {
-            condiciones.cod_usu = req.body.cod_usu
-        }
-        
-        const data = await modelEntrenar.find(condiciones);
+        const data = await modelEventos.find(condiciones);
         
         if (data.length === 0) {
-            return res.status(404).json({ message: 'No hay entrenos hechos con tales características' });
+            return res.status(404).json({ message: 'No hay ejercicios con tales características' });
         }
         
         res.status(200).json(data);
@@ -58,11 +51,10 @@ router.get('/getFilterEntrenar', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
-    const data = new modelEntrenar({
-        duracion: req.body.duracion,
-        fecha: req.body.fecha,
-        cod_usu: req.body.cod_usu,
-        cod_ent: req.body.cod_ent
+    const data = new modelEventos({
+        nombre: req.body.nombre,
+        tipo: req.body.tipo,
+        descripcion: req.body.descripcion
     })
 
     try {
@@ -78,12 +70,11 @@ router.patch("/update", async (req, res) => {
     try {
     const id = req.body._id;
 
-    const resultado = await modelEntrenar.updateOne(
+    const resultado = await modelEventos.updateOne(
     { _id: id }, { $set: {
-        duracion: req.body.duracion,
-        fecha: req.body.fecha,
-        cod_usu: req.body.cod_usu,
-        cod_ent: req.body.cod_ent
+        nombre: req.body.nombre,
+        tipo: req.body.tipo,
+        descripcion: req.body.descripcion
     }});
     
     if (resultado.modifiedCount === 0) {
@@ -100,7 +91,7 @@ router.patch("/update", async (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
     const id = req.body._id;
-    const data = await modelEntrenar.deleteOne({ _id: id })
+    const data = await modelEventos.deleteOne({ _id: id })
     if (data.deletedCount === 0) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }

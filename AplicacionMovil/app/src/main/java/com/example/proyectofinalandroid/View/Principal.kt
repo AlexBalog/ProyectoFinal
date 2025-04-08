@@ -1,5 +1,8 @@
 package com.example.proyectofinalandroid.View
 
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -35,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.proyectofinalandroid.Model.Entrenamientos
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
+import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -44,13 +49,20 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 import kotlinx.coroutines.delay
+import android.util.Base64
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 
+@SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    navController: NavController,
-    entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel()
-) {
+fun HomeScreen(navController: NavController, ) {
+
+    val parentEntry = remember(navController) {
+        navController.getBackStackEntry("root")
+    }
+    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
+
     // Estados
     var isAnimatedIn by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
@@ -60,7 +72,7 @@ fun HomeScreen(
     val scrollState = rememberScrollState()
 
     // Datos simulados (estos vendrían de tu Base de Datos)
-    val misSesiones = remember { entrenamientosViewModel.obtenerMisSesiones() }
+    val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState() // Puede fallar
     val programasDestacados = remember { entrenamientosViewModel.obtenerProgramasDestacados() }
     val eventosProgramados = remember { entrenamientosViewModel.obtenerEventosFecha(selectedDate) }
 
@@ -80,7 +92,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // TopBar ahora es parte del contenido scrolleable
             TopAppBar(
                 title = {
                     Text(
@@ -130,10 +141,10 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Mis Sesiones (solo se muestra si hay sesiones disponibles)
-                    if (misSesiones.isNotEmpty()) {
-                        MisSesionesSection(
-                            sesiones = misSesiones,
+                    // Mis Entrenamientos (solo se muestra si hay entrenamientos disponibles)
+                    if (misEntrenamientos!!.isNotEmpty()) {
+                        MisEntrenamientosSection(
+                            entrenamientos = misEntrenamientos!!,
                             navController = navController
                         )
 
@@ -410,8 +421,8 @@ fun EventoItem(evento: EventoProgramado) {
 }
 
 @Composable
-fun MisSesionesSection(
-    sesiones: List<Sesion>,
+fun MisEntrenamientosSection(
+    entrenamientos: List<Entrenamientos>,
     navController: NavController
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -423,14 +434,14 @@ fun MisSesionesSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Mis Sesiones",
+                text = "Mis Entrenamientos",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
 
             TextButton(
-                onClick = { /* Ver todas las sesiones */ },
+                onClick = { /* Ver todos los entrenamientos */ },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
             ) {
                 Text(
@@ -448,9 +459,9 @@ fun MisSesionesSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(sesiones) { sesion ->
-                SesionItem(
-                    sesion = sesion,
+            items(entrenamientos) { entrenamiento ->
+                EntrenamientoItem(
+                    entrenamiento = entrenamiento,
                     onClick = { /* Navegar a detalles de la sesión */ }
                 )
             }
@@ -459,8 +470,8 @@ fun MisSesionesSection(
 }
 
 @Composable
-fun SesionItem(
-    sesion: Sesion,
+fun EntrenamientoItem(
+    entrenamiento: Entrenamientos,
     onClick: () -> Unit
 ) {
     Card(
@@ -477,7 +488,7 @@ fun SesionItem(
                     .height(100.dp)
             ) {
                 Image(
-                    painter = painterResource(id = sesion.imagenResId),
+                    painter = remember { BitmapPainter(base64ToBitmap(entrenamiento.foto)!!.asImageBitmap()) },
                     contentDescription = "Imagen de sesión",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -516,7 +527,7 @@ fun SesionItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = sesion.duracion,
+                            text = "${entrenamiento.duracion}",
                             fontSize = 10.sp,
                             color = Color.White
                         )
@@ -530,7 +541,7 @@ fun SesionItem(
                     .padding(8.dp)
             ) {
                 Text(
-                    text = sesion.nombre,
+                    text = entrenamiento.nombre,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
@@ -539,7 +550,7 @@ fun SesionItem(
                 )
 
                 Text(
-                    text = sesion.tipo,
+                    text = entrenamiento.categoria,
                     fontSize = 12.sp,
                     color = Color.Gray,
                     maxLines = 1,
@@ -559,7 +570,7 @@ fun SesionItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${sesion.likes}",
+                        text = "${entrenamiento.likes}",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -862,15 +873,6 @@ enum class TipoEvento {
     ENTRENAMIENTO, MEDICION, NUTRICION
 }
 
-data class Sesion(
-    val id: String,
-    val nombre: String,
-    val tipo: String,
-    val duracion: String,
-    val likes: Int,
-    val imagenResId: Int
-)
-
 data class ProgramaDestacado(
     val id: String,
     val nombre: String,
@@ -915,36 +917,6 @@ fun EntrenamientosViewModel.obtenerEventosFecha(fecha: LocalDate): List<EventoPr
     } else {
         emptyList() // Sin eventos para esta fecha
     }
-}
-
-fun EntrenamientosViewModel.obtenerMisSesiones(): List<Sesion> {
-    // Simula sesiones desde la base de datos
-    return listOf(
-        Sesion(
-            id = "1",
-            nombre = "Full Body",
-            tipo = "Fuerza",
-            duracion = "45 min",
-            likes = 120,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        ),
-        Sesion(
-            id = "2",
-            nombre = "HIIT Cardio",
-            tipo = "Cardio",
-            duracion = "30 min",
-            likes = 87,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        ),
-        Sesion(
-            id = "3",
-            nombre = "Yoga Flow",
-            tipo = "Flexibilidad",
-            duracion = "60 min",
-            likes = 95,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        )
-    )
 }
 
 fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado> {
@@ -1001,4 +973,14 @@ fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado
             imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
         )
     )
+}
+
+fun base64ToBitmap(base64String: String): Bitmap? {
+    return try {
+        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
 }

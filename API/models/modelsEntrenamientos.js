@@ -5,6 +5,18 @@ const EntrenamientosSchema = mongoose.Schema({
         required: true,
         type: String
     },
+    nombre: {
+        required: true,
+        type: String
+    },
+    duracion: {
+        required: true,
+        type: Number
+    },
+    foto: {
+        required: true,
+        type: String
+    },
     musculos: {
         required: true,
         type: [String],
@@ -21,6 +33,19 @@ const EntrenamientosSchema = mongoose.Schema({
     },
     creador: {
         required: true,
+        type: String
+    },
+    aprobado: {
+        required: true,
+        type: Boolean,
+        default: false
+    },
+    pedido: {
+        required: true,
+        type: Boolean,
+        default: false
+    },
+    motivoRechazo: {
         type: String
     }
 })

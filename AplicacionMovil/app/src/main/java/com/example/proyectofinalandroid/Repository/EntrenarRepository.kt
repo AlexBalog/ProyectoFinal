@@ -1,44 +1,44 @@
 package com.example.proyectofinalandroid.Repository
 
 import android.util.Log
-import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Entrenamientos
+import com.example.proyectofinalandroid.Model.Entrenar
 import com.example.proyectofinalandroid.Model.Usuarios
 import com.example.proyectofinalandroid.Model.LoginResponse
-import com.example.proyectofinalandroid.Remote.EntrenamientosApi
+import com.example.proyectofinalandroid.Remote.EntrenarApi
 import com.example.proyectofinalandroid.Remote.UsuariosApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class EntrenamientosRepository @Inject constructor(private val api: EntrenamientosApi) {
+class EntrenarRepository @Inject constructor(private val api: EntrenarApi) {
 
-    suspend fun getAllEntrenamientos(token: String): List<Entrenamientos>? {
-        val response = api.getAllEntrenamientos("Bearer $token")
+    suspend fun getAllEntrenar(token: String): List<Entrenar>? {
+        val response = api.getAllEntrenar("Bearer $token")
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun updateEntrenamiento(_id: String, updatedData: Map<String, String>, token: String): Boolean {
+    suspend fun updateEntrenar(_id: String, updatedData: Map<String, String>, token: String): Boolean {
         val request = mutableMapOf<String, String>("_id" to _id)
         request.putAll(updatedData)
-        val response = api.updateEntrenamiento("Bearer $token", request)
+        val response = api.updateEntrenar("Bearer $token", request)
         return response.isSuccessful
     }
 
-    suspend fun deleteEntrenamiento(_id: String, token: String): Boolean {
+    suspend fun deleteEntrenar(_id: String, token: String): Boolean {
         val request = mapOf("_id" to _id)
-        val response = api.deleteEntrenamiento("Bearer $token", request)
+        val response = api.deleteEntrenar("Bearer $token", request)
         return response.isSuccessful
     }
 
-    suspend fun getOneEntrenamiento(_id: String, token: String): Entrenamientos? {
+    suspend fun getOneEntrenar(_id: String, token: String): Entrenar? {
         val request = mapOf("_id" to _id)
-        val response = api.getOneEntrenamiento("Bearer $token", request)
+        val response = api.getOneEntrenar("Bearer $token", request)
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun peticionEntrenamiento(entrenamientos: Entrenamientos): Entrenamientos? {
-        val response = api.peticionEntrenamiento(entrenamientos)
+    suspend fun newEntrenar(entrenar: Entrenar): Entrenar? {
+        val response = api.newEntrenar(entrenar)
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -46,9 +46,9 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
         return response.body()
     }
 
-    suspend fun getFilterEntrenamientos(token: String, filtros: Map<String, String>): List<Entrenamientos>? {
+    suspend fun getFilterEntrenar(token: String, filtros: Map<String, String>): List<Entrenar>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilterEntrenamientos(token, filtros)
+            val response = api.getFilterEntrenar(token, filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {

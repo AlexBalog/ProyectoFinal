@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const ModelEntrenamiento = require('../models/modelsEntrenamientos'); 
+const modelEntrenamientos = require('../models/modelsEntrenamientos'); 
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
-    const data = await ModelEntrenamiento.find();
+    const data = await modelEntrenamientos.find();
     res.status(200).json(data);
     }
     catch(error){
@@ -12,14 +12,14 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOne', async (req, res) => {
+router.post('/getOneEntrenamiento', async (req, res) => {
     try{
     const id = req.body._id;
-    const habitacionesDB = await ModelEntrenamiento.findOne({ _id: id });
-    if (!habitacionesDB) {
+    const entrenamientosDB = await modelEntrenamientos.findOne({ _id: id });
+    if (!entrenamientosDB) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
-    res.status(200).json(habitacionesDB);
+    res.status(200).json(entrenamientosDB);
     }
     catch(error){
         res.status(500).json({message: error.message});
@@ -27,122 +27,48 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-    router.get('/getOne', async (req, res) => {
-        try{
-        const id = req.query._id;
-        const habitacionesDB = await ModelEntrenamiento.findOne({ _id: id });
-        console.log(habitacionesDB);
-        if (!habitacionesDB) {
-            return res.status(404).json({ message: 'Documento no encontrado' });
-        }
-        res.status(200).json(habitacionesDB);
-        }
-        catch(error){
-            res.status(500).json({message: error.message});
-        }
-        });
-
-
-
-// getOne get
-
-router.get('/getOne/:id', async (req, res) => {
-    try {
-        const habitacion = await ModelEntrenamiento.findOne({ _id: req.params.id });
-        if (!habitacion) {
-            return res.status(404).json({ message: 'Habitación no encontrada' });
-        }
-    } catch (error) {
-        console.log("err");
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// getOne getCondiciones
-
-router.get('/getOneHuespedes/:id', async (req, res) => {
-    try {
-        const { numHuespedes } = req.query;
-        const habitacion = await ModelEntrenamiento.findOne({ 
-            _id: req.params.id, 
-            ...(numHuespedes && { huespedes: { $gte: parseInt(numHuespedes) } }) 
-        });
-        
-        if (!habitacion) {
-            return res.status(404).json({ message: 'Habitación no encontrada o no cumple los filtros' });
-        }
-
-        res.status(200).json(habitacion);
-    } catch (error) {
-        console.error("Error en getOne:", error);
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.get('/getFilterHuespedes', async (req, res) => {
+router.get('/getFilterEntrenamientos', async (req, res) => {
     try {
         const condiciones = {};
 
-        if (req.query.huespedes) {
-            condiciones.huespedes = { $gte: parseInt(req.query.huespedes)} ;
+        if (req.body.nombre !== null && req.body.nombre.trim() !== "") {
+            condiciones.nombre = req.body.nombre;
         }
-        if (req.query.camaExtra && req.query.camaExtra != null){
-            condiciones.camaExtra = req.query.camaExtra;
+
+        if (req.body.categoria !== null && req.body.categoria.trim() !== "") {
+            condiciones.categoria = req.body.categoria;
         }
-        if (req.query.cuna && req.query.cuna != null){
-            condiciones.cuna = req.query.cuna;
+
+        if (req.body.musculos !== null) {
+            condiciones.musculos = req.body.musculos;
         }
-        condiciones.baja = false
-        const data = await ModelEntrenamiento.find(condiciones);
+
+        if (req.body.duracion !== null) {
+            condiciones.duracion = req.body.duracion;
+        }
+        
+        const data = await modelEntrenamientos.find(condiciones);
         
         if (data.length === 0) {
-            return res.status(404).json({ message: 'No hay habitaciones disponibles para ese número de huéspedes' });
+            return res.status(404).json({ message: 'No hay entrenamientos con tales características' });
         }
         
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });
-    }
-});
-
-
-
-
-router.post('/getFilter2', async (req, res) => {
-    try{
-        const condiciones = {};
-        if (req.body.huespedes) condiciones.huespedes = req.body.huespedes;
-        if (req.body.ofertaMin !== undefined || req.body.ofertaMax !== undefined) {
-            condiciones.oferta = {};
-            if (req.body.ofertaMin !== undefined) condiciones.oferta.$gte = req.body.ofertaMin;
-            if (req.body.ofertaMax !== undefined) condiciones.oferta.$lte = req.body.ofertaMax;
-        }
-        if (req.body.baja) condiciones.baja = req.body.baja;
-        if (req.body.camaExtra) condiciones.camaExtra = req.body.camaExtra;
-        if (req.body.cuna) condiciones.cuna = req.body.cuna;
-        const data = await ModelEntrenamiento.find(condiciones);
-        if (data.length === 0) {
-            return res.status(404).json({ message: 'Documento no encontrado' });
-        }
-        res.status(200).json(data);
-    }
-    catch(error){
-    res.status(500).json({message: error.message});
     }
 });
 
 router.post('/new', async (req, res) => {
-    const data = new ModelEntrenamiento({
+    const data = new modelEntrenamientos({
         nombre: req.body.nombre,
-        huespedes: req.body.huespedes,
-        descripcion: req.body.descripcion,
-        imagen: req.body.imagen,
-        precio: req.body.precio,
-        oferta: req.body.oferta,
-        finOferta: req.body.finOferta,
-        camaExtra: req.body.camaExtra,
-        baja: req.body.baja,
-        cuna: req.body.cuna
+        categoria: req.body.categoria,
+        musculos: req.body.musculos,
+        duracion: req.body.duracion,
+        foto: req.body.foto,
+        likes: 0,
+        creador: req.body.creador,
+        motivoRechazo: ""
     })
 
     try {
@@ -158,19 +84,17 @@ router.patch("/update", async (req, res) => {
     try {
     const id = req.body._id;
 
-    const resultado = await ModelEntrenamiento.updateOne(
+    const resultado = await modelEntrenamientos.updateOne(
     { _id: id }, { $set: {
         nombre: req.body.nombre,
-        huespedes: req.body.huespedes,
-        descripcion: req.body.descripcion,
-        imagen: req.body.imagen,
-        precio: req.body.precio,
-        oferta: req.body.oferta,
-        finOferta: req.body.finOferta,
-        camaExtra: req.body.camaExtra,
-        baja: req.body.baja,
-        cuna: req.body.cuna
-    },});
+        categoria: req.body.categoria,
+        musculos: req.body.musculos,
+        duracion: req.body.duracion,
+        foto: req.body.foto,
+        likes: req.body.likes,
+        ejercicios: req.body.ejercicios,
+        aprobado: req.body.aprobado
+    }});
     
     if (resultado.modifiedCount === 0) {
         return res.status(404).json({ message: "Documento no encontrado" });
@@ -186,7 +110,7 @@ router.patch("/update", async (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
     const id = req.body._id;
-    const data = await ModelEntrenamiento.deleteOne({ _id: id })
+    const data = await modelEntrenamientos.deleteOne({ _id: id })
     if (data.deletedCount === 0) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
@@ -198,27 +122,23 @@ router.delete('/delete', async (req, res) => {
     }
     })
 
-    router.get('/getFilterAndroid', async (req, res) => {
-        try {
-            const condiciones = {};
-    
-            if (req.query.nombre) condiciones.nombre = req.query.nombre;
-            if (req.query.huespedes != -1) condiciones.huespedes = parseInt(req.query.huespedes, 10);
-            if (req.query.camaExtra) condiciones.camaExtra = req.query.camaExtra === 'true';
-            if (req.query.cuna) condiciones.cuna = req.query.cuna === 'true';
-    
-            console.log("Condiciones de búsqueda:", condiciones); // Para depuración
-    
-            const data = await ModelEntrenamiento.find(condiciones);
-            const filteredData = data.filter(element => element.baja !== true);
-            if (filteredData.length === 0) {
-                return res.status(404).json({ message: 'No se encontraron habitaciones' });
-            }
-    
-            res.status(200).json(filteredData);
-        } catch (error) {
-            res.status(500).json({ message: error.message });
+router.post('/peticion', async (req, res) => {
+    try {
+        const id = req.body._id;
+        const resultado = await modelEntrenamientos.updateOne(
+            { _id: id },
+            {$set: {
+                pedido: true
+                }
+            });
+        if (resultado.modifiedCount === 0) {
+            res.status(404).json({ message: "Entrenamiento no encontrado" })
         }
-    });
+        res.status(200).json({ message: "Petición del entrenamiento enviada" });
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message })
+    }
+})
 
 module.exports = router;

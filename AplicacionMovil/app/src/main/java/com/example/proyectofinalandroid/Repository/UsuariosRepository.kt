@@ -26,8 +26,8 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
         return response.isSuccessful
     }
 
-    suspend fun deleteUsuario(dni: String, token: String): Boolean {
-        val request = mapOf("dni" to dni)
+    suspend fun deleteUsuario(_id: String, token: String): Boolean {
+        val request = mapOf("_id" to _id)
         val response = api.deleteUsuario("Bearer $token", request)
         return response.isSuccessful
     }
