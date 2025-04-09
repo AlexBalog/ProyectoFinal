@@ -12,7 +12,7 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOneEjercicio', async (req, res) => {
+router.post('/getOne', async (req, res) => {
     try{
     const id = req.body._id;
     const ejerciciosDB = await modelEjercicios.findOne({ _id: id });
@@ -27,7 +27,7 @@ router.post('/getOneEjercicio', async (req, res) => {
     });
 
 
-router.get('/getFilterEjercicios', async (req, res) => {
+router.get('/getFilter', async (req, res) => {
     try {
         const condiciones = {};
 

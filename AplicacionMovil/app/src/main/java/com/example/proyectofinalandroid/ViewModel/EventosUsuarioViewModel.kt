@@ -10,13 +10,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.State
+import com.example.proyectofinalandroid.Model.Eventos
+import com.example.proyectofinalandroid.Model.EventosUsuario
+import com.example.proyectofinalandroid.Repository.EventosUsuarioRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepository) : ViewModel() {
+class EventosUsuarioViewModel @Inject constructor(private val repository: EventosUsuarioRepository) : ViewModel() {
     // Estados con StateFlow
     private val _usuario = MutableStateFlow<Usuarios?>(null)
     val usuario: StateFlow<Usuarios?> get() = _usuario
@@ -27,30 +30,11 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    fun login(email: String, contrasena: String) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                val loginResponse = repository.login(email, contrasena)
-                if (loginResponse != null) {
-                    val usuarioLogueado = repository.getOneByEmail(email, contrasena, loginResponse.token)
-                    if (usuarioLogueado != null) {
-                        usuarioLogueado.token = loginResponse.token // El token ya se guarda en el modelo
-                        _usuario.value = usuarioLogueado
-                        _errorMessage.value = null
-                    } else {
-                        _errorMessage.value = "Error al obtener datos del usuario"
-                    }
-                } else {
-                    _errorMessage.value = "No existe un usuario con ese correo electrónico"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Error en el login: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
+    private val _eventosusuario = MutableStateFlow<List<EventosUsuario>?>(emptyList())
+    val eventosusuario: StateFlow<List<EventosUsuario>?> get() = _eventosusuario
+
+    private val _eventosUsuario = MutableStateFlow<EventosUsuario?>(null)
+    val eventosUsuario: StateFlow<EventosUsuario?> get() = _eventosUsuario
 
     suspend fun update(updatedData: Map<String, String>): Boolean {
         return withContext(Dispatchers.IO) {
@@ -66,18 +50,47 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
         }
     }
 
-    fun registrar(newUser: Usuarios) {
+    fun new(eventosUsuario: EventosUsuario) {
         viewModelScope.launch {
             try {
-                val creado = repository.registerWithoutToken(newUser)
+                val creado = repository.new(eventosUsuario)
                 if (creado != null) {
-                    _usuario.value = creado
+                    _eventosUsuario.value = creado
                     _errorMessage.value = null
                 } else {
                     _errorMessage.value = "Error al crear el usuario"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
+            }
+        }
+    }
+
+    private val _eventosUsuarioSeleccionado = MutableStateFlow<EventosUsuario?>(null)
+    val eventosUsuarioSeleccionado: StateFlow<EventosUsuario?> get() = _eventosUsuarioSeleccionado
+
+    fun getOne(id: String) {
+        Log.d("Mensaje", "${id} cargado")
+        viewModelScope.launch {
+            _eventosUsuarioSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
+        }
+    }
+
+
+    fun getAll() {
+        viewModelScope.launch {
+            try {
+                val lista = repository.getAll(token = _usuario.value?.token.toString())
+                if (lista != null) {
+                    _eventosusuario.value = lista
+                    Log.d("Habitaciones", "Datos cargados: $lista")
+                } else {
+                    _eventosusuario.value = emptyList()
+                    Log.d("Habitaciones", "Respuesta nula o lista vacía.")
+                }
+            } catch (e: Exception) {
+                Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
+                _eventosusuario.value = emptyList()
             }
         }
     }

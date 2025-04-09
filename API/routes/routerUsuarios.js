@@ -34,7 +34,7 @@ router.post('/new', /*verifyToken,*/ async (req, res) => {
         nombre: req.body.nombre,
         apellido: req.body.apellido,
         sexo: req.body.sexo,
-        fecha_nac: req.body.fecha_nac,
+        fechaNacimiento: req.body.fechaNacimiento,
         foto: req.body.foto,
       });
   
@@ -70,8 +70,8 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.contrasena = contrasena;
     }
 
-    if (req.body.fecha_nac !== undefined) {
-      updateFields.fecha_nac = parseFecha(req.body.fecha_nac);
+    if (req.body.fechaNacimiento !== undefined) {
+      updateFields.fechaNacimiento = parseFecha(req.body.fechaNacimiento);
     }
 
     if (req.body.nombre !== undefined) {
@@ -102,20 +102,20 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.peso = req.body.peso;
     }
 
-    if (req.body.objetivo_peso !== undefined) {
-      updateFields.objetivo_peso = req.body.objetivo_peso;
+    if (req.body.objetivoPeso !== undefined) {
+      updateFields.objetivoPeso = req.body.objetivoPeso;
     }
 
-    if (req.body.objetivo_tiem !== undefined) {
-      updateFields.objetivo_tiem = req.body.objetivo_tiem;
+    if (req.body.objetivoTiempo !== undefined) {
+      updateFields.objetivoTiempo = req.body.objetivoTiempo;
     }
 
-    if (req.body.objetivo_cal !== undefined) {
-      updateFields.objetivo_cal = req.body.objetivo_cal;
+    if (req.body.objetivoCalorias !== undefined) {
+      updateFields.objetivoCalorias = req.body.objetivoCalorias;
     }
 
-    if (req.body.ent_fav !== undefined) {
-      updateFields.ent_fav = req.body.ent_fav;
+    if (req.body.entrenamientosFavoritos !== undefined) {
+      updateFields.entrenamientosFavoritos = req.body.entrenamientosFavoritos;
     }
 
     if (req.body.plan !== undefined) {
@@ -124,7 +124,11 @@ router.patch('/update', verifyToken, async (req, res) => {
 
     if (req.body.formulario !== undefined) {
       updateFields.formulario = req.body.formulario;
-    }  
+    }
+    
+    if (req.body.entrenamientosRealizados !== undefined) {
+      updateFields.entrenamientosRealizados = req.body.entrenamientosRealizados
+    }
 
     // Si no se envía ningún campo para actualizar, se informa
     if (Object.keys(updateFields).length === 0) {
@@ -189,7 +193,7 @@ router.post('/getFilterInter',verifyToken, async (req, res) => {
             condiciones.sexo = req.body.sexo;
         }
         if (req.body.fechaNacimiento && req.body.fechaNacimiento.trim() !== "") {
-            condiciones.fecha_nac = req.body.fechaNacimiento;
+            condiciones.fechaNacimiento = req.body.fechaNacimiento;
         }
         if (req.body.ciudad && req.body.ciudad.trim() !== "") {
             condiciones.ciudad = req.body.ciudad;

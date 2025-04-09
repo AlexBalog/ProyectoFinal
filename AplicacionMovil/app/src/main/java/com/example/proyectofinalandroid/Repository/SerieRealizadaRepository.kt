@@ -1,19 +1,15 @@
 package com.example.proyectofinalandroid.Repository
 
 import android.util.Log
-import com.example.proyectofinalandroid.Model.Ejercicios
-import com.example.proyectofinalandroid.Model.Entrenamientos
-import com.example.proyectofinalandroid.Model.Usuarios
-import com.example.proyectofinalandroid.Model.LoginResponse
-import com.example.proyectofinalandroid.Remote.EntrenamientosApi
-import com.example.proyectofinalandroid.Remote.UsuariosApi
+import com.example.proyectofinalandroid.Model.SerieRealizada
+import com.example.proyectofinalandroid.Remote.SerieRealizadaApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class EntrenamientosRepository @Inject constructor(private val api: EntrenamientosApi) {
+class SerieRealizadaRepository @Inject constructor(private val api: SerieRealizadaApi) {
 
-    suspend fun getAll(token: String): List<Entrenamientos>? {
+    suspend fun getAll(token: String): List<SerieRealizada>? {
         val response = api.getAll("Bearer $token")
         return if (response.isSuccessful) response.body() else null
     }
@@ -31,22 +27,13 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
         return response.isSuccessful
     }
 
-    suspend fun getOne(_id: String, token: String): Entrenamientos? {
+    suspend fun getOneEjercicio(_id: String, token: String): SerieRealizada? {
         val request = mapOf("_id" to _id)
         val response = api.getOne("Bearer $token", request)
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun peticion(entrenamientos: Entrenamientos): Entrenamientos? {
-        val response = api.peticion(entrenamientos)
-        if (!response.isSuccessful) {
-            val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
-            throw Exception(errorMsg)
-        }
-        return response.body()
-    }
-
-    suspend fun getFilter(token: String, filtros: Map<String, String>): List<Entrenamientos>? {
+    suspend fun getFilter(token: String, filtros: Map<String, String>): List<SerieRealizada>? {
         return withContext(Dispatchers.IO) {
             val response = api.getFilter(token, filtros)
             if (response.isSuccessful) {

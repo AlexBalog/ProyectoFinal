@@ -11,8 +11,8 @@ data class Usuarios(
     val email: String,
     @SerializedName("contrasena")
     val contrasena: String,
-    @SerializedName("fecha_nac")
-    val fecha_nac: Date = Date(),
+    @SerializedName("fechaNacimiento")
+    val fechaNacimiento: Date = Date(),
     @SerializedName("nombre")
     val nombre: String,
     @SerializedName("apellido")
@@ -27,18 +27,21 @@ data class Usuarios(
     val altura: Float = 0f,
     @SerializedName("peso")
     val peso: Float = 0f,
-    @SerializedName("objetivo_peso")
-    val objetivo_peso: Float = 0f,
-    @SerializedName("objetivo_tiem")
-    val objetivo_tiem: Float = 0f,
-    @SerializedName("objetivo_cal")
-    val objetivo_cal: Float = 0f,
-    @SerializedName("ent_fav")
-    val ent_fav: Array<String> = arrayOf(),
+    @SerializedName("objetivoPeso")
+    val objetivoPeso: Float = 0f,
+    @SerializedName("objetivoTiempo")
+    val objetivoTiempo: Float = 0f,
+    @SerializedName("objetivoCalorias")
+    val objetivoCalorias: Float = 0f,
+    @SerializedName("entrenamientosFavoritos")
+    val entrenamientosFavoritos: List<String>,
     @SerializedName("plan")
     val plan: String = "",
     @SerializedName("formulario")
     val formulario: Boolean = false,
+    @SerializedName("entrenamientosRealizados")
+    val entrenamientosRealizados: List<String>,
+
     var token: String? = null
 ) : Serializable {
     // Constructor secundario que solo requiere nombre, apellido, email y contraseña
@@ -46,7 +49,7 @@ data class Usuarios(
         _id = "",
         email = email,
         contrasena = contrasena,
-        fecha_nac = Date(),
+        fechaNacimiento = Date(),
         nombre = nombre,
         apellido = apellido,
         foto = "",
@@ -54,12 +57,13 @@ data class Usuarios(
         IMC = 0f,
         altura = 0f,
         peso = 0f,
-        objetivo_peso = 0f,
-        objetivo_tiem = 0f,
-        objetivo_cal = 0f,
-        ent_fav = arrayOf(),
+        objetivoPeso = 0f,
+        objetivoTiempo = 0f,
+        objetivoCalorias = 0f,
+        entrenamientosFavoritos = listOf(),
         plan = "",
-        formulario = false
+        formulario = false,
+        entrenamientosRealizados = listOf()
     )
 }
 

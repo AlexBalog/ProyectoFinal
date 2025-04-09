@@ -142,7 +142,7 @@ fun RegisterScreen(
             contrasena = password
         )
 
-        usuariosViewModel.registrarUsuario(newUser)
+        usuariosViewModel.registrar(newUser)
     }
 
     // Efectos de lanzamiento para manejo de usuario

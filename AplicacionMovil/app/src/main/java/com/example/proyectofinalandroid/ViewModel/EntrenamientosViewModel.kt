@@ -35,12 +35,17 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     private val _entrenamiento = MutableStateFlow<Entrenamientos?>(null)
     val entrenamiento: StateFlow<Entrenamientos?> get() = _entrenamiento
 
-    fun getAllEntrenamientos() {
+    fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+        getAll()
+    }
+
+    fun getAll() {
         viewModelScope.launch {
             try {
                 _usuario.value?.let { currentUser ->
                     val token = currentUser.token ?: return@launch
-                    val lista = repository.getAllEntrenamientos(token)
+                    val lista = repository.getAll(token)
                     if (lista != null) {
                         _entrenamientos.value = lista
                     } else {
@@ -53,11 +58,11 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
-    fun updateEntrenamiento(_id: String, updatedData: Map<String, String>) {
+    fun update(_id: String, updatedData: Map<String, String>) {
         viewModelScope.launch {
             _usuario.value?.let { currentUser ->
                 val token = currentUser.token ?: return@launch // Si no hay token, no hacemos nada
-                val success = repository.updateEntrenamiento(_id, updatedData, token)
+                val success = repository.update(_id, updatedData, token)
                 if (!success) {
                     _errorMessage.value = "Error al actualizar el usuario"
                 }
@@ -69,17 +74,17 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     private val _entrenamientoSeleccionado = MutableStateFlow<Entrenamientos?>(null)
     val entrenamientoSeleccionado: StateFlow<Entrenamientos?> get() = _entrenamientoSeleccionado
 
-    fun getOneEjercicio(id: String) {
-        Log.d("Mensaje", "${id} cargado")
+    fun getOne(id: String) {
+        Log.d("Mensaje", "${id} cargado ${usuario.value}")
         viewModelScope.launch {
-            _entrenamientoSeleccionado.value = repository.getOneEntrenamiento(id, _usuario.value?.token.toString())
+            _entrenamientoSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
         }
     }
 
-    fun getFilterEntrenamientos(filtros: Map<String, String>) {
+    fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
-                val lista = repository.getFilterEntrenamientos(_usuario.value?.token.toString(), filtros)
+                val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
                 if (lista != null) {
                     _entrenamientos.value = lista
                     Log.d("Habitaciones", "Datos filtrados cargados: $lista")
@@ -94,10 +99,10 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
-    fun peticionEntrenamiento(nuevoEntrenamiento: Entrenamientos) {
+    fun peticion(nuevoEntrenamiento: Entrenamientos) {
         viewModelScope.launch {
             try {
-                val creado = repository.peticionEntrenamiento(nuevoEntrenamiento)
+                val creado = repository.peticion(nuevoEntrenamiento)
                 if (creado != null) {
                     _entrenamiento.value = creado
                     _errorMessage.value = null

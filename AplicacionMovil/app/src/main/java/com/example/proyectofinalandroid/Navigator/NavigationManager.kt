@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.proyectofinalandroid.View.DetalleEntrenamientoScreen
 import com.example.proyectofinalandroid.View.FormularioScreen
 import com.example.proyectofinalandroid.View.HomeScreen
 import com.example.proyectofinalandroid.View.LoginScreen
@@ -25,6 +26,10 @@ fun Navegador() {
         navigation(startDestination = "formulario", route = "main") {
             composable("formulario") { FormularioScreen(navController) }
             composable("principal") { HomeScreen(navController) }
+            composable("detalleEntrenamiento/{id}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id")
+                DetalleEntrenamientoScreen(navController, id.toString())
+            }
         }
     }
 }

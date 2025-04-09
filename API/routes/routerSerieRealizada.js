@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const modelRealizarEjer = require('../models/modelsRealizarEjer'); 
+const modelSerieRealizada = require('../models/modelsSerieRealizada'); 
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
-    const data = await modelRealizarEjer.find();
+    const data = await modelSerieRealizada.find();
     res.status(200).json(data);
     }
     catch(error){
@@ -12,10 +12,10 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOneRealizarEjer', async (req, res) => {
+router.post('/getOne', async (req, res) => {
     try{
     const id = req.body._id;
-    const data = await modelRealizarEjer.findOne({ _id: id });
+    const data = await modelSerieRealizada.findOne({ _id: id });
     if (!data) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
@@ -27,11 +27,9 @@ router.post('/getOneRealizarEjer', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
-    const data = new modelRealizarEjer({
-        cod_ent: req.body.cod_ent,
-        cod_eje: req.body.cod_eje,
+    const data = new modelSerieRealizada({
+        numeroSerie: req.body.numeroSerie,
         repeticiones: req.body.repeticiones,
-        series: req.body.series,
         peso: req.body.peso
     })
 
@@ -48,12 +46,10 @@ router.patch("/update", async (req, res) => {
     try {
     const id = req.body._id;
 
-    const resultado = await modelRealizarEjer.updateOne(
+    const resultado = await modelSerieRealizada.updateOne(
     { _id: id }, { $set: {
-        cod_ent: req.body.cod_ent,
-        cod_eje: req.body.cod_eje,
+        numeroSerie: req.body.numeroSerie,
         repeticiones: req.body.repeticiones,
-        series: req.body.series,
         peso: req.body.peso
     },});
     
@@ -71,7 +67,7 @@ router.patch("/update", async (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
     const id = req.body._id;
-    const data = await modelRealizarEjer.deleteOne({ _id: id })
+    const data = await modelSerieRealizada.deleteOne({ _id: id })
     if (data.deletedCount === 0) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }

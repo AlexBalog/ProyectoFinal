@@ -9,7 +9,7 @@ const UsuariosSchema = mongoose.Schema({
         required: true,
         type: String
     },
-    fecha_nac: {
+    fechaNacimiento: {
         type: Date
     }, 
     nombre: {
@@ -35,16 +35,16 @@ const UsuariosSchema = mongoose.Schema({
     peso: {
         type: Number
     }, 
-    objetivo_peso: {
+    objetivoPeso: {
         type: Number
     }, 
-    objetivo_tiem: {
+    objetivoTiempo: {
         type: Number
     }, 
-    objetivo_cal: {
+    objetivoCalorias: {
         type: Number
     },
-    ent_fav: {
+    entrenamientosFavoritos: {
         type: [String],
         default: []
     },
@@ -55,6 +55,10 @@ const UsuariosSchema = mongoose.Schema({
     formulario: {
         type: Boolean,
         default: false
+    },
+    entrenamientosRealizados: {
+        type: [String],
+        default: []
     }
 }, {__v: false});
 

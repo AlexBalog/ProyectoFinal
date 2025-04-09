@@ -4,6 +4,7 @@ const modelEntrenamientos = require('../models/modelsEntrenamientos');
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
+        console.log("Entra")
     const data = await modelEntrenamientos.find();
     res.status(200).json(data);
     }
@@ -12,7 +13,7 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOneEntrenamiento', async (req, res) => {
+router.post('/getOne', async (req, res) => {
     try{
     const id = req.body._id;
     const entrenamientosDB = await modelEntrenamientos.findOne({ _id: id });
@@ -27,7 +28,7 @@ router.post('/getOneEntrenamiento', async (req, res) => {
     });
 
 
-router.get('/getFilterEntrenamientos', async (req, res) => {
+router.get('/getFilter', async (req, res) => {
     try {
         const condiciones = {};
 

@@ -16,11 +16,11 @@ data class Entrenamientos(
     @SerializedName("foto")
     val foto: String,
     @SerializedName("musculos")
-    val musculos: Array<String> = arrayOf(),
+    val musculos: List<String>,
     @SerializedName("likes")
     val likes: Number,
     @SerializedName("ejercicios")
-    val ejercicios: Array<String> = arrayOf(),
+    val ejercicios: List<String>,
     @SerializedName("creador")
     val creador: String,
     @SerializedName("aprobado")

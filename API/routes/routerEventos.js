@@ -12,7 +12,7 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOneEvento', async (req, res) => {
+router.post('/getOne', async (req, res) => {
     try{
     const id = req.body._id;
     const data = await modelEventos.findOne({ _id: id });
@@ -27,7 +27,7 @@ router.post('/getOneEvento', async (req, res) => {
     });
 
 
-router.get('/getFilterEventos', async (req, res) => {
+router.get('/getFilter', async (req, res) => {
     try {
         const condiciones = {};
 

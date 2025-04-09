@@ -2,13 +2,19 @@ package com.example.proyectofinalandroid.di
 
 import com.example.proyectofinalandroid.Remote.EjerciciosApi
 import com.example.proyectofinalandroid.Remote.EntrenamientosApi
-import com.example.proyectofinalandroid.Remote.EntrenarApi
-import com.example.proyectofinalandroid.Remote.RealizarEjerApi
+import com.example.proyectofinalandroid.Remote.EntrenamientoRealizadoApi
+import com.example.proyectofinalandroid.Remote.EventosApi
+import com.example.proyectofinalandroid.Remote.EventosUsuarioApi
+import com.example.proyectofinalandroid.Remote.EjercicioRealizadoApi
+import com.example.proyectofinalandroid.Remote.SerieRealizadaApi
 import com.example.proyectofinalandroid.Remote.UsuariosApi
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
 import com.example.proyectofinalandroid.Repository.EntrenamientosRepository
-import com.example.proyectofinalandroid.Repository.EntrenarRepository
-import com.example.proyectofinalandroid.Repository.RealizarEjerRepository
+import com.example.proyectofinalandroid.Repository.EntrenamientoRealizadoRepository
+import com.example.proyectofinalandroid.Repository.EventosRepository
+import com.example.proyectofinalandroid.Repository.EventosUsuarioRepository
+import com.example.proyectofinalandroid.Repository.EjercicioRealizadoRepository
+import com.example.proyectofinalandroid.Repository.SerieRealizadaRepository
 import com.example.proyectofinalandroid.Repository.UsuariosRepository
 import dagger.Module
 import dagger.Provides
@@ -60,14 +66,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideEntrenarApi(retrofit: Retrofit): EntrenarApi {
-        return retrofit.create(EntrenarApi::class.java)
+    fun provideEntrenarApi(retrofit: Retrofit): EntrenamientoRealizadoApi {
+        return retrofit.create(EntrenamientoRealizadoApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideEntrenarRepository(api: EntrenarApi): EntrenarRepository {
-        return EntrenarRepository(api)
+    fun provideEntrenarRepository(api: EntrenamientoRealizadoApi): EntrenamientoRealizadoRepository {
+        return EntrenamientoRealizadoRepository(api)
     }
 
     @Provides
@@ -84,13 +90,49 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRealizarEjerApi(retrofit: Retrofit): RealizarEjerApi {
-        return retrofit.create(RealizarEjerApi::class.java)
+    fun provideRealizarEjerApi(retrofit: Retrofit): EjercicioRealizadoApi {
+        return retrofit.create(EjercicioRealizadoApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideRealizarEjerRepository(api: RealizarEjerApi): RealizarEjerRepository {
-        return RealizarEjerRepository(api)
+    fun provideRealizarEjerRepository(api: EjercicioRealizadoApi): EjercicioRealizadoRepository {
+        return EjercicioRealizadoRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEventosApi(retrofit: Retrofit): EventosApi {
+        return retrofit.create(EventosApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEventosRepository(api: EventosApi): EventosRepository {
+        return EventosRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEventosUsuarioApi(retrofit: Retrofit): EventosUsuarioApi {
+        return retrofit.create(EventosUsuarioApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEventosUsuarioRepository(api: EventosUsuarioApi): EventosUsuarioRepository {
+        return EventosUsuarioRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSerieRealizadaApi(retrofit: Retrofit): SerieRealizadaApi {
+        return retrofit.create(SerieRealizadaApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSerieRealizadaRepository(api: SerieRealizadaApi): SerieRealizadaRepository {
+        return SerieRealizadaRepository(api)
     }
 }

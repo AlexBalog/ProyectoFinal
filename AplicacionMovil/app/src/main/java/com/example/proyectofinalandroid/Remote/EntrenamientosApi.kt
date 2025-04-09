@@ -1,10 +1,6 @@
 package com.example.proyectofinalandroid.Remote
 
-import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Entrenamientos
-import com.example.proyectofinalandroid.Model.Entrenar
-import com.example.proyectofinalandroid.Model.LoginResponse
-import com.example.proyectofinalandroid.Model.Usuarios
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -12,35 +8,35 @@ interface EntrenamientosApi {
 
     // Endpoint para obtener todos los entrenamientos (requiere token)
     @GET("entrenamientos/getAll")
-    suspend fun getAllEntrenamientos(@Header("Authorization") auth: String): Response<List<Entrenamientos>>
+    suspend fun getAll(@Header("Authorization") auth: String): Response<List<Entrenamientos>>
 
     // Endpoint para actualizar un entrenamiento (requiere token)
     @PATCH("entrenamientos/update")
-    suspend fun updateEntrenamiento(
+    suspend fun update(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
 
     // Endpoint para eliminar un entrenamiento (requiere token)
     @HTTP(method = "DELETE", path = "entrenamientos/delete", hasBody = true)
-    suspend fun deleteEntrenamiento(
+    suspend fun delete(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
 
     // Endpoint para obtener un entrenamiento (requiere token)
-    @POST("entrenamientos/getOneEntrenamiento")
-    suspend fun getOneEntrenamiento(
+    @POST("entrenamientos/getOne")
+    suspend fun getOne(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Entrenamientos>
 
     // Endpoint para hacer petición de entrenamiento nuevo
-    @POST("entrenamiento/peticion")
-    suspend fun peticionEntrenamiento(@Body entrenamientos: Entrenamientos): Response<Entrenamientos>
+    @POST("entrenamientos/peticion")
+    suspend fun peticion(@Body entrenamientos: Entrenamientos): Response<Entrenamientos>
 
-    @GET("entrenamientos/getFilterEntrenamientos")
-    suspend fun getFilterEntrenamientos(
+    @GET("entrenamientos/getFilter")
+    suspend fun getFilter(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<List<Entrenamientos>>

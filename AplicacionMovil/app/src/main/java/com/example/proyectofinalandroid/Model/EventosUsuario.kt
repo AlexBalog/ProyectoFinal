@@ -4,15 +4,15 @@ import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 import java.util.Date
 
-data class Entrenar(
+data class EventosUsuario(
     @SerializedName("_id")
     val _id: String,
-    @SerializedName("cod_usu")
-    val cos_usu: String,
-    @SerializedName("cod_ent")
-    val cod_ent: String,
-    @SerializedName("duracion")
-    val duracion: Number,
+    @SerializedName("evento")
+    val evento: String,
+    @SerializedName("usuario")
+    val usuario: String,
     @SerializedName("fecha")
-    val fecha: Date
+    val fecha: Date,
+    @SerializedName("hora")
+    val hora: String
 ) : Serializable

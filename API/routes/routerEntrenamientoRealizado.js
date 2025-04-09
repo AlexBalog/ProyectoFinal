@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const modelEntrenar = require('../models/modelsEntrenar'); 
+const modelEntrenamientoRealizado = require('../models/modelsEntrenamientoRealizado'); 
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
-    const data = await modelEntrenar.find();
+    const data = await modelEntrenamientoRealizado.find();
     res.status(200).json(data);
     }
     catch(error){
@@ -12,10 +12,10 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOneEntrenar', async (req, res) => {
+router.post('/getOne', async (req, res) => {
     try{
     const id = req.body._id;
-    const data = await modelEntrenar.findOne({ _id: id });
+    const data = await modelEntrenamientoRealizado.findOne({ _id: id });
     if (!data) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
@@ -27,7 +27,7 @@ router.post('/getOneEntrenar', async (req, res) => {
     });
 
 
-router.get('/getFilterEntrenar', async (req, res) => {
+router.get('/getFilter', async (req, res) => {
     try {
         const condiciones = {};
 
@@ -41,11 +41,11 @@ router.get('/getFilterEntrenar', async (req, res) => {
             if (req.body.fechaMax !== undefined) condiciones.fecha.$lte = req.body.fechaMax;
         }
         
-        if (req.body.cod_usu !== null) {
-            condiciones.cod_usu = req.body.cod_usu
+        if (req.body.usuario !== null) {
+            condiciones.usuario = req.body.usuario
         }
         
-        const data = await modelEntrenar.find(condiciones);
+        const data = await modelEntrenamientoRealizado.find(condiciones);
         
         if (data.length === 0) {
             return res.status(404).json({ message: 'No hay entrenos hechos con tales características' });
@@ -58,11 +58,12 @@ router.get('/getFilterEntrenar', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
-    const data = new modelEntrenar({
+    const data = new modelEntrenamientoRealizado({
+        usuario: req.body.usuario,
+        entrenamiento: req.body.entrenamiento,
         duracion: req.body.duracion,
         fecha: req.body.fecha,
-        cod_usu: req.body.cod_usu,
-        cod_ent: req.body.cod_ent
+        ejerciciosRealizados: req.body.ejerciciosRealizados
     })
 
     try {
@@ -78,12 +79,13 @@ router.patch("/update", async (req, res) => {
     try {
     const id = req.body._id;
 
-    const resultado = await modelEntrenar.updateOne(
+    const resultado = await modelEntrenamientoRealizado.updateOne(
     { _id: id }, { $set: {
+        usuario: req.body.usuario,
+        entrenamiento: req.body.entrenamiento,
         duracion: req.body.duracion,
         fecha: req.body.fecha,
-        cod_usu: req.body.cod_usu,
-        cod_ent: req.body.cod_ent
+        ejerciciosRealizados: req.body.ejerciciosRealizados
     }});
     
     if (resultado.modifiedCount === 0) {
@@ -100,7 +102,7 @@ router.patch("/update", async (req, res) => {
 router.delete('/delete', async (req, res) => {
     try {
     const id = req.body._id;
-    const data = await modelEntrenar.deleteOne({ _id: id })
+    const data = await modelEntrenamientoRealizado.deleteOne({ _id: id })
     if (data.deletedCount === 0) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }

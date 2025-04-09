@@ -14,21 +14,21 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun getAllUsuarios(token: String): List<Usuarios>? {
-        val response = api.getAllUsuarios("Bearer $token")
+    suspend fun getAll(token: String): List<Usuarios>? {
+        val response = api.getAll("Bearer $token")
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun updateUsuario(_id: String, updatedData: Map<String, String>, token: String): Boolean {
+    suspend fun update(_id: String, updatedData: Map<String, String>, token: String): Boolean {
         val request = mutableMapOf<String, String>("_id" to _id)
         request.putAll(updatedData)
-        val response = api.updateUsuario("Bearer $token", request)
+        val response = api.update("Bearer $token", request)
         return response.isSuccessful
     }
 
-    suspend fun deleteUsuario(_id: String, token: String): Boolean {
+    suspend fun delete(_id: String, token: String): Boolean {
         val request = mapOf("_id" to _id)
-        val response = api.deleteUsuario("Bearer $token", request)
+        val response = api.delete("Bearer $token", request)
         return response.isSuccessful
     }
 

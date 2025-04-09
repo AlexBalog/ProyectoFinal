@@ -1,26 +1,19 @@
 package com.example.proyectofinalandroid.ViewModel
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectofinalandroid.Model.Usuarios
-import com.example.proyectofinalandroid.Repository.UsuariosRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import androidx.compose.runtime.State
-import com.example.proyectofinalandroid.Model.Ejercicios
-import com.example.proyectofinalandroid.Model.Entrenar
-import com.example.proyectofinalandroid.Repository.EjerciciosRepository
-import com.example.proyectofinalandroid.Repository.EntrenarRepository
-import kotlinx.coroutines.Dispatchers
+import com.example.proyectofinalandroid.Model.SerieRealizada
+import com.example.proyectofinalandroid.Repository.SerieRealizadaRepository
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class EntrenarViewModel @Inject constructor(private val repository: EntrenarRepository) : ViewModel() {
+class SerieRealizadaViewModel @Inject constructor(private val repository: SerieRealizadaRepository) : ViewModel() {
     // Estados con StateFlow
     private val _usuario = MutableStateFlow<Usuarios?>(null)
     val usuario: StateFlow<Usuarios?> get() = _usuario
@@ -31,51 +24,51 @@ class EntrenarViewModel @Inject constructor(private val repository: EntrenarRepo
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private val _entrenar = MutableStateFlow<List<Entrenar>?>(emptyList())
-    val entrenar: StateFlow<List<Entrenar>?> get() = _entrenar
+    private val _seriesRealizadas = MutableStateFlow<List<SerieRealizada>?>(emptyList())
+    val seriesRealizadas: StateFlow<List<SerieRealizada>?> get() = _seriesRealizadas
 
-    private fun getAllEntrenar() {
+    fun getAll() {
         viewModelScope.launch {
             try {
-                val lista = repository.getAllEntrenar(token = _usuario.value?.token.toString())
+                val lista = repository.getAll(token = _usuario.value?.token.toString())
                 if (lista != null) {
-                    _entrenar.value = lista
+                    _seriesRealizadas.value = lista
                     Log.d("Habitaciones", "Datos cargados: $lista")
                 } else {
-                    _entrenar.value = emptyList()
+                    _seriesRealizadas.value = emptyList()
                     Log.d("Habitaciones", "Respuesta nula o lista vacía.")
                 }
             } catch (e: Exception) {
                 Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
-                _entrenar.value = emptyList()
+                _seriesRealizadas.value = emptyList()
             }
         }
     }
 
-    private val _entrenarSeleccionado = MutableStateFlow<Entrenar?>(null)
-    val entrenarSeleccionado: StateFlow<Entrenar?> get() = _entrenarSeleccionado
+    private val _seriesRealizadaseleccionado = MutableStateFlow<SerieRealizada?>(null)
+    val serieRealizadaSeleccionada: StateFlow<SerieRealizada?> get() = _seriesRealizadaseleccionado
 
-    fun getOneEntrenar(id: String) {
+    fun getOne(id: String) {
         Log.d("Mensaje", "${id} cargado")
         viewModelScope.launch {
-            _entrenarSeleccionado.value = repository.getOneEntrenar(id, _usuario.value?.token.toString())
+            _seriesRealizadaseleccionado.value = repository.getOneEjercicio(id, _usuario.value?.token.toString())
         }
     }
 
-    fun getFilterEntrenar(filtros: Map<String, String>) {
+    fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
-                val lista = repository.getFilterEntrenar(_usuario.value?.token.toString(), filtros)
+                val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
                 if (lista != null) {
-                    _entrenar.value = lista
+                    _seriesRealizadas.value = lista
                     Log.d("Habitaciones", "Datos filtrados cargados: $lista")
                 } else {
-                    _entrenar.value = emptyList()
+                    _seriesRealizadas.value = emptyList()
                     Log.d("Habitaciones", "No se encontraron habitaciones con esos filtros.")
                 }
             } catch (e: Exception) {
                 Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
-                _entrenar.value = emptyList()
+                _seriesRealizadas.value = emptyList()
             }
         }
     }

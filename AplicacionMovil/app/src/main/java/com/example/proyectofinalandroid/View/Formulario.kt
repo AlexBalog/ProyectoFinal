@@ -220,7 +220,7 @@ fun FormularioScreen(navController: NavController) {
                 datos["objetivo_tiempo"] = objetivoTiempo
                 datos["formulario"] = true.toString()
                 val exito = withContext(Dispatchers.Main) {
-                    usuariosViewModel.updateUsuario(datos)
+                    usuariosViewModel.update(datos)
                 }
                 if(exito) {
                     navController.navigate("principal") {

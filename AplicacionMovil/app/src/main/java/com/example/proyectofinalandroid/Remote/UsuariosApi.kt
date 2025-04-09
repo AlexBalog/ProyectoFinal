@@ -13,18 +13,18 @@ interface UsuariosApi {
 
     // Endpoint para obtener todos los usuarios (requiere token)
     @GET("usuarios/getAll")
-    suspend fun getAllUsuarios(@Header("Authorization") auth: String): Response<List<Usuarios>>
+    suspend fun getAll(@Header("Authorization") auth: String): Response<List<Usuarios>>
 
     // Endpoint para actualizar usuario (requiere token)
     @PATCH("usuarios/update")
-    suspend fun updateUsuario(
+    suspend fun update(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
 
     // Endpoint para eliminar usuario (requiere token)
     @HTTP(method = "DELETE", path = "user/delete", hasBody = true)
-    suspend fun deleteUsuario(
+    suspend fun delete(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>

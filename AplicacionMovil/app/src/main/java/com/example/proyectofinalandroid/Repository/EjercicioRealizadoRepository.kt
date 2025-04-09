@@ -1,15 +1,12 @@
 package com.example.proyectofinalandroid.Repository
 
-import android.util.Log
-import com.example.proyectofinalandroid.Model.Ejercicios
-import com.example.proyectofinalandroid.Remote.EjerciciosApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.proyectofinalandroid.Model.EjercicioRealizado
+import com.example.proyectofinalandroid.Remote.EjercicioRealizadoApi
 import javax.inject.Inject
 
-class EjerciciosRepository @Inject constructor(private val api: EjerciciosApi) {
+class EjercicioRealizadoRepository @Inject constructor(private val api: EjercicioRealizadoApi) {
 
-    suspend fun getAll(token: String): List<Ejercicios>? {
+    suspend fun getAll(token: String): List<EjercicioRealizado>? {
         val response = api.getAll("Bearer $token")
         return if (response.isSuccessful) response.body() else null
     }
@@ -27,20 +24,18 @@ class EjerciciosRepository @Inject constructor(private val api: EjerciciosApi) {
         return response.isSuccessful
     }
 
-    suspend fun getOne(_id: String, token: String): Ejercicios? {
+    suspend fun getOne(_id: String, token: String): EjercicioRealizado? {
         val request = mapOf("_id" to _id)
         val response = api.getOne("Bearer $token", request)
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun getFilter(token: String, filtros: Map<String, String>): List<Ejercicios>? {
-        return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
-            if (response.isSuccessful) {
-                response.body()
-            } else {
-                null
-            }
+    suspend fun new(ejercicioRealizado: EjercicioRealizado): EjercicioRealizado? {
+        val response = api.new(ejercicioRealizado)
+        if (!response.isSuccessful) {
+            val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+            throw Exception(errorMsg)
         }
+        return response.body()
     }
 }

@@ -50,8 +50,10 @@ import java.time.format.TextStyle
 import java.util.*
 import kotlinx.coroutines.delay
 import android.util.Base64
+import android.util.Log
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.navigation.compose.rememberNavController
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +64,8 @@ fun HomeScreen(navController: NavController, ) {
         navController.getBackStackEntry("root")
     }
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+
 
     // Estados
     var isAnimatedIn by remember { mutableStateOf(false) }
@@ -75,6 +79,14 @@ fun HomeScreen(navController: NavController, ) {
     val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState() // Puede fallar
     val programasDestacados = remember { entrenamientosViewModel.obtenerProgramasDestacados() }
     val eventosProgramados = remember { entrenamientosViewModel.obtenerEventosFecha(selectedDate) }
+
+    val usuario by usuariosViewModel.usuario.collectAsState()
+
+    LaunchedEffect(usuario) {
+        usuario?.let {
+            entrenamientosViewModel.setUsuario(usuario!!)
+        }
+    }
 
     // Animación de entrada
     LaunchedEffect(Unit) {
@@ -460,9 +472,10 @@ fun MisEntrenamientosSection(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(entrenamientos) { entrenamiento ->
+                Log.d("FalloPrincipal1", "$entrenamiento")
                 EntrenamientoItem(
                     entrenamiento = entrenamiento,
-                    onClick = { /* Navegar a detalles de la sesión */ }
+                    onClick = { navController.navigate("detalleEntrenamiento/${entrenamiento._id}") }
                 )
             }
         }
@@ -472,7 +485,7 @@ fun MisEntrenamientosSection(
 @Composable
 fun EntrenamientoItem(
     entrenamiento: Entrenamientos,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier

@@ -25,22 +25,24 @@ database.once('connected', () => {
 // Rutas
 const routerUsuarios = require('./routes/routerUsuarios');   // Rutas de usuarios
 const routerEjercicios = require('./routes/routerEjercicios');   // Rutas de ejercicios
-const routerEntrenar = require('./routes/routerEntrenar');   // Rutas de entrenar
+const routerEntrenamientoRealizado = require('./routes/routerEntrenamientoRealizado');   // Rutas de entrenar
 const routerEntrenamientos = require('./routes/routerEntrenamientos');   // Rutas de entrenamientos
-const routerRealizarEjer = require('./routes/routerRealizarEjer');   // Rutas de realizarejer
+const routerEjercicioRealizado = require('./routes/routerEjercicioRealizado');   // Rutas de ejercicio realizado
 const authRouter = require('./routes/auth');   // Rutas de autenticación
 const routerEventos = require('./routes/routerEventos');   // Rutas de eventos
 const routerEventosUsuario = require('./routes/routerEventosUsuario');   // Rutas de eventos del usuario
+const routerSerieRealizada = require('./routes/routerSerieRealizada');   // Rutas de serie realizada
 
 // Empleos
 app.use('/usuarios', routerUsuarios);
 app.use('/ejercicios', routerEjercicios);
-app.use('/entrenar', routerEntrenar);
+app.use('/entrenamientoRealizado', routerEntrenamientoRealizado);
 app.use('/entrenamientos', routerEntrenamientos);
-app.use('/realizarejer', routerRealizarEjer);
+app.use('/ejercicioRealizado', routerEjercicioRealizado);
 app.use('/auth', authRouter);
 app.use('/eventos', routerEventos);
-app.use('/eventosusuario', routerEventosUsuario);
+app.use('/eventosUsuario', routerEventosUsuario);
+app.use('/serieRealizada', routerSerieRealizada);
 
 // Define el puerto y arranca el servidor
 const PORT = process.env.PORT || 3000;

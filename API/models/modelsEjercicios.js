@@ -5,7 +5,7 @@ const EjerciciosSchema = new mongoose.Schema({
         required: true, 
         type: String
     },
-    musculos: {
+    musculo: {
         type: String
     },
     descripcion: {
