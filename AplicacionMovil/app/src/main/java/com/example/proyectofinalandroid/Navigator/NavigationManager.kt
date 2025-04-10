@@ -10,6 +10,7 @@ import com.example.proyectofinalandroid.View.FormularioScreen
 import com.example.proyectofinalandroid.View.HomeScreen
 import com.example.proyectofinalandroid.View.LoginScreen
 import com.example.proyectofinalandroid.View.RegisterScreen
+import com.example.proyectofinalandroid.View.DetalleEjercicioScreen
 
 @Composable
 fun Navegador() {
@@ -29,6 +30,10 @@ fun Navegador() {
             composable("detalleEntrenamiento/{id}") { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id")
                 DetalleEntrenamientoScreen(navController, id.toString())
+            }
+            composable("detalleEjercicio/{id}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id")
+                DetalleEjercicioScreen(navController, id.toString())
             }
         }
     }

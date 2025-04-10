@@ -12,6 +12,8 @@ data class Ejercicios(
     val musculo: String,
     @SerializedName("descripcion")
     val descripcion: String,
+    @SerializedName("consejos")
+    val consejos: List<String>,
     @SerializedName("foto")
     val foto: String
 ) : Serializable

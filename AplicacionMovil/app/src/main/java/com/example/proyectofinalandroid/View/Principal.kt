@@ -1,8 +1,7 @@
 package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.text.Layout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -49,11 +48,10 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 import kotlinx.coroutines.delay
-import android.util.Base64
 import android.util.Log
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.navigation.compose.rememberNavController
+import com.example.proyectofinalandroid.utils.base64ToBitmap
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,11 +64,18 @@ fun HomeScreen(navController: NavController, ) {
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
 
+    val usuario by usuariosViewModel.usuario.collectAsState()
+
+    LaunchedEffect(usuario) {
+        usuario?.let {
+            entrenamientosViewModel.setUsuario(usuario!!)
+        }
+    }
 
     // Estados
     var isAnimatedIn by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    val currentMonth = remember { YearMonth.now() }
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     val firstDayOfMonth = remember { currentMonth.atDay(1) }
     val lastDayOfMonth = remember { currentMonth.atEndOfMonth() }
     val scrollState = rememberScrollState()
@@ -80,13 +85,6 @@ fun HomeScreen(navController: NavController, ) {
     val programasDestacados = remember { entrenamientosViewModel.obtenerProgramasDestacados() }
     val eventosProgramados = remember { entrenamientosViewModel.obtenerEventosFecha(selectedDate) }
 
-    val usuario by usuariosViewModel.usuario.collectAsState()
-
-    LaunchedEffect(usuario) {
-        usuario?.let {
-            entrenamientosViewModel.setUsuario(usuario!!)
-        }
-    }
 
     // Animación de entrada
     LaunchedEffect(Unit) {
@@ -108,9 +106,16 @@ fun HomeScreen(navController: NavController, ) {
                 title = {
                     Text(
                         text = "FitSphere",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp
+                        style = androidx.compose.ui.text.TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFFAB47BC),
+                                    Color(0xFF7B1FA2)
+                                )
+                            )
+                        )
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -140,7 +145,8 @@ fun HomeScreen(navController: NavController, ) {
                     CalendarSection(
                         currentMonth = currentMonth,
                         selectedDate = selectedDate,
-                        onDateSelected = { selectedDate = it }
+                        onDateSelected = { selectedDate = it },
+                        onMonthChanged = { newMonth -> currentMonth = newMonth }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -164,7 +170,7 @@ fun HomeScreen(navController: NavController, ) {
                     }
 
                     // Programas Destacados
-                    ProgramasDestacadosSection(
+                    EntrenamientosDestacadosSection(
                         programas = programasDestacados,
                         navController = navController
                     )
@@ -193,8 +199,10 @@ fun HomeScreen(navController: NavController, ) {
 fun CalendarSection(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
+    onMonthChanged: (YearMonth) -> Unit
 ) {
+    Log.d("Investigar", "$currentMonth")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -218,15 +226,17 @@ fun CalendarSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val texto = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES")))
+                val textoCapitalizado = texto.replaceFirstChar { it.uppercase() }
                 Text(
-                    text = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "ES"))),
+                    text = textoCapitalizado,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
 
                 Row {
-                    IconButton(onClick = { /* Mes anterior */ }) {
+                    IconButton(onClick = { onMonthChanged(currentMonth.minusMonths(1)) }) {
                         Icon(
                             imageVector = Icons.Default.ChevronLeft,
                             contentDescription = "Mes anterior",
@@ -234,7 +244,7 @@ fun CalendarSection(
                         )
                     }
 
-                    IconButton(onClick = { /* Mes siguiente */ }) {
+                    IconButton(onClick = { onMonthChanged(currentMonth.plusMonths(1)) }) {
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = "Mes siguiente",
@@ -266,56 +276,65 @@ fun CalendarSection(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Días del mes
-            val firstDayOfWeek = DayOfWeek.MONDAY
-            val daysInMonth = currentMonth.lengthOfMonth()
-            val firstDayOfMonthValue = currentMonth.atDay(1).dayOfWeek.value
-            val offset = (firstDayOfMonthValue - firstDayOfWeek.value + 7) % 7
+            DiasDelMes(currentMonth, selectedDate, onDateSelected)
+        }
+    }
+}
 
-            val totalDaysToShow = daysInMonth + offset
-            val rowsNeeded = (totalDaysToShow + 6) / 7
+@Composable
+fun DiasDelMes(
+    currentMonth: YearMonth,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val firstDayOfWeek = DayOfWeek.MONDAY
+    val daysInMonth = currentMonth.lengthOfMonth()
+    val firstDayOfMonthValue = currentMonth.atDay(1).dayOfWeek.value
+    val offset = (firstDayOfMonthValue - firstDayOfWeek.value + 7) % 7
 
-            for (row in 0 until rowsNeeded) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    for (column in 0 until 7) {
-                        val day = row * 7 + column - offset + 1
+    val totalDaysToShow = daysInMonth + offset
+    val rowsNeeded = (totalDaysToShow + 6) / 7
+
+    for (row in 0 until rowsNeeded) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            for (column in 0 until 7) {
+                val day = row * 7 + column - offset + 1
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .padding(2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (day in 1..daysInMonth) {
+                        val date = currentMonth.atDay(day)
+                        val isSelected = date == selectedDate
+                        val isToday = date == LocalDate.now()
+
                         Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .aspectRatio(1f)
-                                .padding(2.dp),
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    when {
+                                        isSelected -> Color(0xFFAB47BC)
+                                        isToday -> Color(0xFF7B1FA2).copy(alpha = 0.3f)
+                                        else -> Color.Transparent
+                                    }
+                                )
+                                .clickable { onDateSelected(date) },
                             contentAlignment = Alignment.Center
                         ) {
-                            if (day in 1..daysInMonth) {
-                                val date = currentMonth.atDay(day)
-                                val isSelected = date == selectedDate
-                                val isToday = date == LocalDate.now()
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            when {
-                                                isSelected -> Color(0xFFAB47BC)
-                                                isToday -> Color(0xFF7B1FA2).copy(alpha = 0.3f)
-                                                else -> Color.Transparent
-                                            }
-                                        )
-                                        .clickable { onDateSelected(date) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = day.toString(),
-                                        fontSize = 14.sp,
-                                        color = when {
-                                            isSelected -> Color.White
-                                            isToday -> Color(0xFFAB47BC)
-                                            else -> Color.White
-                                        },
-                                        fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                }
-                            }
+                            Text(
+                                text = day.toString(),
+                                fontSize = 14.sp,
+                                color = when {
+                                    isSelected -> Color.White
+                                    isToday -> Color(0xFFAB47BC)
+                                    else -> Color.White
+                                },
+                                fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
                         }
                     }
                 }
@@ -340,11 +359,33 @@ fun ProgrammedEventsSection(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "Programado para ${date.format(DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "ES")))}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Programado para ${date.format(DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "ES")))}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                IconButton(
+                    onClick = {}
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar evento",
+                        tint = Color(0xFFAB47BC),
+                        modifier = Modifier.padding(0.dp)
+                    )
+                }
+            }
+            Divider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color(0xFFAB47BC).copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -594,7 +635,7 @@ fun EntrenamientoItem(
 }
 
 @Composable
-fun ProgramasDestacadosSection(
+fun EntrenamientosDestacadosSection(
     programas: List<ProgramaDestacado>,
     navController: NavController
 ) {
@@ -986,14 +1027,4 @@ fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado
             imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
         )
     )
-}
-
-fun base64ToBitmap(base64String: String): Bitmap? {
-    return try {
-        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
-        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
 }

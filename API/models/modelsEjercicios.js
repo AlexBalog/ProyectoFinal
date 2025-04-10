@@ -6,14 +6,20 @@ const EjerciciosSchema = new mongoose.Schema({
         type: String
     },
     musculo: {
+        required: true,
         type: String
     },
     descripcion: {
+        required: true,
         type: String
     },
     foto: {
         required: true,
         type: String
+    },
+    consejos: {
+        required: true,
+        type: [String]
     }
 }, {__v: false});
 

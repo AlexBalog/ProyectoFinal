@@ -1,7 +1,6 @@
 package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -10,9 +9,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -21,15 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +42,7 @@ import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.EjerciciosViewModel
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
+import com.example.proyectofinalandroid.utils.base64ToBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -61,6 +61,7 @@ fun DetalleEntrenamientoScreen(
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
 
     val usuario by usuariosViewModel.usuario.collectAsState()
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(usuario) {
         usuario?.let {
@@ -70,7 +71,6 @@ fun DetalleEntrenamientoScreen(
     }
 
     var isAnimatedIn by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     // Mapa para almacenar los ejercicios cargados
@@ -82,7 +82,6 @@ fun DetalleEntrenamientoScreen(
 
     // Cargar el entrenamiento por ID cuando se inicia la pantalla
     LaunchedEffect(entrenamientoId) {
-        Log.d("FalloDetalle", entrenamientoId)
         entrenamientosViewModel.getOne(entrenamientoId)
         delay(100)
         isAnimatedIn = true
@@ -120,93 +119,162 @@ fun DetalleEntrenamientoScreen(
                 animationSpec = tween(600)
             )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .systemBarsPadding(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Contenido principal
                 if (isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = Color(0xFFAB47BC),
-                                modifier = Modifier.size(50.dp)
-                            )
-                        }
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFFAB47BC),
+                            modifier = Modifier.size(50.dp)
+                        )
                     }
                 } else {
                     entrenamientoSeleccionado?.let { entrenamiento ->
-                        // Cabecera con imagen y detalles principales
-                        item {
-                            HeaderEntrenamiento(entrenamiento, navController)
-                        }
-
-                        // Detalles del entrenamiento
-                        item {
-                            DetallesEntrenamiento(entrenamiento)
-                        }
-
-                        // Título para la sección de ejercicios
-                        item {
-                            Text(
-                                text = "Ejercicios",
-                                style = TextStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 24.sp,
-                                    color = Color.White,
-                                    letterSpacing = 1.sp
-                                ),
+                        // Estructura principal
+                        Column(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            // Barra superior con degradado
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 16.dp)
-                            )
-                        }
-
-                        // Lista de ejercicios
-                        items(entrenamiento.ejercicios) { ejercicioId ->
-                            val ejercicio = ejerciciosCargados[ejercicioId]
-                            if (ejercicio != null) {
-                                TarjetaEjercicio(ejercicio, navController)
-                            } else {
-                                TarjetaEjercicioCargando(ejercicioId)
-                            }
-                        }
-
-                        // Botón para comenzar el entrenamiento
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(
-                                onClick = {
-                                    navController.navigate("comenzar_entrenamiento/${entrenamiento._id}")
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF7B1FA2)
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                                    .height(105.dp)
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color(0xFF0D0D0D),
+                                                Color(0xFF0D0D0D).copy(alpha = 0.0f)
+                                            )
+                                        )
+                                    )
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Comenzar",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                // Título de la aplicación en la barra superior
                                 Text(
-                                    text = "COMENZAR ENTRENAMIENTO",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    text = "FitSphere",
+                                    style = TextStyle(
+                                        fontSize = 26.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        shadow = Shadow(
+                                            color = Color.Black.copy(alpha = 0.7f),
+                                            blurRadius = 4f,
+                                            offset = Offset(2f, 2f)
+                                        ),
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(
+                                                Color(0xFFAB47BC),
+                                                Color(0xFF7B1FA2)
+                                            )
+                                        )
+                                    ),
+                                    modifier = Modifier
+                                        .padding(top = 33.dp)
+                                        .align(Alignment.TopCenter)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(32.dp))
+
+                            // Contenido desplazable (incluyendo imagen y tarjeta)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f)
+                            ) {
+                                // Imagen de fondo (header) - Ahora comienza justo debajo de la barra superior
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(280.dp)
+                                        .offset(y = (-30).dp) // Para que se una con la barra superior
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(
+                                            ImageRequest.Builder(LocalContext.current)
+                                                .data(base64ToBitmap(entrenamiento.foto))
+                                                .error(R.drawable.logo)
+                                                .build()
+                                        ),
+                                        contentDescription = "Imagen del entrenamiento",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+
+                                    // Gradiente para mejorar legibilidad
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                    ) {
+                                        // Fondo o contenido principal si lo necesitas
+                                        // Por ejemplo una imagen de fondo aquí
+
+                                        // Degradado de arriba hacia abajo
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        colorStops = arrayOf(
+                                                            0.0f to Color(0xFF0D0D0D),               // Sólido arriba
+                                                            0.1f to Color(0xFF0D0D0D).copy(alpha = 0.6f),
+                                                            0.2f to Color(0xFF0D0D0D).copy(alpha = 0.0f) // Transparente en el medio
+                                                        )
+                                                    )
+                                                )
+                                        )
+
+                                        // Degradado de abajo hacia arriba
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        colorStops = arrayOf(
+                                                            0.0f to Color(0xFF0D0D0D).copy(alpha = 0.0f), // Transparente abajo
+                                                            0.5f to Color(0xFF0D0D0D).copy(alpha = 0.6f),
+                                                            1.0f to Color(0xFF0D0D0D)                     // Sólido arriba
+                                                        )
+                                                    )
+                                                )
+                                        )
+                                    }
+                                }
+
+                                // Contenido desplazable
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(scrollState)
+                                ) {
+                                    // Espacio para la imagen de fondo
+                                    Spacer(modifier = Modifier.height(230.dp))
+
+                                    // Tarjeta con la información del entrenamiento
+                                    EntrenamientoInfoCard(entrenamiento, ejerciciosCargados, navController)
+                                }
+                            }
+                        }
+
+                        // Botón de regreso
+                        IconButton(
+                            onClick = { navController.popBackStack() },
+                            modifier = Modifier
+                                .padding(16.dp, 25.dp, 16.dp, 16.dp)
+                                .size(48.dp)
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = CircleShape
+                                )
+                                .background(
+                                    color = Color(0xFF1A1A1A).copy(alpha = 0.8f),
+                                    shape = CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = Color.White
+                            )
                         }
                     }
                 }
@@ -216,128 +284,175 @@ fun DetalleEntrenamientoScreen(
 }
 
 @Composable
-fun HeaderEntrenamiento(entrenamiento: Entrenamientos, navController: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp)
-    ) {
-        // Imagen de fondo
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Box {
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current)
-                            .data(data = entrenamiento.foto)
-                            .error(R.drawable.logo)
-                            .build()
-                    ),
-                    contentDescription = "Imagen de entrenamiento",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // Gradiente oscuro para mejor legibilidad del texto
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color(0xFF0D0D0D).copy(alpha = 0.7f),
-                                    Color(0xFF0D0D0D)
-                                )
-                            )
-                        )
-                )
-
-                // Botón de volver
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(8.dp)
-                        .size(48.dp)
-                        .background(
-                            color = Color(0xFF1A1A1A).copy(alpha = 0.6f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
-                    )
-                }
-
-                // Título del entrenamiento
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = entrenamiento.nombre,
-                        style = TextStyle(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp,
-                            color = Color.White,
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.7f),
-                                blurRadius = 6f
-                            )
-                        )
-                    )
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = "Categoría",
-                            tint = Color(0xFFAB47BC),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = entrenamiento.categoria,
-                            style = TextStyle(
-                                fontSize = 16.sp,
-                                color = Color.LightGray
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DetallesEntrenamiento(entrenamiento: Entrenamientos) {
+fun EntrenamientoInfoCard(
+    entrenamiento: Entrenamientos,
+    ejerciciosCargados: Map<String, Ejercicios>,
+    navController: NavController
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp)
+            .padding(horizontal = 16.dp)
+            .offset(y = (-40).dp)
             .shadow(
                 elevation = 8.dp,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 ambientColor = Color(0xFF7B1FA2),
                 spotColor = Color(0xFF7B1FA2)
             ),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
+        ) {
+            // Nombre del entrenamiento
+            Text(
+                text = entrenamiento.nombre,
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 26.sp,
+                    color = Color.White
+                ),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Tarjeta de categoría
+            CategoryCard(entrenamiento.categoria)
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Detalles del entrenamiento
+            EntrenamientoDetalles(entrenamiento)
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Lista de ejercicios
+            Text(
+                text = "Ejercicios",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color(0xFFAB47BC)
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            entrenamiento.ejercicios.forEach { ejercicioId ->
+                val ejercicio = ejerciciosCargados[ejercicioId]
+                if (ejercicio != null) {
+                    TarjetaEjercicio(ejercicio, navController)
+                } else {
+                    TarjetaEjercicioCargando(ejercicioId)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón para comenzar el entrenamiento
+            Button(
+                onClick = {
+                    navController.navigate("comenzar_entrenamiento/${entrenamiento._id}")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF7B1FA2)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "Comenzar",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "COMENZAR ENTRENAMIENTO",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryCard(categoria: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 4.dp,
+                shape = RoundedCornerShape(16.dp)
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF252525)
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icono circular
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = Color(0xFF7B1FA2).copy(alpha = 0.2f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FitnessCenter,
+                    contentDescription = "Categoría",
+                    tint = Color(0xFFAB47BC),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = "Categoría",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = Color.LightGray
+                    )
+                )
+
+                Text(
+                    text = categoria,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.White
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EntrenamientoDetalles(entrenamiento: Entrenamientos) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF252525)
+        ),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
@@ -345,88 +460,122 @@ fun DetallesEntrenamiento(entrenamiento: Entrenamientos) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Duración
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 12.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Timer,
-                    contentDescription = "Duración",
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Detalles",
                     tint = Color(0xFFAB47BC),
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Duración: ${entrenamiento.duracion} minutos",
+                    text = "Detalles del entrenamiento",
                     style = TextStyle(
+                        fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Color.White
                     )
                 )
             }
 
-            // Músculos trabajados
+            Divider(
+                color = Color(0xFF333333),
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            // Músculos trabajados - Cambiado a lista vertical normal en lugar de FlowRow
             Row(
                 verticalAlignment = Alignment.Top,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(vertical = 4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.FitnessCenter,
                     contentDescription = "Músculos",
                     tint = Color(0xFFAB47BC),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
                         text = "Músculos trabajados:",
                         style = TextStyle(
-                            fontSize = 16.sp,
-                            color = Color.White
+                            fontSize = 15.sp,
+                            color = Color.LightGray,
+                            lineHeight = 20.sp
                         )
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        entrenamiento.musculos.forEachIndexed { index, musculo ->
-                            if (index > 0) {
+
+                    // Lista normal de músculos con chips
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        entrenamiento.musculos.forEach { musculo ->
+                            Card(
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp)
+                                    .fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF7B1FA2).copy(alpha = 0.2f)
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
                                 Text(
-                                    text = " • ",
-                                    color = Color(0xFFAB47BC),
-                                    fontWeight = FontWeight.Bold
+                                    text = musculo,
+                                    style = TextStyle(
+                                        fontSize = 13.sp,
+                                        color = Color.White
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                                 )
                             }
-                            Text(
-                                text = musculo,
-                                style = TextStyle(
-                                    fontSize = 14.sp,
-                                    color = Color.LightGray
-                                )
-                            )
                         }
                     }
                 }
             }
 
+            // Duración
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Timer,
+                    contentDescription = "Duración",
+                    tint = Color(0xFFAB47BC),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Duración: ${entrenamiento.duracion} minutos",
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = Color.LightGray,
+                        lineHeight = 20.sp
+                    )
+                )
+            }
+
             // Likes
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Likes",
                     tint = Color(0xFFAB47BC),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "${entrenamiento.likes} likes",
                     style = TextStyle(
-                        fontSize = 16.sp,
-                        color = Color.White
+                        fontSize = 15.sp,
+                        color = Color.LightGray,
+                        lineHeight = 20.sp
                     )
                 )
             }
@@ -439,15 +588,16 @@ fun TarjetaEjercicio(ejercicio: Ejercicios, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 4.dp) // Añadido padding para dar espacio a la sombra
             .shadow(
-                elevation = 6.dp,
+                elevation = 8.dp, // Aumentado para mayor visibilidad
                 shape = RoundedCornerShape(12.dp),
-                ambientColor = Color(0xFF7B1FA2).copy(alpha = 0.5f),
-                spotColor = Color(0xFF7B1FA2).copy(alpha = 0.5f)
+                ambientColor = Color(0xFF7B1FA2),
+                spotColor = Color(0xFF7B1FA2),
+                // No especificamos offset para que sea uniforme en todas direcciones
             )
             .clickable {
-                navController.navigate("detalle_ejercicio/${ejercicio._id}")
+                navController.navigate("detalleEjercicio/${ejercicio._id}")
             },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
         shape = RoundedCornerShape(12.dp)
@@ -455,19 +605,20 @@ fun TarjetaEjercicio(ejercicio: Ejercicios, navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(96.dp)
+                .height(86.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Imagen del ejercicio
             Box(
                 modifier = Modifier
-                    .width(96.dp)
-                    .height(96.dp)
+                    .width(86.dp)
+                    .height(86.dp)
                     .background(Color(0xFF252525))
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(LocalContext.current)
-                            .data(data = ejercicio.foto)
+                            .data(base64ToBitmap(ejercicio.foto))
                             .error(R.drawable.logo)
                             .build()
                     ),
@@ -480,10 +631,9 @@ fun TarjetaEjercicio(ejercicio: Ejercicios, navController: NavController) {
             // Información del ejercicio
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .weight(1f)
                     .padding(12.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = ejercicio.nombre,
@@ -496,21 +646,13 @@ fun TarjetaEjercicio(ejercicio: Ejercicios, navController: NavController) {
                     overflow = TextOverflow.Ellipsis
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    text = "Músculo: ${ejercicio.musculo}",
+                    text = ejercicio.musculo,
                     style = TextStyle(
                         fontSize = 14.sp,
                         color = Color(0xFFAB47BC)
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text = ejercicio.descripcion,
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        color = Color.LightGray
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -540,10 +682,13 @@ fun TarjetaEjercicioCargando(ejercicioId: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 4.dp) // Añadido padding para dar espacio a la sombra
             .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(12.dp)
+                elevation = 8.dp, // Aumentado para mayor visibilidad
+                shape = RoundedCornerShape(12.dp),
+                ambientColor = Color(0xFF7B1FA2),
+                spotColor = Color(0xFF7B1FA2)
+                // No especificamos offset para que sea uniforme en todas direcciones
             ),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
         shape = RoundedCornerShape(12.dp)
@@ -551,19 +696,19 @@ fun TarjetaEjercicioCargando(ejercicioId: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(96.dp)
+                .height(86.dp)
         ) {
             // Placeholder para imagen
             Box(
                 modifier = Modifier
-                    .width(96.dp)
-                    .height(96.dp)
+                    .width(86.dp)
+                    .height(86.dp)
                     .background(Color(0xFF252525)),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     color = Color(0xFFAB47BC),
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(28.dp),
                     strokeWidth = 2.dp
                 )
             }
@@ -571,10 +716,9 @@ fun TarjetaEjercicioCargando(ejercicioId: String) {
             // Placeholder para información
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .weight(1f)
                     .padding(12.dp),
-                verticalArrangement = Arrangement.SpaceEvenly
+                verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "Cargando ejercicio...",
@@ -582,8 +726,11 @@ fun TarjetaEjercicioCargando(ejercicioId: String) {
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = Color.White
-                    )
+                    ),
+                    maxLines = 1
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 LinearProgressIndicator(
                     modifier = Modifier
@@ -594,227 +741,5 @@ fun TarjetaEjercicioCargando(ejercicioId: String) {
                 )
             }
         }
-    }
-}
-
-@Composable
-fun DetalleEjercicioScreen(
-    navController: NavController,
-    ejercicioId: String
-) {
-    val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel()
-    var isAnimatedIn by remember { mutableStateOf(false) }
-
-    // Observar el estado del ejercicio seleccionado
-    val ejercicioSeleccionado by ejerciciosViewModel.ejercicioSeleccionado.collectAsState()
-    val isLoading by ejerciciosViewModel.isLoading.collectAsState()
-
-    // Cargar el ejercicio por ID cuando se inicia la pantalla
-    LaunchedEffect(ejercicioId) {
-        ejerciciosViewModel.getOne(ejercicioId)
-        delay(100)
-        isAnimatedIn = true
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
-    ) {
-        AnimatedVisibility(
-            visible = isAnimatedIn,
-            enter = fadeIn(tween(600)) + slideInVertically(
-                initialOffsetY = { it / 3 },
-                animationSpec = tween(600)
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .systemBarsPadding()
-            ) {
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = Color(0xFFAB47BC),
-                            modifier = Modifier.size(50.dp)
-                        )
-                    }
-                } else {
-                    ejercicioSeleccionado?.let { ejercicio ->
-                        // Cabecera con imagen y botón de volver
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp)
-                        ) {
-                            // Imagen del ejercicio
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    ImageRequest.Builder(LocalContext.current)
-                                        .data(data = ejercicio.foto)
-                                        .error(R.drawable.logo)
-                                        .build()
-                                ),
-                                contentDescription = "Imagen del ejercicio",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(16.dp))
-                            )
-
-                            // Gradiente oscuro para mejor legibilidad
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                Color(0xFF0D0D0D).copy(alpha = 0.7f)
-                                            )
-                                        )
-                                    )
-                            )
-
-                            // Botón de volver
-                            IconButton(
-                                onClick = { navController.popBackStack() },
-                                modifier = Modifier
-                                    .align(Alignment.TopStart)
-                                    .padding(8.dp)
-                                    .size(48.dp)
-                                    .background(
-                                        color = Color(0xFF1A1A1A).copy(alpha = 0.6f),
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Volver",
-                                    tint = Color.White
-                                )
-                            }
-
-                            // Nombre del ejercicio
-                            Text(
-                                text = ejercicio.nombre,
-                                style = TextStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 28.sp,
-                                    color = Color.White,
-                                    shadow = Shadow(
-                                        color = Color.Black.copy(alpha = 0.7f),
-                                        blurRadius = 6f
-                                    )
-                                ),
-                                modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .padding(16.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Tarjeta con información del ejercicio
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(
-                                    elevation = 8.dp,
-                                    shape = RoundedCornerShape(16.dp),
-                                    ambientColor = Color(0xFF7B1FA2),
-                                    spotColor = Color(0xFF7B1FA2)
-                                ),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                            ) {
-                                // Músculo
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(bottom = 12.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.FitnessCenter,
-                                        contentDescription = "Músculo",
-                                        tint = Color(0xFFAB47BC),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Músculo: ${ejercicio.musculo}",
-                                        style = TextStyle(
-                                            fontSize = 16.sp,
-                                            color = Color.White
-                                        )
-                                    )
-                                }
-
-                                Divider(
-                                    color = Color(0xFF252525),
-                                    thickness = 1.dp,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-
-                                // Descripción
-                                Text(
-                                    text = "Descripción",
-                                    style = TextStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp,
-                                        color = Color(0xFFAB47BC)
-                                    ),
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-
-                                Text(
-                                    text = ejercicio.descripcion,
-                                    style = TextStyle(
-                                        fontSize = 16.sp,
-                                        color = Color.White,
-                                        lineHeight = 24.sp
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Esta vista sería a la que navegaríamos al pulsar el botón "Comenzar entrenamiento"
-@Composable
-fun ComenzarEntrenamientoScreen(
-    navController: NavController,
-    entrenamientoId: String
-) {
-    // Esta función se implementaría con la lógica para comenzar el entrenamiento
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D0D0D)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Pantalla de ejecución del entrenamiento\nEn desarrollo",
-            style = TextStyle(
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
-        )
     }
 }

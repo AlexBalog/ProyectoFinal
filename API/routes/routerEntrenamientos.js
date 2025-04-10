@@ -4,19 +4,18 @@ const modelEntrenamientos = require('../models/modelsEntrenamientos');
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
-        console.log("Entra")
-    const data = await modelEntrenamientos.find();
-    res.status(200).json(data);
+        const data = await modelEntrenamientos.find();
+        res.status(200).json(data);
     }
     catch(error){
-    res.status(500).json({message: error.message});
+        res.status(500).json({message: error.message});
     }
     });
 
 router.post('/getOne', async (req, res) => {
     try{
-    const id = req.body._id;
-    const entrenamientosDB = await modelEntrenamientos.findOne({ _id: id });
+        const id = req.body._id;
+        const entrenamientosDB = await modelEntrenamientos.findOne({ _id: id });
     if (!entrenamientosDB) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
