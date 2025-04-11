@@ -513,7 +513,6 @@ fun MisEntrenamientosSection(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(entrenamientos) { entrenamiento ->
-                Log.d("FalloPrincipal1", "$entrenamiento")
                 EntrenamientoItem(
                     entrenamiento = entrenamiento,
                     onClick = { navController.navigate("detalleEntrenamiento/${entrenamiento._id}") }

@@ -67,7 +67,10 @@ router.post('/new', async (req, res) => {
         duracion: req.body.duracion,
         foto: req.body.foto,
         likes: 0,
+        ejercicios: req.body.ejercicios,
         creador: req.body.creador,
+        pedido: req.body.pedido,
+        aprobado: req.body.aprobado,
         motivoRechazo: ""
     })
 
@@ -93,7 +96,10 @@ router.patch("/update", async (req, res) => {
         foto: req.body.foto,
         likes: req.body.likes,
         ejercicios: req.body.ejercicios,
-        aprobado: req.body.aprobado
+        creador: req.body.creador,
+        pedido: req.body.pedido,
+        aprobado: req.body.aprobado,
+        motivoRechazo: req.body.motivoRechazo
     }});
     
     if (resultado.modifiedCount === 0) {

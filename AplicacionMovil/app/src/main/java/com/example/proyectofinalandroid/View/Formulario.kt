@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -794,7 +795,26 @@ fun FormularioScreen(navController: NavController) {
                     selectedDayContentColor = Color.White,
                     selectedDayContainerColor = Color(0xFF7B1FA2),
                     todayContentColor = Color(0xFFAB47BC),
-                    todayDateBorderColor = Color(0xFFAB47BC)
+                    todayDateBorderColor = Color(0xFFAB47BC),
+                    dateTextFieldColors = TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            disabledTextColor = Color.White,
+                            errorTextColor = Color.Red,
+                            focusedPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                            unfocusedPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                            disabledPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                            errorPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            cursorColor = Color(0xFFAB47BC),
+                            selectionColors = TextSelectionColors(
+                                handleColor = Color(0xFFAB47BC),
+                                backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
+                            )
+                        )
                 )
             )
         }

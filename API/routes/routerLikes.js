@@ -29,15 +29,15 @@ router.post('/getOne', async (req, res) => {
 
 router.get('/getFilter', async (req, res) => {
     try {
+        console.log("entra" + req.body)
         const condiciones = {};
 
         if (req.body.entrenamiento !== null && req.body.entrenamiento.trim() !== "") {
             condiciones.entrenamiento = req.body.entrenamiento ;
         }
-        if (req.body.usuario !== null) {
+        if (req.body.usuario !== undefined) {
             condiciones.usuario = req.body.usuario;
         }
-        
         const data = await modelLikes.find(condiciones);
         
         if (data.length === 0) {
@@ -88,13 +88,13 @@ router.patch("/update", async (req, res) => {
 
 router.delete('/delete', async (req, res) => {
     try {
-    const { entrenamiento, usuario } = req.body;    
+    const { entrenamiento, usuario } = req.body;
     const data = await modelLikes.deleteOne({ entrenamiento: entrenamiento, usuario: usuario })
     if (data.deletedCount === 0) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
 
-    res.status(200).json({ message: `Document with ${id} has been deleted..` })
+    res.status(200).json({ message: `El like con entrenamiento: ${entrenamiento} y usuario: ${usuario}` })
     }
     catch (error) {
         res.status(400).json({ message: error.message })

@@ -1,11 +1,13 @@
 package com.example.proyectofinalandroid.di
 
+import android.util.Log
 import com.example.proyectofinalandroid.Remote.EjerciciosApi
 import com.example.proyectofinalandroid.Remote.EntrenamientosApi
 import com.example.proyectofinalandroid.Remote.EntrenamientoRealizadoApi
 import com.example.proyectofinalandroid.Remote.EventosApi
 import com.example.proyectofinalandroid.Remote.EventosUsuarioApi
 import com.example.proyectofinalandroid.Remote.EjercicioRealizadoApi
+import com.example.proyectofinalandroid.Remote.LikesApi
 import com.example.proyectofinalandroid.Remote.SerieRealizadaApi
 import com.example.proyectofinalandroid.Remote.UsuariosApi
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
@@ -14,12 +16,14 @@ import com.example.proyectofinalandroid.Repository.EntrenamientoRealizadoReposit
 import com.example.proyectofinalandroid.Repository.EventosRepository
 import com.example.proyectofinalandroid.Repository.EventosUsuarioRepository
 import com.example.proyectofinalandroid.Repository.EjercicioRealizadoRepository
+import com.example.proyectofinalandroid.Repository.LikesRepository
 import com.example.proyectofinalandroid.Repository.SerieRealizadaRepository
 import com.example.proyectofinalandroid.Repository.UsuariosRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -36,6 +40,7 @@ object AppModule {
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(provideOkHttpClient())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -134,5 +139,28 @@ object AppModule {
     @Singleton
     fun provideSerieRealizadaRepository(api: SerieRealizadaApi): SerieRealizadaRepository {
         return SerieRealizadaRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun LikesApi(retrofit: Retrofit): LikesApi {
+        return retrofit.create(LikesApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLikesRepository(api: LikesApi): LikesRepository {
+        return LikesRepository(api)
+    }
+
+    @Provides
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request()
+                Log.d("Retrofit", "Request URL: ${request.url}")
+                chain.proceed(request)
+            }
+            .build()
     }
 }

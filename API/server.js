@@ -32,6 +32,7 @@ const authRouter = require('./routes/auth');   // Rutas de autenticación
 const routerEventos = require('./routes/routerEventos');   // Rutas de eventos
 const routerEventosUsuario = require('./routes/routerEventosUsuario');   // Rutas de eventos del usuario
 const routerSerieRealizada = require('./routes/routerSerieRealizada');   // Rutas de serie realizada
+const routerLikes = require('./routes/routerLikes');   // Rutas de serie realizada
 
 // Empleos
 app.use('/usuarios', routerUsuarios);
@@ -43,6 +44,7 @@ app.use('/auth', authRouter);
 app.use('/eventos', routerEventos);
 app.use('/eventosUsuario', routerEventosUsuario);
 app.use('/serieRealizada', routerSerieRealizada);
+app.use('/likes', routerLikes)
 
 // Define el puerto y arranca el servidor
 const PORT = process.env.PORT || 3000;

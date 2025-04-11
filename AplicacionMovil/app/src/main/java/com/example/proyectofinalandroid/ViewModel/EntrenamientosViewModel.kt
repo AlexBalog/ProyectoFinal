@@ -35,9 +35,16 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     private val _entrenamiento = MutableStateFlow<Entrenamientos?>(null)
     val entrenamiento: StateFlow<Entrenamientos?> get() = _entrenamiento
 
+    private val _likesCount = MutableStateFlow(0)
+    val likesCount: StateFlow<Int> get() = _likesCount
+
     fun setUsuario(usuario: Usuarios) {
         _usuario.value = usuario
         getAll()
+    }
+
+    fun updateLikesCount(newCount: Int) {
+        _likesCount.value = newCount
     }
 
     fun getAll() {

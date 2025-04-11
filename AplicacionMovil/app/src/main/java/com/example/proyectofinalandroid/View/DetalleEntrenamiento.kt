@@ -1,6 +1,7 @@
 package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -38,9 +39,11 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Entrenamientos
+import com.example.proyectofinalandroid.Model.Likes
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.EjerciciosViewModel
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
+import com.example.proyectofinalandroid.ViewModel.LikesViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import com.example.proyectofinalandroid.utils.base64ToBitmap
 import kotlinx.coroutines.delay
@@ -59,6 +62,7 @@ fun DetalleEntrenamientoScreen(
         navController.getBackStackEntry("root")
     }
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val likesViewModel: LikesViewModel = hiltViewModel()
 
     val usuario by usuariosViewModel.usuario.collectAsState()
     val scrollState = rememberScrollState()
@@ -75,7 +79,9 @@ fun DetalleEntrenamientoScreen(
 
     // Mapa para almacenar los ejercicios cargados
     val ejerciciosCargados = remember { mutableStateMapOf<String, Ejercicios>() }
-
+    val isLiked by likesViewModel.isLiked.collectAsState()
+    val contadorLikes by likesViewModel.likesCount.collectAsState()
+    likesViewModel.devolverLikesEntrenamiento(entrenamientoId, usuario)
     // Observar el estado del entrenamiento seleccionado
     val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
     val isLoading by entrenamientosViewModel.isLoading.collectAsState()
@@ -85,6 +91,12 @@ fun DetalleEntrenamientoScreen(
         entrenamientosViewModel.getOne(entrenamientoId)
         delay(100)
         isAnimatedIn = true
+    }
+
+    LaunchedEffect(usuario, entrenamientoSeleccionado) {
+        if (usuario != null && entrenamientoSeleccionado != null) {
+            likesViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
+        }
     }
 
     // Cargar los ejercicios cuando cambia el entrenamiento seleccionado
@@ -250,7 +262,27 @@ fun DetalleEntrenamientoScreen(
                                     Spacer(modifier = Modifier.height(230.dp))
 
                                     // Tarjeta con la información del entrenamiento
-                                    EntrenamientoInfoCard(entrenamiento, ejerciciosCargados, navController)
+                                    EntrenamientoInfoCard(entrenamiento, ejerciciosCargados, navController, isLiked, {
+                                        if (isLiked) {
+                                            likesViewModel.delete(
+                                                mapOf(
+                                                    "usuario" to usuario?._id.orEmpty(),
+                                                    "entrenamiento" to entrenamiento._id
+                                                )
+                                            )
+                                            val contador = entrenamientosViewModel.likesCount.value
+                                            entrenamientosViewModel.updateLikesCount(contador - 1)
+                                        } else {
+                                            likesViewModel.new(
+                                                Likes(
+                                                    usuario = usuario?._id.orEmpty(),
+                                                    entrenamiento = entrenamiento._id
+                                                )
+                                            )
+                                            val contador = entrenamientosViewModel.likesCount.value
+                                            entrenamientosViewModel.updateLikesCount(contador + 1)
+                                        }
+                                    }, contadorLikes)
                                 }
                             }
                         }
@@ -287,7 +319,11 @@ fun DetalleEntrenamientoScreen(
 fun EntrenamientoInfoCard(
     entrenamiento: Entrenamientos,
     ejerciciosCargados: Map<String, Ejercicios>,
-    navController: NavController
+    navController: NavController,
+    isLiked: Boolean,
+    onLikeToggle: () -> Unit,
+    contadorLikes: Int
+
 ) {
     Card(
         modifier = Modifier
@@ -308,16 +344,33 @@ fun EntrenamientoInfoCard(
                 .fillMaxWidth()
                 .padding(24.dp)
         ) {
-            // Nombre del entrenamiento
-            Text(
-                text = entrenamiento.nombre,
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp,
-                    color = Color.White
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Nombre del entrenamiento
+                Text(
+                    text = entrenamiento.nombre,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 26.sp,
+                        color = Color.White
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                IconButton(
+                    onClick = onLikeToggle
+                ) {
+                    Icon(
+                        imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = if (isLiked) "Quitar like" else "Dar like",
+                        tint = if (isLiked) Color.Red else Color.Gray
+                    )
+                }
+            }
 
             // Tarjeta de categoría
             CategoryCard(entrenamiento.categoria)
@@ -325,7 +378,7 @@ fun EntrenamientoInfoCard(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Detalles del entrenamiento
-            EntrenamientoDetalles(entrenamiento)
+            EntrenamientoDetalles(entrenamiento, contadorLikes)
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -446,7 +499,7 @@ fun CategoryCard(categoria: String) {
 }
 
 @Composable
-fun EntrenamientoDetalles(entrenamiento: Entrenamientos) {
+fun EntrenamientoDetalles(entrenamiento: Entrenamientos, contadorLikes: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -571,7 +624,7 @@ fun EntrenamientoDetalles(entrenamiento: Entrenamientos) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "${entrenamiento.likes} likes",
+                    text = "$contadorLikes likes",
                     style = TextStyle(
                         fontSize = 15.sp,
                         color = Color.LightGray,
