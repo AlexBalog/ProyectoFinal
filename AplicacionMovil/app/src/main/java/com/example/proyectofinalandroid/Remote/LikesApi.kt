@@ -34,7 +34,7 @@ interface LikesApi {
         @Body request: Map<String, String>
     ): Response<Likes>
 
-    @GET("likes/getFilter")
+    @POST("likes/getFilter")
     suspend fun getFilter(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>

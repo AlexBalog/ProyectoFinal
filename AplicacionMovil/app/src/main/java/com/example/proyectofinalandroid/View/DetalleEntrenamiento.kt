@@ -96,6 +96,7 @@ fun DetalleEntrenamientoScreen(
     LaunchedEffect(usuario, entrenamientoSeleccionado) {
         if (usuario != null && entrenamientoSeleccionado != null) {
             likesViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
+            likesViewModel.devolverLikesEntrenamiento(entrenamientoSeleccionado!!._id, usuario)
         }
     }
 

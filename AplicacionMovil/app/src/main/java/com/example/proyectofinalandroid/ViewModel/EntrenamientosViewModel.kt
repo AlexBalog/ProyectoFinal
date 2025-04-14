@@ -47,6 +47,20 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         _likesCount.value = newCount
     }
 
+    fun observarLikes(
+        likesViewModel: LikesViewModel,
+        usuario: Usuarios
+    ) {
+        viewModelScope.launch {
+            entrenamientos.value?.forEach { entrenamiento ->
+                likesViewModel.devolverLikesEntrenamiento(entrenamiento._id, usuario)
+                likesViewModel.getLikesCountForEntrenamiento(entrenamiento._id).collect { likesCount ->
+                    entrenamiento.likes = likesCount // Actualiza el contador de likes en el modelo
+                }
+            }
+        }
+    }
+
     fun getAll() {
         viewModelScope.launch {
             try {

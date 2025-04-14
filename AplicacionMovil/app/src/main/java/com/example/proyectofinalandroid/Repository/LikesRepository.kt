@@ -43,7 +43,7 @@ class LikesRepository @Inject constructor(private val api: LikesApi) {
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Likes>? {
         return withContext(Dispatchers.IO) {
-            Log.d("FalloRepos1", "$filtros")
+            Log.d("FalloRepos1", "$filtros y token $token")
             val response = api.getFilter(token, filtros)
             Log.d("FalloRepos2", "${response.isSuccessful}")
             if (response.isSuccessful) {

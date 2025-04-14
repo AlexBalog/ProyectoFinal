@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const modelLikes = require('../models/modelsLikes'); 
+const modelLikes = require('../models/modelsLikes');
+const verifyToken = require('../middlewares/authMiddleware'); // Middleware para validar el JWT
+
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
@@ -27,7 +29,7 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.get('/getFilter', async (req, res) => {
+router.post('/getFilter', async (req, res) => {
     try {
         console.log("entra" + req.body)
         const condiciones = {};
@@ -43,7 +45,7 @@ router.get('/getFilter', async (req, res) => {
         if (data.length === 0) {
             return res.status(404).json({ message: 'No hay ejercicios con tales características' });
         }
-        
+        console.log("data" + data)
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });

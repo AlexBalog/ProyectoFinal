@@ -52,6 +52,7 @@ import android.util.Log
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import com.example.proyectofinalandroid.utils.base64ToBitmap
+import com.example.proyectofinalandroid.ViewModel.LikesViewModel
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +64,7 @@ fun HomeScreen(navController: NavController, ) {
     }
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val likesViewModel: LikesViewModel = hiltViewModel()
 
     val usuario by usuariosViewModel.usuario.collectAsState()
 
