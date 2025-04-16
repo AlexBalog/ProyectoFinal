@@ -39,10 +39,12 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Entrenamientos
+import com.example.proyectofinalandroid.Model.Guardados
 import com.example.proyectofinalandroid.Model.Likes
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.EjerciciosViewModel
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
+import com.example.proyectofinalandroid.ViewModel.GuardadosViewModel
 import com.example.proyectofinalandroid.ViewModel.LikesViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import com.example.proyectofinalandroid.utils.base64ToBitmap
@@ -63,7 +65,7 @@ fun DetalleEntrenamientoScreen(
     }
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
     val likesViewModel: LikesViewModel = hiltViewModel()
-
+    val guardadosViewModel: GuardadosViewModel = hiltViewModel()
     val usuario by usuariosViewModel.usuario.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -80,6 +82,7 @@ fun DetalleEntrenamientoScreen(
     // Mapa para almacenar los ejercicios cargados
     val ejerciciosCargados = remember { mutableStateMapOf<String, Ejercicios>() }
     val isLiked by likesViewModel.isLiked.collectAsState()
+    val isSaved by guardadosViewModel.isSaved.collectAsState()
     val contadorLikes by entrenamientosViewModel.likesCount.collectAsState()
     entrenamientosViewModel.observarLikes(likesViewModel, usuario!!)
     // Observar el estado del entrenamiento seleccionado
@@ -96,6 +99,7 @@ fun DetalleEntrenamientoScreen(
     LaunchedEffect(usuario, entrenamientoSeleccionado) {
         if (usuario != null && entrenamientoSeleccionado != null) {
             likesViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
+            guardadosViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
             likesViewModel.devolverLikesEntrenamiento(entrenamientoSeleccionado!!._id, usuario)
             // Configura la observación específica para este entrenamiento
             entrenamientosViewModel.observarLikesDeEntrenamiento(
@@ -269,7 +273,7 @@ fun DetalleEntrenamientoScreen(
                                     Spacer(modifier = Modifier.height(230.dp))
 
                                     // Tarjeta con la información del entrenamiento
-                                    EntrenamientoInfoCard(entrenamiento, ejerciciosCargados, navController, isLiked, {
+                                    EntrenamientoInfoCard(entrenamiento, ejerciciosCargados, navController, isLiked, isSaved, {
                                         if (isLiked) {
                                             likesViewModel.delete(
                                                 mapOf(
@@ -290,6 +294,22 @@ fun DetalleEntrenamientoScreen(
                                             entrenamientosViewModel.updateLikesCount(contadorLikes + 1)
                                             val contador = entrenamientosViewModel.likesCount.value
                                             entrenamientosViewModel.update(entrenamiento._id, mapOf("likes" to (contador).toString()))
+                                        }
+                                    }, {
+                                        if (isSaved) {
+                                            guardadosViewModel.delete(
+                                                mapOf(
+                                                    "usuario" to usuario?._id.orEmpty(),
+                                                    "entrenamiento" to entrenamiento._id
+                                                )
+                                            )
+                                        } else {
+                                            guardadosViewModel.new(
+                                                Guardados(
+                                                    usuario = usuario?._id.orEmpty(),
+                                                    entrenamiento = entrenamiento._id
+                                                )
+                                            )
                                         }
                                     }, contadorLikes)
                                 }
@@ -330,7 +350,9 @@ fun EntrenamientoInfoCard(
     ejerciciosCargados: Map<String, Ejercicios>,
     navController: NavController,
     isLiked: Boolean,
+    isSaved: Boolean,
     onLikeToggle: () -> Unit,
+    onSaveToggle: () -> Unit,
     contadorLikes: Int
 
 ) {
@@ -371,12 +393,24 @@ fun EntrenamientoInfoCard(
                 Spacer(modifier = Modifier.weight(1f))
 
                 IconButton(
-                    onClick = onLikeToggle
+                    onClick = onLikeToggle,
+                    modifier = Modifier.padding(bottom = 15.dp)
                 ) {
                     Icon(
                         imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         contentDescription = if (isLiked) "Quitar like" else "Dar like",
                         tint = if (isLiked) Color.Red else Color.Gray
+                    )
+                }
+
+                IconButton(
+                    onClick = onSaveToggle,
+                    modifier = Modifier.padding(bottom = 15.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                        contentDescription = if (isSaved) "Quitar guardado" else "Guardar",
+                        tint = if (isSaved) Color(0xFFDAA520) else Color.Gray
                     )
                 }
             }
@@ -416,9 +450,7 @@ fun EntrenamientoInfoCard(
 
             // Botón para comenzar el entrenamiento
             Button(
-                onClick = {
-                    navController.navigate("comenzar_entrenamiento/${entrenamiento._id}")
-                },
+                onClick = { navController.navigate("realizarEntrenamiento/${entrenamiento._id}") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

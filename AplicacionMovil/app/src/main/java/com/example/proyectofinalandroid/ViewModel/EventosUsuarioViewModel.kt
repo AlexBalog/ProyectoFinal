@@ -30,8 +30,8 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private val _eventosusuario = MutableStateFlow<List<EventosUsuario>?>(emptyList())
-    val eventosusuario: StateFlow<List<EventosUsuario>?> get() = _eventosusuario
+    private val _eventosUsuarioLista = MutableStateFlow<List<EventosUsuario>?>(emptyList())
+    val eventosUsuarioLista: StateFlow<List<EventosUsuario>?> get() = _eventosUsuarioLista
 
     private val _eventosUsuario = MutableStateFlow<EventosUsuario?>(null)
     val eventosUsuario: StateFlow<EventosUsuario?> get() = _eventosUsuario
@@ -82,15 +82,15 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
             try {
                 val lista = repository.getAll(token = _usuario.value?.token.toString())
                 if (lista != null) {
-                    _eventosusuario.value = lista
+                    _eventosUsuarioLista.value = lista
                     Log.d("Habitaciones", "Datos cargados: $lista")
                 } else {
-                    _eventosusuario.value = emptyList()
+                    _eventosUsuarioLista.value = emptyList()
                     Log.d("Habitaciones", "Respuesta nula o lista vacía.")
                 }
             } catch (e: Exception) {
                 Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
-                _eventosusuario.value = emptyList()
+                _eventosUsuarioLista.value = emptyList()
             }
         }
     }

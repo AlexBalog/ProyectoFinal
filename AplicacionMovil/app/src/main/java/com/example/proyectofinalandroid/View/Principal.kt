@@ -49,10 +49,15 @@ import java.time.format.TextStyle
 import java.util.*
 import kotlinx.coroutines.delay
 import android.util.Log
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.window.Dialog
+import com.example.proyectofinalandroid.ViewModel.EventosUsuarioViewModel
 import com.example.proyectofinalandroid.utils.base64ToBitmap
-import com.example.proyectofinalandroid.ViewModel.LikesViewModel
+import com.example.proyectofinalandroid.ViewModel.EventosViewModel
+import com.example.proyectofinalandroid.Model.EventosUsuario
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +69,8 @@ fun HomeScreen(navController: NavController, ) {
     }
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val eventosUsuariosViewModel: EventosUsuarioViewModel = hiltViewModel()
+    val eventosViewModel: EventosViewModel = hiltViewModel()
 
     val usuario by usuariosViewModel.usuario.collectAsState()
 
@@ -84,7 +91,7 @@ fun HomeScreen(navController: NavController, ) {
     // Datos simulados (estos vendrían de tu Base de Datos)
     val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState() // Puede fallar
     val programasDestacados = remember { entrenamientosViewModel.obtenerProgramasDestacados() }
-    val eventosProgramados = remember { entrenamientosViewModel.obtenerEventosFecha(selectedDate) }
+    val eventosUsuario by eventosUsuariosViewModel.eventosUsuarioLista.collectAsState()
 
 
     // Animación de entrada
@@ -155,7 +162,7 @@ fun HomeScreen(navController: NavController, ) {
                     // Eventos programados para la fecha seleccionada
                     ProgrammedEventsSection(
                         date = selectedDate,
-                        eventos = eventosProgramados
+                        eventos = eventosUsuario as List<EventosUsuario>
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -347,8 +354,9 @@ fun DiasDelMes(
 @Composable
 fun ProgrammedEventsSection(
     date: LocalDate,
-    eventos: List<EventoProgramado>
+    eventos: List<EventosUsuario>
 ) {
+    var showAddSerieDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -374,7 +382,7 @@ fun ProgrammedEventsSection(
                 Spacer(modifier = Modifier.weight(1f))
 
                 IconButton(
-                    onClick = {}
+                    onClick = { showAddSerieDialog = true }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
@@ -407,7 +415,7 @@ fun ProgrammedEventsSection(
                 }
             } else {
                 eventos.forEach { evento ->
-                    EventoItem(evento = evento)
+                  //  EventoItem(evento = evento)
                     if (evento != eventos.last()) {
                         Divider(
                             modifier = Modifier.padding(vertical = 8.dp),
@@ -417,11 +425,20 @@ fun ProgrammedEventsSection(
                 }
             }
         }
+        if (showAddSerieDialog) {
+            DialogoEventos(
+                onConfirm = { peso, repeticiones ->
+                  //  eventos.new(Serie(peso, repeticiones))
+                    showAddSerieDialog = false
+                },
+                onDismiss = { showAddSerieDialog = false }
+            )
+        }
     }
 }
 
-@Composable
-fun EventoItem(evento: EventoProgramado) {
+/*@Composable
+fun EventoItem(evento: EventosUsuario) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -472,7 +489,7 @@ fun EventoItem(evento: EventoProgramado) {
             fontWeight = FontWeight.Medium
         )
     }
-}
+}*/
 
 @Composable
 fun MisEntrenamientosSection(
@@ -1027,4 +1044,101 @@ fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado
             imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
         )
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogoEventos(
+    onConfirm: (String, String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var peso by remember { mutableStateOf("") }
+    var repeticiones by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF252525))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Añadir Serie",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFAB47BC)
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Campo de peso
+                OutlinedTextField(
+                    value = peso,
+                    onValueChange = { peso = it },
+                    label = { Text("Peso (kg)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        //textColor = Color.White,
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = Color(0xFFAB47BC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Campo de repeticiones
+                OutlinedTextField(
+                    value = repeticiones,
+                    onValueChange = { repeticiones = it },
+                    label = { Text("Repeticiones") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = Color(0xFFAB47BC)
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botones de acción
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cancelar")
+                    }
+
+                    TextButton(
+                        onClick = { onConfirm(peso, repeticiones) },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFFAB47BC)
+                        ),
+                        enabled = peso.isNotEmpty() && repeticiones.isNotEmpty()
+                    ) {
+                        Text("Guardar")
+                    }
+                }
+            }
+        }
+    }
 }

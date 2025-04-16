@@ -7,6 +7,8 @@ import com.example.proyectofinalandroid.Remote.EntrenamientoRealizadoApi
 import com.example.proyectofinalandroid.Remote.EventosApi
 import com.example.proyectofinalandroid.Remote.EventosUsuarioApi
 import com.example.proyectofinalandroid.Remote.EjercicioRealizadoApi
+import com.example.proyectofinalandroid.Remote.GuardadosApi
+import com.example.proyectofinalandroid.Repository.GuardadosRepository
 import com.example.proyectofinalandroid.Remote.LikesApi
 import com.example.proyectofinalandroid.Remote.SerieRealizadaApi
 import com.example.proyectofinalandroid.Remote.UsuariosApi
@@ -151,6 +153,18 @@ object AppModule {
     @Singleton
     fun provideLikesRepository(api: LikesApi): LikesRepository {
         return LikesRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun GuardadosApi(retrofit: Retrofit): GuardadosApi {
+        return retrofit.create(GuardadosApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGuardadosRepository(api: GuardadosApi): GuardadosRepository {
+        return GuardadosRepository(api)
     }
 
     @Provides
