@@ -31,7 +31,6 @@ router.post('/getOne', async (req, res) => {
 
 router.post('/getFilter', async (req, res) => {
     try {
-        console.log("entra" + req.body)
         const condiciones = {};
 
         if (req.body.entrenamiento !== null && req.body.entrenamiento.trim() !== "") {
@@ -45,7 +44,6 @@ router.post('/getFilter', async (req, res) => {
         if (data.length === 0) {
             return res.status(404).json({ message: 'No hay ejercicios con tales características' });
         }
-        console.log("data" + data)
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: error.message });

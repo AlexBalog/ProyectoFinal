@@ -139,12 +139,9 @@ class LikesViewModel @Inject constructor(private val repository: LikesRepository
                     _errorMessage.value = "Usuario no autenticado"
                     return@launch
                 }
-                Log.d("FalloVM0", entrenamiento + " ${usuario._id}")
                 val respuesta = repository.getFilter(token, mapOf("entrenamiento" to entrenamiento))
-                Log.d("FalloVM1", "${respuesta}")
                 if (respuesta != null) {
                     _likesCount.value = respuesta.size
-                    Log.d("FalloVM2", "${_likesCount.value}")
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message

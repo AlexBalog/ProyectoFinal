@@ -80,8 +80,8 @@ fun DetalleEntrenamientoScreen(
     // Mapa para almacenar los ejercicios cargados
     val ejerciciosCargados = remember { mutableStateMapOf<String, Ejercicios>() }
     val isLiked by likesViewModel.isLiked.collectAsState()
-    val contadorLikes by likesViewModel.likesCount.collectAsState()
-    likesViewModel.devolverLikesEntrenamiento(entrenamientoId, usuario)
+    val contadorLikes by entrenamientosViewModel.likesCount.collectAsState()
+    entrenamientosViewModel.observarLikes(likesViewModel, usuario!!)
     // Observar el estado del entrenamiento seleccionado
     val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
     val isLoading by entrenamientosViewModel.isLoading.collectAsState()
@@ -97,6 +97,12 @@ fun DetalleEntrenamientoScreen(
         if (usuario != null && entrenamientoSeleccionado != null) {
             likesViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
             likesViewModel.devolverLikesEntrenamiento(entrenamientoSeleccionado!!._id, usuario)
+            // Configura la observación específica para este entrenamiento
+            entrenamientosViewModel.observarLikesDeEntrenamiento(
+                entrenamientoSeleccionado!!._id,
+                likesViewModel,
+                usuario!!
+            )
         }
     }
 
@@ -271,8 +277,9 @@ fun DetalleEntrenamientoScreen(
                                                     "entrenamiento" to entrenamiento._id
                                                 )
                                             )
+                                            entrenamientosViewModel.updateLikesCount(contadorLikes - 1)
                                             val contador = entrenamientosViewModel.likesCount.value
-                                            entrenamientosViewModel.updateLikesCount(contador - 1)
+                                            entrenamientosViewModel.update(entrenamiento._id, mapOf("likes" to (contador).toString()))
                                         } else {
                                             likesViewModel.new(
                                                 Likes(
@@ -280,8 +287,9 @@ fun DetalleEntrenamientoScreen(
                                                     entrenamiento = entrenamiento._id
                                                 )
                                             )
+                                            entrenamientosViewModel.updateLikesCount(contadorLikes + 1)
                                             val contador = entrenamientosViewModel.likesCount.value
-                                            entrenamientosViewModel.updateLikesCount(contador + 1)
+                                            entrenamientosViewModel.update(entrenamiento._id, mapOf("likes" to (contador).toString()))
                                         }
                                     }, contadorLikes)
                                 }
@@ -625,7 +633,7 @@ fun EntrenamientoDetalles(entrenamiento: Entrenamientos, contadorLikes: Int) {
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "$contadorLikes likes",
+                    text = "${contadorLikes} likes",
                     style = TextStyle(
                         fontSize = 15.sp,
                         color = Color.LightGray,

@@ -64,7 +64,6 @@ fun HomeScreen(navController: NavController, ) {
     }
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
-    val likesViewModel: LikesViewModel = hiltViewModel()
 
     val usuario by usuariosViewModel.usuario.collectAsState()
 
