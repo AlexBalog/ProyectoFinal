@@ -28,6 +28,12 @@ const UsuariosSchema = mongoose.Schema({
     },
     IMC: {
         type: Number
+    },
+    nivelActividad: {
+        type: String
+    },
+    caloriasMantenimiento: {
+        type: Number
     }, 
     altura: {
         type: Number

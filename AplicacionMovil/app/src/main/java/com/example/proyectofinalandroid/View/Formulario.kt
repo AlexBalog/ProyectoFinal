@@ -2,6 +2,8 @@ package com.example.proyectofinalandroid.View
 
 
 import android.content.Context
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import android.util.Base64
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
@@ -72,7 +74,20 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.withContext
+import java.time.Period
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.SportsMartialArts
+import androidx.compose.ui.graphics.vector.ImageVector
 
+
+data class ActivityLevel(
+    val name: String,
+    val icon: ImageVector,
+    val description: String
+)
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +107,37 @@ fun FormularioScreen(navController: NavController) {
     var peso by remember { mutableStateOf("") }
     var objetivoPeso by remember { mutableStateOf("") }
     var objetivoTiempo by remember { mutableStateOf("") }
+    var expandedDropdown by remember { mutableStateOf(false) }
+    var nivelActividad by remember { mutableStateOf("") }
+    var objetivoCalorias by remember { mutableStateOf("") }
+
+    val activityOptions = listOf(
+        ActivityLevel(
+            "Sedentario",
+            Icons.Default.SelfImprovement,
+            "Poco o ningún ejercicio"
+        ),
+        ActivityLevel(
+            "Ligero",
+            Icons.Default.DirectionsWalk,
+            "Ejercicio ligero 1-3 días/semana"
+        ),
+        ActivityLevel(
+            "Moderado",
+            Icons.Default.DirectionsRun,
+            "Ejercicio moderado 3-5 días/semana"
+        ),
+        ActivityLevel(
+            "Intenso",
+            Icons.Default.FitnessCenter,
+            "Ejercicio intenso 6-7 días/semana"
+        ),
+        ActivityLevel(
+            "Muy intenso",
+            Icons.Default.SportsMartialArts,
+            "Ejercicio muy intenso diario"
+        )
+    )
 
     // Estados de error para validación
     var alturaError by remember { mutableStateOf<String?>(null) }
@@ -187,6 +233,11 @@ fun FormularioScreen(navController: NavController) {
         }
     }
 
+    fun calcularEdad(fechaNacimiento: LocalDate): Int {
+        val hoy = LocalDate.now()
+        return Period.between(fechaNacimiento, hoy).years
+    }
+
     // Función para guardar el formulario
     suspend fun guardarFormulario() {
         // Validar todos los campos antes de guardar
@@ -209,21 +260,56 @@ fun FormularioScreen(navController: NavController) {
             // Aquí se guardarían los datos en la base de datos o ViewModel
             val fotoBase64 = fotoPerfil?.let { convertImageToBase64(it) } ?: ""
 
+            var edad = calcularEdad(stringToLocalDate(fechaNacimiento))
+            var TMB = 0f
+            var caloriasMantenimiento = 0.0F
+
+            if (sexo.equals("Masculino")) {
+                TMB = 10F * peso.toFloat() + 6.25f * altura.toFloat() - 5f * edad.toFloat() + 5f
+            } else if (sexo.equals("Femenino")) {
+                TMB = 10f * peso.toFloat() + 6.25f * altura.toFloat() - 5f * edad.toFloat() + 5f
+            }
+
+            if (nivelActividad.equals("Sedentario")) {
+                caloriasMantenimiento = TMB * 1.2f
+            } else if (nivelActividad.equals("Ligero")) {
+                caloriasMantenimiento = TMB * 1.375f
+            } else if (nivelActividad.equals("Moderado")) {
+                caloriasMantenimiento = TMB * 1.55f
+            } else if (nivelActividad.equals("Intenso")) {
+                caloriasMantenimiento = TMB * 1.725f
+            } else if (nivelActividad.equals("Muy intenso")) {
+                caloriasMantenimiento = TMB * 1.9f
+            }
+
+            var calcularCalorias = 0f
+
+            if (objetivoPeso.toFloat() > peso.toFloat()) {
+                calcularCalorias = (7700f * (objetivoPeso.toFloat() - peso.toFloat())) / (objetivoTiempo.toFloat() * 7f)
+            } else if (objetivoPeso.toFloat() < peso.toFloat()) {
+                calcularCalorias = (7700f * (peso.toFloat() - objetivoPeso.toFloat())) / (objetivoTiempo.toFloat() * 7f)
+            }
+
             // Simular guardado
             try {
                 val datos = mutableMapOf<String, String>()
                 datos["foto"] = fotoBase64
-                datos["fecha_nac"] = fechaNacimiento
+                datos["fechaNacimiento"] = fechaNacimiento
                 datos["sexo"] = sexo
                 datos["altura"] = altura
                 datos["peso"] = peso
-                datos["objetivo_peso"] = objetivoPeso
-                datos["objetivo_tiempo"] = objetivoTiempo
+                datos["nivelActividad"] = nivelActividad
+                datos["objetivoPeso"] = objetivoPeso
+                datos["objetivoTiempo"] = objetivoTiempo
+                datos["caloriasMantenimiento"] = caloriasMantenimiento.toString()
+                datos["objetivoCalorias"] = (caloriasMantenimiento + calcularCalorias).toString()
+                datos["IMC"] = ((peso.toFloat() ?: 0f) / ((altura.toFloat() ?: 0f) / 100).let { it * it }).toString()
                 datos["formulario"] = true.toString()
                 val exito = withContext(Dispatchers.Main) {
                     usuariosViewModel.update(datos)
                 }
                 if(exito) {
+                    Toast.makeText(context, "Gracias por tu paciencia!!", Toast.LENGTH_SHORT).show()
                     navController.navigate("principal") {
                         popUpTo("profileForm") { inclusive = true }
                     }
@@ -624,6 +710,135 @@ fun FormularioScreen(navController: NavController) {
                             }
                         )
 
+                        var nivelActividad by remember { mutableStateOf("") }
+                        var selectedIcon by remember { mutableStateOf<ImageVector?>(null) }
+                        var selectedDescription by remember { mutableStateOf("") }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                        ) {
+                            Text(
+                                text = "Nivel de actividad",
+                                color = Color.Gray,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                // Campo de texto que actúa como el trigger del dropdown
+                                OutlinedTextField(
+                                    value = nivelActividad,
+                                    onValueChange = { },
+                                    readOnly = true,
+                                    label = {
+                                        if (nivelActividad.isEmpty()) {
+                                            Text("Selecciona tu nivel de actividad", color = Color.Gray)
+                                        }
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = selectedIcon ?: Icons.Default.FitnessCenter, // Icono placeholder
+                                            contentDescription = "Nivel de actividad",
+                                            tint = if (nivelActividad.isEmpty()) Color.Gray else Color(0xFFAB47BC)
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = "Expandir",
+                                            tint = Color(0xFFAB47BC)
+                                        )
+                                    },
+                                    supportingText = {
+                                        if (selectedDescription.isNotEmpty()) {
+                                            Text(
+                                                text = selectedDescription,
+                                                color = Color.Gray,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null // Sin indicación visual de clic
+                                        ) {
+                                            expandedDropdown = !expandedDropdown
+                                        },
+                                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = Color(0xFFAB47BC),
+                                        unfocusedBorderColor = Color.Gray,
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        cursorColor = Color(0xFFAB47BC),
+                                        selectionColors = TextSelectionColors(
+                                            handleColor = Color(0xFFAB47BC),
+                                            backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
+                                        )
+                                    )
+                                )
+
+                                // Overlay transparente que captura los clics en todo el campo
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null // Sin indicación visual de clic
+                                        ) {
+                                            expandedDropdown = !expandedDropdown
+                                        }
+                                )
+
+                                // Menú desplegable con iconos
+                                DropdownMenu(
+                                    expanded = expandedDropdown,
+                                    onDismissRequest = { expandedDropdown = false },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.95f)
+                                        .background(Color(0xFF2A2A2A))
+                                ) {
+                                    activityOptions.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = option.name,
+                                                    color = if (nivelActividad == option.name) Color(0xFFAB47BC) else Color.White
+                                                )
+                                            },
+                                            onClick = {
+                                                nivelActividad = option.name
+                                                selectedIcon = option.icon
+                                                selectedDescription = option.description
+                                                expandedDropdown = false
+                                            },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = option.icon,
+                                                    contentDescription = option.name,
+                                                    tint = if (nivelActividad == option.name) Color(0xFFAB47BC) else Color.White
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .background(
+                                                    if (nivelActividad == option.name)
+                                                        Color(0xFF7B1FA2).copy(alpha = 0.2f)
+                                                    else
+                                                        Color.Transparent
+                                                )
+                                                .fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         // Objetivo de tiempo (semanas) con validación
                         OutlinedTextField(
                             value = objetivoTiempo,
@@ -821,3 +1036,7 @@ fun FormularioScreen(navController: NavController) {
     }
 }
 
+fun stringToLocalDate(fecha: String): LocalDate {
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    return LocalDate.parse(fecha, formatter)
+}

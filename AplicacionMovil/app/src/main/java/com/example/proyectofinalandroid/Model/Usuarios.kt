@@ -23,6 +23,10 @@ data class Usuarios(
     val sexo: String = "",
     @SerializedName("IMC")
     val IMC: Float = 0f,
+    @SerializedName("nivelActividad")
+    val nivelActividad: String = "",
+    @SerializedName("caloriasMantenimiento")
+    val caloriasMantenimiento: String = "",
     @SerializedName("altura")
     val altura: Float = 0f,
     @SerializedName("peso")

@@ -94,6 +94,14 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.IMC = req.body.IMC;
     }
 
+    if (req.body.nivelActividad !== undefined) {
+      updateFields.nivelActividad = req.body.nivelActividad;
+    }
+
+    if (req.body.caloriasMantenimiento !== undefined) {
+      updateFields.caloriasMantenimiento = req.body.caloriasMantenimiento;
+    }
+
     if (req.body.altura !== undefined) {
       updateFields.altura = req.body.altura;
     }
