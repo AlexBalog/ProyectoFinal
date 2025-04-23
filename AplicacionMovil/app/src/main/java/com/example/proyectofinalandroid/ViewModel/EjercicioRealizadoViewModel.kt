@@ -54,4 +54,20 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
             _ejercicioRealizadoSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
         }
     }
+
+    fun new(ejercicioRealizado: EjercicioRealizado) {
+        viewModelScope.launch {
+            try {
+                val creado = repository.new(ejercicioRealizado)
+                if (creado != null) {
+                    _ejercicioRealizadoSeleccionado.value = creado
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Error al crear el usuario"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
+        }
+    }
 }

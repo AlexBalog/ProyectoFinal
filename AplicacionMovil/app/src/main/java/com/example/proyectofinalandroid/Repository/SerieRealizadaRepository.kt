@@ -1,9 +1,11 @@
 package com.example.proyectofinalandroid.Repository
 
 import android.util.Log
+import androidx.lifecycle.viewModelScope
 import com.example.proyectofinalandroid.Model.SerieRealizada
 import com.example.proyectofinalandroid.Remote.SerieRealizadaApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -27,7 +29,7 @@ class SerieRealizadaRepository @Inject constructor(private val api: SerieRealiza
         return response.isSuccessful
     }
 
-    suspend fun getOneEjercicio(_id: String, token: String): SerieRealizada? {
+    suspend fun getOne(_id: String, token: String): SerieRealizada? {
         val request = mapOf("_id" to _id)
         val response = api.getOne("Bearer $token", request)
         return if (response.isSuccessful) response.body() else null
@@ -42,5 +44,14 @@ class SerieRealizadaRepository @Inject constructor(private val api: SerieRealiza
                 null
             }
         }
+    }
+
+    suspend fun new(serie: SerieRealizada): SerieRealizada? {
+        val response = api.new(serie)
+        if (!response.isSuccessful) {
+            val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+            throw Exception(errorMsg)
+        }
+        return response.body()
     }
 }

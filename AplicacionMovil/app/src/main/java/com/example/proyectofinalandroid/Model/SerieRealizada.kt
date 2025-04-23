@@ -5,7 +5,7 @@ import java.io.Serializable
 
 data class SerieRealizada(
     @SerializedName("_id")
-    val _id: String,
+    val _id: String = "",
     @SerializedName("numeroSerie")
     val numeroSerie: Number,
     @SerializedName("repeticiones")

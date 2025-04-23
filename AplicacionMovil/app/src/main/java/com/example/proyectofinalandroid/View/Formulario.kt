@@ -81,6 +81,8 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.SportsMartialArts
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.proyectofinalandroid.utils.uriToBase64
+import kotlin.math.pow
 
 
 data class ActivityLevel(
@@ -168,29 +170,6 @@ fun FormularioScreen(navController: NavController) {
         isAnimatedIn = true
     }
 
-    // Función para convertir imagen a Base64
-    fun convertImageToBase64(uri: Uri): String {
-        Log.d("FalloForm1", "x")
-
-        val inputStream = context.contentResolver.openInputStream(uri)
-            ?: throw IllegalArgumentException("No se pudo abrir el URI: $uri")
-
-        val bitmap = inputStream.use {
-            BitmapFactory.decodeStream(it)
-        }
-
-        Log.d("FalloForm2", "x")
-
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-        Log.d("FalloForm3", "x")
-
-        val byteArray = outputStream.toByteArray()
-        Log.d("FalloForm4", "${byteArray.size} bytes")
-
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
-
 
     // Funciones de validación
     fun validateAltura(value: String): String? {
@@ -257,69 +236,69 @@ fun FormularioScreen(navController: NavController) {
 
             isLoading = true
 
-            // Aquí se guardarían los datos en la base de datos o ViewModel
-            val fotoBase64 = fotoPerfil?.let { convertImageToBase64(it) } ?: ""
-
-            var edad = calcularEdad(stringToLocalDate(fechaNacimiento))
-            var TMB = 0f
-            var caloriasMantenimiento = 0.0F
-
-            if (sexo.equals("Masculino")) {
-                TMB = 10F * peso.toFloat() + 6.25f * altura.toFloat() - 5f * edad.toFloat() + 5f
-            } else if (sexo.equals("Femenino")) {
-                TMB = 10f * peso.toFloat() + 6.25f * altura.toFloat() - 5f * edad.toFloat() + 5f
-            }
-
-            if (nivelActividad.equals("Sedentario")) {
-                caloriasMantenimiento = TMB * 1.2f
-            } else if (nivelActividad.equals("Ligero")) {
-                caloriasMantenimiento = TMB * 1.375f
-            } else if (nivelActividad.equals("Moderado")) {
-                caloriasMantenimiento = TMB * 1.55f
-            } else if (nivelActividad.equals("Intenso")) {
-                caloriasMantenimiento = TMB * 1.725f
-            } else if (nivelActividad.equals("Muy intenso")) {
-                caloriasMantenimiento = TMB * 1.9f
-            }
-
-            var calcularCalorias = 0f
-
-            if (objetivoPeso.toFloat() > peso.toFloat()) {
-                calcularCalorias = (7700f * (objetivoPeso.toFloat() - peso.toFloat())) / (objetivoTiempo.toFloat() * 7f)
-            } else if (objetivoPeso.toFloat() < peso.toFloat()) {
-                calcularCalorias = (7700f * (peso.toFloat() - objetivoPeso.toFloat())) / (objetivoTiempo.toFloat() * 7f)
-            }
-
-            // Simular guardado
             try {
-                val datos = mutableMapOf<String, String>()
-                datos["foto"] = fotoBase64
-                datos["fechaNacimiento"] = fechaNacimiento
-                datos["sexo"] = sexo
-                datos["altura"] = altura
-                datos["peso"] = peso
-                datos["nivelActividad"] = nivelActividad
-                datos["objetivoPeso"] = objetivoPeso
-                datos["objetivoTiempo"] = objetivoTiempo
-                datos["caloriasMantenimiento"] = caloriasMantenimiento.toString()
-                datos["objetivoCalorias"] = (caloriasMantenimiento + calcularCalorias).toString()
-                datos["IMC"] = ((peso.toFloat() ?: 0f) / ((altura.toFloat() ?: 0f) / 100).let { it * it }).toString()
-                datos["formulario"] = true.toString()
+                val fotoBase64 = fotoPerfil?.let { uriToBase64(context, it) } ?: ""
+                val edad = try {
+                    calcularEdad(stringToLocalDate(fechaNacimiento))
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Fecha de nacimiento inválida", Toast.LENGTH_LONG).show()
+                    isLoading = false
+                    return
+                }
+
+                // Calcular TMB
+                val TMB = when (sexo) {
+                    "Masculino" -> 10f * peso.toFloat() + 6.25f * altura.toFloat() - 5f * edad + 5f
+                    "Femenino" -> 10f * peso.toFloat() + 6.25f * altura.toFloat() - 5f * edad - 161f
+                    else -> 0f
+                }
+
+                val caloriasMantenimiento = when (nivelActividad) {
+                    "Sedentario" -> TMB * 1.2f
+                    "Ligero" -> TMB * 1.375f
+                    "Moderado" -> TMB * 1.55f
+                    "Intenso" -> TMB * 1.725f
+                    "Muy intenso" -> TMB * 1.9f
+                    else -> TMB
+                }
+
+                val calcularCalorias = (7700f * (objetivoPeso.toFloat() - peso.toFloat())) / (objetivoTiempo.toFloat() * 7f)
+
+                val datos = mutableMapOf<String, String>().apply {
+                    put("foto", fotoBase64)
+                    put("fechaNacimiento", fechaNacimiento)
+                    put("sexo", sexo)
+                    put("altura", altura)
+                    put("peso", peso)
+                    put("nivelActividad", nivelActividad)
+                    put("objetivoPeso", objetivoPeso)
+                    put("objetivoTiempo", objetivoTiempo)
+                    put("caloriasMantenimiento", caloriasMantenimiento.toString())
+                    put("objetivoCalorias", (caloriasMantenimiento + calcularCalorias).toString())
+                    put("IMC", ((peso.toFloat() / ((altura.toFloat() / 100).pow(2))).toString()))
+                    put("formulario", true.toString())
+                }
+
                 val exito = withContext(Dispatchers.Main) {
                     usuariosViewModel.update(datos)
                 }
-                if(exito) {
+
+                if (exito) {
                     Toast.makeText(context, "Gracias por tu paciencia!!", Toast.LENGTH_SHORT).show()
                     navController.navigate("principal") {
                         popUpTo("profileForm") { inclusive = true }
                     }
+                } else {
+                    Toast.makeText(context, "No se pudo guardar, inténtalo más tarde.", Toast.LENGTH_LONG).show()
                 }
+
             } catch (e: Exception) {
-                Toast.makeText(context, "Error al guardar: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Error inesperado: ${e.message}", Toast.LENGTH_LONG).show()
                 isLoading = false
             }
         }
     }
+
 
     // Función para omitir formulario
     fun omitirFormulario() {
@@ -710,7 +689,6 @@ fun FormularioScreen(navController: NavController) {
                             }
                         )
 
-                        var nivelActividad by remember { mutableStateOf("") }
                         var selectedIcon by remember { mutableStateOf<ImageVector?>(null) }
                         var selectedDescription by remember { mutableStateOf("") }
 
@@ -737,14 +715,14 @@ fun FormularioScreen(navController: NavController) {
                                     readOnly = true,
                                     label = {
                                         if (nivelActividad.isEmpty()) {
-                                            Text("Selecciona tu nivel de actividad", color = Color.Gray)
+                                            Text("Tu actividad física", color = Color.Gray)
                                         }
                                     },
                                     leadingIcon = {
                                         Icon(
                                             imageVector = selectedIcon ?: Icons.Default.FitnessCenter, // Icono placeholder
                                             contentDescription = "Nivel de actividad",
-                                            tint = if (nivelActividad.isEmpty()) Color.Gray else Color(0xFFAB47BC)
+                                            tint = Color(0xFFAB47BC)
                                         )
                                     },
                                     trailingIcon = {

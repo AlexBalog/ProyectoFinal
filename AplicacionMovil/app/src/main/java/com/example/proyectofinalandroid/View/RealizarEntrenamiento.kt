@@ -1,6 +1,8 @@
 package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -1258,6 +1260,7 @@ data class Serie(
 )
 
 // Función para formatear el tiempo en HH:MM:SS
+@RequiresApi(Build.VERSION_CODES.GINGERBREAD)
 fun formatearTiempo(segundos: Long): String {
     val horas = TimeUnit.SECONDS.toHours(segundos)
     val minutos = TimeUnit.SECONDS.toMinutes(segundos) % 60

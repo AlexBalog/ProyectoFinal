@@ -72,4 +72,20 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
             }
         }
     }
+
+    fun new(entrenamientoRealizado: EntrenamientoRealizado) {
+        viewModelScope.launch {
+            try {
+                val creado = repository.new(entrenamientoRealizado)
+                if (creado != null) {
+                    _entrenamientoRealizadoSeleccionado.value = creado
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Error al crear el usuario"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
+        }
+    }
 }

@@ -2,10 +2,15 @@ package com.example.proyectofinalandroid.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Base64
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-
+import java.io.ByteArrayOutputStream
+import android.os.Build
+import android.graphics.ImageDecoder
+import android.content.Context
+import android.provider.MediaStore
 
 fun base64ToBitmap(base64String: String): Bitmap? {
     return try {
@@ -27,4 +32,18 @@ fun base64ToImageBitmap(base64: String): ImageBitmap? {
         e.printStackTrace()
         null
     }
+}
+
+fun uriToBase64(context: Context, imageUri: Uri): String {
+    val bitmap: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val source = ImageDecoder.createSource(context.contentResolver, imageUri)
+        ImageDecoder.decodeBitmap(source)
+    } else {
+        MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
+    }
+
+    val outputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+    val byteArray = outputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.NO_WRAP)
 }

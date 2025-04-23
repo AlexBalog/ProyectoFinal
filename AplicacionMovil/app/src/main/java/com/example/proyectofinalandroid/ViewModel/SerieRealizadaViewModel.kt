@@ -45,13 +45,13 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         }
     }
 
-    private val _seriesRealizadaseleccionado = MutableStateFlow<SerieRealizada?>(null)
-    val serieRealizadaSeleccionada: StateFlow<SerieRealizada?> get() = _seriesRealizadaseleccionado
+    private val _serieRealizadaSeleccionado = MutableStateFlow<SerieRealizada?>(null)
+    val serieRealizadaSeleccionada: StateFlow<SerieRealizada?> get() = _serieRealizadaSeleccionado
 
     fun getOne(id: String) {
         Log.d("Mensaje", "${id} cargado")
         viewModelScope.launch {
-            _seriesRealizadaseleccionado.value = repository.getOneEjercicio(id, _usuario.value?.token.toString())
+            _serieRealizadaSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
         }
     }
 
@@ -69,6 +69,22 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
             } catch (e: Exception) {
                 Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
                 _seriesRealizadas.value = emptyList()
+            }
+        }
+    }
+
+    fun new(serieRealizada: SerieRealizada) {
+        viewModelScope.launch {
+            try {
+                val creado = repository.new(serieRealizada)
+                if (creado != null) {
+                    _serieRealizadaSeleccionado.value = creado
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Error al crear el usuario"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
             }
         }
     }

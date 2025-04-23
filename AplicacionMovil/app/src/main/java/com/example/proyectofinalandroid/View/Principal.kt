@@ -50,19 +50,49 @@ import java.util.*
 import kotlinx.coroutines.delay
 import android.util.Log
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinalandroid.ViewModel.EventosUsuarioViewModel
 import com.example.proyectofinalandroid.utils.base64ToBitmap
 import com.example.proyectofinalandroid.ViewModel.EventosViewModel
 import com.example.proyectofinalandroid.Model.EventosUsuario
+import com.example.proyectofinalandroid.Model.Usuarios
+import com.example.proyectofinalandroid.utils.base64ToImageBitmap
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
+import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, ) {
+fun HomeScreen(navController: NavController) {
+    // Declarar el estado de diálogo primero
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    val activity = LocalContext.current as? Activity
+
+    val backDispatcherOwner = LocalOnBackPressedDispatcherOwner.current
+
+    DisposableEffect(backDispatcherOwner) {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showExitDialog = true
+            }
+        }
+
+        backDispatcherOwner?.onBackPressedDispatcher?.addCallback(callback)
+
+        onDispose {
+            callback.remove()
+        }
+    }
 
     val parentEntry = remember(navController) {
         navController.getBackStackEntry("root")
@@ -84,15 +114,17 @@ fun HomeScreen(navController: NavController, ) {
     var isAnimatedIn by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
-    val firstDayOfMonth = remember { currentMonth.atDay(1) }
-    val lastDayOfMonth = remember { currentMonth.atEndOfMonth() }
+
+    // Valores derivados - no usar remember aquí
+    val firstDayOfMonth = currentMonth.atDay(1)
+    val lastDayOfMonth = currentMonth.atEndOfMonth()
+
     val scrollState = rememberScrollState()
 
-    // Datos simulados (estos vendrían de tu Base de Datos)
-    val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState() // Puede fallar
-    val programasDestacados = remember { entrenamientosViewModel.obtenerProgramasDestacados() }
+    // Datos simulados
+    val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState()
+    val programasDestacados by remember { mutableStateOf(entrenamientosViewModel.obtenerProgramasDestacados()) }
     val eventosUsuario by eventosUsuariosViewModel.eventosUsuarioLista.collectAsState()
-
 
     // Animación de entrada
     LaunchedEffect(Unit) {
@@ -168,7 +200,7 @@ fun HomeScreen(navController: NavController, ) {
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Mis Entrenamientos (solo se muestra si hay entrenamientos disponibles)
-                    if (misEntrenamientos!!.isNotEmpty()) {
+                    if (misEntrenamientos?.isNotEmpty() == true) {
                         MisEntrenamientosSection(
                             entrenamientos = misEntrenamientos!!,
                             navController = navController
@@ -183,7 +215,7 @@ fun HomeScreen(navController: NavController, ) {
                         navController = navController
                     )
 
-                    // Espacio adicional al final para evitar que el contenido se oculte detrás del footer
+                    // Espacio adicional al final
                     Spacer(modifier = Modifier.height(120.dp))
                 }
             }
@@ -197,7 +229,42 @@ fun HomeScreen(navController: NavController, ) {
         ) {
             FooterNavigation(
                 navController = navController,
-                currentRoute = "home"
+                currentRoute = "home",
+                usuario = usuario
+            )
+        }
+
+        if (showExitDialog) {
+            AlertDialog(
+                onDismissRequest = { showExitDialog = false },
+                title = { Text(text = "¿Salir de la app?") },
+                text = { Text(text = "¿Estás seguro de que quieres salir?")},
+                confirmButton = {
+                    TextButton(onClick = {
+                        showExitDialog = false
+                        activity?.finish()
+                    }) {
+                        Text(text = "Sí", color = Color(0xFF7B1FA2), fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showExitDialog = false }) {
+                        Text(text = "Cancelar", color = Color(0xFF7B1FA2), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .shadow(
+                        elevation = 20.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = Color(0xFF7B1FA2),
+                        spotColor = Color(0xFF7B1FA2)
+                    ),
+                containerColor = Color(0xFF1A1A1A),
+                titleContentColor = Color.White,
+                textContentColor = Color.LightGray,
+                shape = RoundedCornerShape(24.dp)
             )
         }
     }
@@ -862,7 +929,8 @@ fun ProgramaDestacadoItem(
 @Composable
 fun FooterNavigation(
     navController: NavController,
-    currentRoute: String
+    currentRoute: String,
+    usuario: Usuarios?
 ) {
     NavigationBar(
         containerColor = Color.Black,
@@ -870,28 +938,40 @@ fun FooterNavigation(
         modifier = Modifier.height(105.dp)
     ) {
         FooterNavItem(
-            icon = Icons.Default.CalendarToday,
+            icon = { Icon(Icons.Default.CalendarToday, contentDescription = "Calendario") },
             label = "HOY",
             isSelected = currentRoute == "home",
             onClick = { /* Navegar a home */ }
         )
 
         FooterNavItem(
-            icon = Icons.Outlined.Search,
+            icon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
             label = "BUSCAR",
             isSelected = currentRoute == "search",
             onClick = { /* Navegar a búsqueda */ }
         )
 
         FooterNavItem(
-            icon = Icons.Default.Psychology,
+            icon = { Icon(Icons.Default.Psychology, contentDescription = "FitMind") },
             label = "FitMind",
             isSelected = currentRoute == "fitmind",
             onClick = { /* Navegar a FitMind */ }
         )
 
         FooterNavItem(
-            icon = Icons.Default.Person,
+            icon = {
+                if (!usuario?.foto.isNullOrEmpty()) {
+                    Image(
+                        bitmap = base64ToImageBitmap(usuario!!.foto) as ImageBitmap,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = "Perfil")
+                }
+            },
             label = "PERFIL",
             isSelected = currentRoute == "profile",
             onClick = { /* Navegar a perfil */ }
@@ -901,18 +981,13 @@ fun FooterNavigation(
 
 @Composable
 fun RowScope.FooterNavItem(
-    icon: ImageVector,
+    icon: @Composable () -> Unit,
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
     NavigationBarItem(
-        icon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = label
-            )
-        },
+        icon = icon,
         label = {
             Text(
                 text = label,

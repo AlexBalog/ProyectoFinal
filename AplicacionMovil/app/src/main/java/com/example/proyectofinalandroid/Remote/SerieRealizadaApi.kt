@@ -1,6 +1,5 @@
 package com.example.proyectofinalandroid.Remote
 
-import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.SerieRealizada
 import retrofit2.Response
 import retrofit2.http.*
@@ -37,4 +36,7 @@ interface SerieRealizadaApi {
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<List<SerieRealizada>>
+
+    @POST("serieRealizada/new")
+    suspend fun new(@Body serie: SerieRealizada): Response<SerieRealizada>
 }
