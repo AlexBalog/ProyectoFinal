@@ -24,23 +24,23 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private val _ejercicioRealizado = MutableStateFlow<List<EjercicioRealizado>?>(emptyList())
-    val ejercicioRealizado: StateFlow<List<EjercicioRealizado>?> get() = _ejercicioRealizado
+    private val _ejerciciosRealizados = MutableStateFlow<List<EjercicioRealizado>?>(emptyList())
+    val ejerciciosRealizados: StateFlow<List<EjercicioRealizado>?> get() = _ejerciciosRealizados
 
     private fun getAll() {
         viewModelScope.launch {
             try {
                 val lista = repository.getAll(token = _usuario.value?.token.toString())
                 if (lista != null) {
-                    _ejercicioRealizado.value = lista
+                    _ejerciciosRealizados.value = lista
                     Log.d("Habitaciones", "Datos cargados: $lista")
                 } else {
-                    _ejercicioRealizado.value = emptyList()
+                    _ejerciciosRealizados.value = emptyList()
                     Log.d("Habitaciones", "Respuesta nula o lista vacía.")
                 }
             } catch (e: Exception) {
                 Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
-                _ejercicioRealizado.value = emptyList()
+                _ejerciciosRealizados.value = emptyList()
             }
         }
     }

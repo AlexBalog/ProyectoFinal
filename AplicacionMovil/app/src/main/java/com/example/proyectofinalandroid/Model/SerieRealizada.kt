@@ -6,6 +6,8 @@ import java.io.Serializable
 data class SerieRealizada(
     @SerializedName("_id")
     val _id: String = "",
+    @SerializedName("ejercicioRealizado")
+    val ejercicioRealizado: String,
     @SerializedName("numeroSerie")
     val numeroSerie: Number,
     @SerializedName("repeticiones")

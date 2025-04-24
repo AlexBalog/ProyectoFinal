@@ -82,4 +82,9 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
             }
         }
     }
+
+    suspend fun fetchOne(id: String): Ejercicios? {
+        return repository.getOne(id, _usuario.value?.token.orEmpty())
+    }
+
 }

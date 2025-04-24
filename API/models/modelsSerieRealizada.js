@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 const SerieRealizadaSchema = mongoose.Schema({
     _id: { type: String },
+    ejercicio: {
+        required: true,
+        type: String
+    },
     numeroSerie: {
         required: true,
         type: Number
@@ -16,6 +20,7 @@ const SerieRealizadaSchema = mongoose.Schema({
 })
 
 const CodigoLiberado = require('./modelsCodigosLiberados');
+const e = require("express");
 
 SerieRealizadaSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
     await CodigoLiberado.create({ codigo: this._id, tipo: 'SerieRealizada' });

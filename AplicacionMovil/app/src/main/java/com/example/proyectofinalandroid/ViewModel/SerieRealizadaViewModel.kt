@@ -27,6 +27,12 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
     private val _seriesRealizadas = MutableStateFlow<List<SerieRealizada>?>(emptyList())
     val seriesRealizadas: StateFlow<List<SerieRealizada>?> get() = _seriesRealizadas
 
+    fun anadirSerieALista(serie: SerieRealizada) {
+        val listaActual = _seriesRealizadas.value?.toMutableList() ?: mutableListOf()
+        listaActual.add(serie)
+        _seriesRealizadas.value = listaActual
+    }
+
     fun getAll() {
         viewModelScope.launch {
             try {

@@ -2,6 +2,7 @@ package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -52,7 +53,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.painterResource
+import com.example.proyectofinalandroid.Model.SerieRealizada
 import com.example.proyectofinalandroid.utils.base64ToImageBitmap
+import kotlin.String
+import com.example.proyectofinalandroid.ViewModel.EntrenamientoRealizadoViewModel
+import com.example.proyectofinalandroid.ViewModel.SerieRealizadaViewModel
+import com.example.proyectofinalandroid.ViewModel.EjercicioRealizadoViewModel
 
 // Colores principales - extraídos para mejor mantenimiento
 private val primaryPurple = Color(0xFFAB47BC)
@@ -61,6 +68,7 @@ private val backgroundDark = Color(0xFF0D0D0D)
 private val surfaceDark = Color(0xFF1A1A1A)
 private val darkGray = Color(0xFF252525)
 private val lightGray = Color.LightGray
+
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +83,11 @@ fun ComenzarEntrenamientoScreen(
         navController.getBackStackEntry("root")
     }
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val entrenamientoRealizadoViewModel: EntrenamientoRealizadoViewModel = hiltViewModel()
+    val ejercicioRealizadoViewModel: EjercicioRealizadoViewModel = hiltViewModel()
+    val serieRealizadaViewModel: SerieRealizadaViewModel = hiltViewModel()
+    val ejerciciosRealizados by ejercicioRealizadoViewModel.ejerciciosRealizados.collectAsState()
+    val series by serieRealizadaViewModel.seriesRealizadas.collectAsState()
     val usuario by usuariosViewModel.usuario.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -169,6 +182,13 @@ fun ComenzarEntrenamientoScreen(
             confirmButtonColor = darkPurple,
             onConfirm = {
                 tiempoActivo = false
+                entrenamientoRealizadoViewModel.guardarEntrenamiento(
+                    entrenamientoId = entrenamientoId,
+                    usuarioId = usuario!!._id,
+                    duracion = tiempoFormateado,
+                    viewModelEjercicio = ejercicioRealizadoViewModel,
+                    viewModelSerie = serieRealizadaViewModel
+                )
                 showFinishDialog = false
                 navController.popBackStack()
             },
@@ -421,9 +441,10 @@ fun ComenzarEntrenamientoScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(entrenamiento.ejercicios) { ejercicioId ->
+                                    Log.d("FalloEjercicios1", "${ejercicioId}")
                                     val ejercicio = ejerciciosCargados[ejercicioId]
                                     if (ejercicio != null) {
-                                        EjercicioConSeries(ejercicio)
+                                        EjercicioConSeries(ejercicio, serieRealizadaViewModel)
                                     } else {
                                         TarjetaEjercicioCargando()
                                     }
@@ -509,9 +530,9 @@ fun LoadingScreen() {
 }
 
 @Composable
-fun EjercicioConSeries(ejercicio: Ejercicios) {
+fun EjercicioConSeries(ejercicio: Ejercicios, serieRealizadaViewModel: SerieRealizadaViewModel) {
     // Estado para controlar la lista de series
-    val series = remember { mutableStateListOf<Serie>() }
+    val series = remember { mutableStateListOf<SerieRealizada>() }
 
     // Estado para el diálogo de añadir serie
     var showAddSerieDialog by remember { mutableStateOf(false) }
@@ -550,12 +571,22 @@ fun EjercicioConSeries(ejercicio: Ejercicios) {
                         .height(100.dp)
                         .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
                 ) {
-                    Image(
-                        bitmap = base64ToImageBitmap(ejercicio.foto)!!,
-                        contentDescription = "Imagen de ejercicio",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+
+                    if (ejercicio.foto.isEmpty()) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "Imagen de ejercicio",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Image(
+                            bitmap = base64ToImageBitmap(ejercicio.foto)!!,
+                            contentDescription = "Imagen de ejercicio",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
 
                     // Gradiente sobre la imagen para mejorar legibilidad
                     Box(
@@ -740,7 +771,7 @@ fun EjercicioConSeries(ejercicio: Ejercicios) {
                                             Spacer(modifier = Modifier.width(4.dp))
 
                                             Text(
-                                                text = serie.repeticiones,
+                                                text = serie.repeticiones.toString(),
                                                 style = TextStyle(
                                                     fontSize = 14.sp,
                                                     fontWeight = FontWeight.Bold,
@@ -845,7 +876,15 @@ fun EjercicioConSeries(ejercicio: Ejercicios) {
     if (showAddSerieDialog) {
         DialogAñadirSerie(
             onAddSerie = { peso, repeticiones ->
-                series.add(Serie(peso = peso, repeticiones = repeticiones))
+                val numeroSerie = series.size + 1
+                Log.d("FalloSerie1", "Añadiendo serie: $peso kg, $repeticiones repeticiones, serie $numeroSerie, ejercicio ${ejercicio._id}")
+                val serieNueva = SerieRealizada(peso = peso.toFloat(),
+                                    repeticiones = repeticiones.toInt(),
+                                    numeroSerie = numeroSerie,
+                                    ejercicioRealizado = ejercicio._id
+                )
+                series.add(serieNueva)
+                serieRealizadaViewModel.anadirSerieALista(serieNueva)
                 showAddSerieDialog = false
             },
             onDismiss = { showAddSerieDialog = false }
@@ -1252,12 +1291,6 @@ fun AlertaConfirmacion(
         }
     }
 }
-
-// Clase para manejar los datos de las series
-data class Serie(
-    val peso: String,
-    val repeticiones: String
-)
 
 // Función para formatear el tiempo en HH:MM:SS
 @RequiresApi(Build.VERSION_CODES.GINGERBREAD)
