@@ -62,10 +62,10 @@ import kotlinx.coroutines.delay
 fun LoginScreen(
     navController: NavController,
 ) {
-    val parentEntry = remember(navController) {
+    val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
-    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
 
     // Estados locales
     var email by remember { mutableStateOf("") }

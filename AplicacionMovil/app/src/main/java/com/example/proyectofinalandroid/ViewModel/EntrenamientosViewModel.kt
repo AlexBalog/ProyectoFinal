@@ -150,4 +150,8 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
             }
         }
     }
+
+    suspend fun fetchOne(id: String): Entrenamientos? {
+        return repository.getOne(id, _usuario.value?.token.orEmpty())
+    }
 }

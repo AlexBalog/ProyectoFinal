@@ -60,6 +60,7 @@ import kotlin.String
 import com.example.proyectofinalandroid.ViewModel.EntrenamientoRealizadoViewModel
 import com.example.proyectofinalandroid.ViewModel.SerieRealizadaViewModel
 import com.example.proyectofinalandroid.ViewModel.EjercicioRealizadoViewModel
+import kotlinx.coroutines.flow.*
 
 // Colores principales - extraídos para mejor mantenimiento
 private val primaryPurple = Color(0xFFAB47BC)
@@ -77,12 +78,15 @@ fun ComenzarEntrenamientoScreen(
     navController: NavController,
     entrenamientoId: String
 ) {
-    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel()
-    val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel()
-    val parentEntry = remember(navController) {
+    val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
-    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val parentEntry = remember(navController) {
+        navController.getBackStackEntry("main")
+    }
+    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
+    val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel(parentEntry)
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
     val entrenamientoRealizadoViewModel: EntrenamientoRealizadoViewModel = hiltViewModel()
     val ejercicioRealizadoViewModel: EjercicioRealizadoViewModel = hiltViewModel()
     val serieRealizadaViewModel: SerieRealizadaViewModel = hiltViewModel()
@@ -91,15 +95,9 @@ fun ComenzarEntrenamientoScreen(
     val usuario by usuariosViewModel.usuario.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(usuario) {
-        usuario?.let {
-            entrenamientosViewModel.setUsuario(usuario!!)
-            ejerciciosViewModel.setUsuario(usuario!!)
-        }
-    }
 
     var isAnimatedIn by remember { mutableStateOf(false) }
-    val ejerciciosCargados = remember { mutableStateMapOf<String, Ejercicios>() }
+    val ejerciciosCargados by ejerciciosViewModel.ejercicios.collectAsState()
     val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
     val isLoading by entrenamientosViewModel.isLoading.collectAsState()
 
@@ -124,13 +122,6 @@ fun ComenzarEntrenamientoScreen(
         label = "pulse"
     )
 
-    // Cargar el entrenamiento por ID cuando se inicia la pantalla
-    LaunchedEffect(entrenamientoId) {
-        entrenamientosViewModel.getOne(entrenamientoId)
-        delay(100)
-        isAnimatedIn = true
-    }
-
     // Iniciar cronómetro cuando se carga la pantalla
     LaunchedEffect(tiempoActivo) {
         while (tiempoActivo) {
@@ -139,22 +130,17 @@ fun ComenzarEntrenamientoScreen(
         }
     }
 
-    // Cargar los ejercicios cuando cambia el entrenamiento seleccionado
-    LaunchedEffect(entrenamientoSeleccionado) {
-        entrenamientoSeleccionado?.ejercicios?.forEach { ejercicioId ->
-            coroutineScope.launch {
-                if (!ejerciciosCargados.containsKey(ejercicioId)) {
-                    ejerciciosViewModel.getOne(ejercicioId)
-                    ejerciciosViewModel.ejercicioSeleccionado.collect { ejercicio ->
-                        if (ejercicio != null && ejercicio._id == ejercicioId) {
-                            ejerciciosCargados[ejercicioId] = ejercicio
-                            return@collect
-                        }
-                    }
-                }
-            }
-        }
+    LaunchedEffect(true) {
+        Log.d("FalloRealizarEntrenamiento", "EntrenamientosViewModel: ${entrenamientoSeleccionado}")
+        Log.d("FalloRealizarEntrenamiento", "EjerciciosViewModel: ${ejerciciosViewModel.ejercicios.value}")
+        Log.d("FalloRealizarEntrenamiento", "EjerciciosViewModel: ${ejerciciosViewModel.ejercicios.value?.size}")
     }
+
+    LaunchedEffect(true) {
+        delay(100)
+        isAnimatedIn = true
+    }
+
 
     // Diálogos
     if (showCancelDialog) {
@@ -210,297 +196,292 @@ fun ComenzarEntrenamientoScreen(
                 animationSpec = tween(600)
             )
         ) {
-            if (isLoading) {
-                LoadingScreen()
-            } else {
-                entrenamientoSeleccionado?.let { entrenamiento ->
-                    // Fondo con imagen difuminada para mejor contraste
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
 
+                Image(
+                    bitmap = base64ToImageBitmap(entrenamientoSeleccionado?.foto as String)!!,
+                    contentDescription = "Imagen de entrenamiento",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().blur(15.dp).alpha(0.2f)
+                )
+
+                // Overlay para mejorar legibilidad
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0f to backgroundDark.copy(alpha = 0.85f),
+                                0.4f to backgroundDark.copy(alpha = 0.75f),
+                                1f to backgroundDark.copy(alpha = 0.95f)
+                            )
+                        )
+                )
+            }
+
+            // Contenido principal con layout mejorado
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Header con cronómetro prominente
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Encabezado con efecto de vidrio y cronómetro central
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                    ) {
+                        // Imagen del entrenamiento en la cabecera
                         Image(
-                            bitmap = base64ToImageBitmap(entrenamiento.foto)!!,
+                            bitmap = base64ToImageBitmap(entrenamientoSeleccionado?.foto as String)!!,
                             contentDescription = "Imagen de entrenamiento",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize().blur(15.dp).alpha(0.2f)
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                         )
 
-                        // Overlay para mejorar legibilidad
+                        // Degradado para legibilidad
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                                 .background(
                                     Brush.verticalGradient(
-                                        0f to backgroundDark.copy(alpha = 0.85f),
-                                        0.4f to backgroundDark.copy(alpha = 0.75f),
-                                        1f to backgroundDark.copy(alpha = 0.95f)
+                                        0f to backgroundDark.copy(alpha = 0.9f),
+                                        0.5f to backgroundDark.copy(alpha = 0.7f),
+                                        1f to backgroundDark.copy(alpha = 0.9f)
+                                    )
+                                )
+                        )
+
+                        // Contenido del header
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = 35.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            // Logo con estilo mejorado
+                            Text(
+                                text = "FitSphere",
+                                style = TextStyle(
+                                    fontSize = 26.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    shadow = Shadow(
+                                        color = Color.Black.copy(alpha = 0.7f),
+                                        blurRadius = 4f,
+                                        offset = Offset(2f, 2f)
+                                    ),
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            primaryPurple,
+                                            darkPurple
+                                        )
+                                    )
+                                )
+                            )
+
+                            // Cronómetro con animación y mejor visibilidad
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 8.dp)
+                                    .size(80.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                darkPurple.copy(alpha = 0.7f),
+                                                darkPurple.copy(alpha = 0.4f)
+                                            )
+                                        )
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(primaryPurple, darkPurple)
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .scale(scale = pulseSize),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = tiempoFormateado,
+                                    style = TextStyle(
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                )
+                            }
+                        }
+
+                        // Botón de regreso en la esquina
+                        IconButton(
+                            onClick = { showCancelDialog = true },
+                            modifier = Modifier
+                                .padding(16.dp, 35.dp, 16.dp, 16.dp)
+                                .size(48.dp)
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = CircleShape
+                                )
+                                .background(
+                                    color = surfaceDark.copy(alpha = 0.8f),
+                                    shape = CircleShape
+                                )
+                                .align(Alignment.TopStart)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = Color.White
+                            )
+                        }
+                    }
+
+                    // Título del entrenamiento y categoría
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        // Nombre del entrenamiento
+                        Text(
+                            text = entrenamientoSeleccionado?.nombre.toString(),
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 24.sp,
+                                color = Color.White
+                            )
+                        )
+
+                        // Categoría con diseño integrado
+                        Row(
+                            modifier = Modifier.padding(top = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FitnessCenter,
+                                contentDescription = "Categoría",
+                                tint = primaryPurple,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            Text(
+                                text = entrenamientoSeleccionado?.categoria.toString(),
+                                style = TextStyle(
+                                    fontSize = 16.sp,
+                                    color = primaryPurple,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Título de sección ejercicios
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Ejercicios",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                color = Color.White
+                            )
+                        )
+
+                        // Línea separadora dinámica
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp)
+                                .height(1.dp)
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            primaryPurple.copy(alpha = 0.7f),
+                                            primaryPurple.copy(alpha = 0.0f)
+                                        )
                                     )
                                 )
                         )
                     }
 
-                    // Contenido principal con layout mejorado
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        // Header con cronómetro prominente
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            // Encabezado con efecto de vidrio y cronómetro central
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(180.dp)
-                            ) {
-                                // Imagen del entrenamiento en la cabecera
-                                Image(
-                                    bitmap = base64ToImageBitmap(entrenamiento.foto)!!,
-                                    contentDescription = "Imagen de entrenamiento",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                                )
+                    // Reemplaza el LazyColumn por un Column normal con ScrollState
+                    val scrollState = rememberScrollState()
 
-                                // Degradado para legibilidad
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                                        .background(
-                                            Brush.verticalGradient(
-                                                0f to backgroundDark.copy(alpha = 0.9f),
-                                                0.5f to backgroundDark.copy(alpha = 0.7f),
-                                                1f to backgroundDark.copy(alpha = 0.9f)
-                                            )
-                                        )
-                                )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .verticalScroll(scrollState),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Guardamos la lista en una variable estable
+                        val listaEjercicios = ejerciciosCargados ?: emptyList()
 
-                                // Contenido del header
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(top = 35.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    // Logo con estilo mejorado
-                                    Text(
-                                        text = "FitSphere",
-                                        style = TextStyle(
-                                            fontSize = 26.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            shadow = Shadow(
-                                                color = Color.Black.copy(alpha = 0.7f),
-                                                blurRadius = 4f,
-                                                offset = Offset(2f, 2f)
-                                            ),
-                                            brush = Brush.linearGradient(
-                                                colors = listOf(
-                                                    primaryPurple,
-                                                    darkPurple
-                                                )
-                                            )
-                                        )
-                                    )
-
-                                    // Cronómetro con animación y mejor visibilidad
-                                    Box(
-                                        modifier = Modifier
-                                            .padding(top = 8.dp)
-                                            .size(80.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                Brush.radialGradient(
-                                                    colors = listOf(
-                                                        darkPurple.copy(alpha = 0.7f),
-                                                        darkPurple.copy(alpha = 0.4f)
-                                                    )
-                                                )
-                                            )
-                                            .border(
-                                                width = 2.dp,
-                                                brush = Brush.linearGradient(
-                                                    colors = listOf(primaryPurple, darkPurple)
-                                                ),
-                                                shape = CircleShape
-                                            )
-                                            .scale(scale = pulseSize),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = tiempoFormateado,
-                                            style = TextStyle(
-                                                fontSize = 16.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
-                                            )
-                                        )
-                                    }
-                                }
-
-                                // Botón de regreso en la esquina
-                                IconButton(
-                                    onClick = { showCancelDialog = true },
-                                    modifier = Modifier
-                                        .padding(16.dp, 35.dp, 16.dp, 16.dp)
-                                        .size(48.dp)
-                                        .shadow(
-                                            elevation = 4.dp,
-                                            shape = CircleShape
-                                        )
-                                        .background(
-                                            color = surfaceDark.copy(alpha = 0.8f),
-                                            shape = CircleShape
-                                        )
-                                        .align(Alignment.TopStart)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowBack,
-                                        contentDescription = "Volver",
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-
-                            // Título del entrenamiento y categoría
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                            ) {
-                                // Nombre del entrenamiento
-                                Text(
-                                    text = entrenamiento.nombre,
-                                    style = TextStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 24.sp,
-                                        color = Color.White
-                                    )
-                                )
-
-                                // Categoría con diseño integrado
-                                Row(
-                                    modifier = Modifier.padding(top = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.FitnessCenter,
-                                        contentDescription = "Categoría",
-                                        tint = primaryPurple,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-
-                                    Text(
-                                        text = entrenamiento.categoria,
-                                        style = TextStyle(
-                                            fontSize = 16.sp,
-                                            color = primaryPurple,
-                                            fontWeight = FontWeight.Medium
-                                        ),
-                                        modifier = Modifier.padding(start = 4.dp)
-                                    )
-                                }
-                            }
-
-                            // Título de sección ejercicios
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Ejercicios",
-                                    style = TextStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        color = Color.White
-                                    )
-                                )
-
-                                // Línea separadora dinámica
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(horizontal = 8.dp)
-                                        .height(1.dp)
-                                        .background(
-                                            Brush.horizontalGradient(
-                                                colors = listOf(
-                                                    primaryPurple.copy(alpha = 0.7f),
-                                                    primaryPurple.copy(alpha = 0.0f)
-                                                )
-                                            )
-                                        )
-                                )
-                            }
-
-                            // Lista de ejercicios con LazyColumn para mejor rendimiento
-                            LazyColumn(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(entrenamiento.ejercicios) { ejercicioId ->
-                                    Log.d("FalloEjercicios1", "${ejercicioId}")
-                                    val ejercicio = ejerciciosCargados[ejercicioId]
-                                    if (ejercicio != null) {
-                                        EjercicioConSeries(ejercicio, serieRealizadaViewModel)
-                                    } else {
-                                        TarjetaEjercicioCargando()
-                                    }
-                                }
-
-                                // Espacio al final para el botón flotante
-                                item {
-                                    Spacer(modifier = Modifier.height(80.dp))
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(100.dp))
-                        }
-
-                        // Botón de finalizar flotante
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .background(Color.Black)
-                                .padding(bottom = 40.dp)
-                        ) {
-                            Button(
-                                onClick = { showFinishDialog = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .height(56.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = darkPurple
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = "Finalizar",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "FINALIZAR ENTRENAMIENTO",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                        // Usamos un bucle for en lugar de items de LazyColumn
+                        for (ejercicio in listaEjercicios) {
+                            if (ejercicio != null) {
+                                EjercicioConSeries(ejercicio, serieRealizadaViewModel)
+                            } else {
+                                TarjetaEjercicioCargando()
                             }
                         }
 
+                        // Espacio al final para el botón flotante
+                        Spacer(modifier = Modifier.height(180.dp))
                     }
                 }
+
+                // Botón de finalizar flotante
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(Color.Black)
+                        .padding(bottom = 40.dp)
+                ) {
+                    Button(
+                        onClick = { showFinishDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = darkPurple
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Finalizar",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "FINALIZAR ENTRENAMIENTO",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
             }
         }
     }
 }
 
-@Composable
+/*@Composable
 fun LoadingScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -527,7 +508,7 @@ fun LoadingScreen() {
             )
         }
     }
-}
+}*/
 
 @Composable
 fun EjercicioConSeries(ejercicio: Ejercicios, serieRealizadaViewModel: SerieRealizadaViewModel) {
@@ -1293,10 +1274,9 @@ fun AlertaConfirmacion(
 }
 
 // Función para formatear el tiempo en HH:MM:SS
-@RequiresApi(Build.VERSION_CODES.GINGERBREAD)
 fun formatearTiempo(segundos: Long): String {
-    val horas = TimeUnit.SECONDS.toHours(segundos)
-    val minutos = TimeUnit.SECONDS.toMinutes(segundos) % 60
+    val horas = segundos / 3600
+    val minutos = (segundos % 3600) / 60
     val segs = segundos % 60
 
     return String.format("%02d:%02d:%02d", horas, minutos, segs)

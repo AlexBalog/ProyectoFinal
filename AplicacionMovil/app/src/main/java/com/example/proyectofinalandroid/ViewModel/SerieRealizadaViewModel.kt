@@ -94,4 +94,20 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
             }
         }
     }
+
+    fun eliminarSerieDeLista(indice: Int) {
+        viewModelScope.launch {
+            try {
+                val listaActual = _seriesRealizadas.value?.toMutableList() ?: mutableListOf()
+                if (indice in listaActual.indices) {
+                    listaActual.removeAt(indice)
+                    _seriesRealizadas.value = listaActual
+                } else {
+                    Log.e("SerieRealizadaViewModel", "Índice fuera de rango: $indice")
+                }
+            } catch (e: Exception) {
+                Log.e("SerieRealizadaViewModel", "Error al eliminar la serie: ${e.message}")
+            }
+        }
+    }
 }

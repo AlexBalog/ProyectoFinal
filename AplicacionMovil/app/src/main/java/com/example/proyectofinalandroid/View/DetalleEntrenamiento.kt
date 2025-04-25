@@ -58,12 +58,16 @@ fun DetalleEntrenamientoScreen(
     navController: NavController,
     entrenamientoId: String
 ) {
-    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel()
-    val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel()
-    val parentEntry = remember(navController) {
+    val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
-    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+
+    val parentEntry = remember(navController) {
+        navController.getBackStackEntry("main")
+    }
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
+    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
+    val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel(parentEntry)
     val likesViewModel: LikesViewModel = hiltViewModel()
     val guardadosViewModel: GuardadosViewModel = hiltViewModel()
     val usuario by usuariosViewModel.usuario.collectAsState()
@@ -127,6 +131,12 @@ fun DetalleEntrenamientoScreen(
                     }
                 }
             }
+        }
+    }
+
+    LaunchedEffect(entrenamientoSeleccionado) {
+        entrenamientoSeleccionado?.let { entrenamiento ->
+            ejerciciosViewModel.getListaEjerciciosDesdeIds(entrenamiento.ejercicios)
         }
     }
 

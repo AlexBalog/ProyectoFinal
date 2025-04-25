@@ -96,10 +96,10 @@ data class ActivityLevel(
 @Composable
 fun FormularioScreen(navController: NavController) {
 
-    val parentEntry = remember(navController) {
+    val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
-    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
 
     // Estados para los campos del formulario
     var fotoPerfil by remember { mutableStateOf<Uri?>(null) }

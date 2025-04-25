@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.State
 import com.example.proyectofinalandroid.Model.Ejercicios
+import com.example.proyectofinalandroid.Model.Entrenamientos
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,11 +56,22 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
         }
     }
 
+    suspend fun getListaEjerciciosDesdeIds(ids: List<String>): List<Ejercicios> {
+        val ejercicios = mutableListOf<Ejercicios>()
+        for (id in ids) {
+            val ejercicio = fetchOne(id)
+            if (ejercicio != null) {
+                ejercicios.add(ejercicio)
+            }
+        }
+        return ejercicios
+    }
+
+
     private val _ejercicioSeleccionado = MutableStateFlow<Ejercicios?>(null)
     val ejercicioSeleccionado: StateFlow<Ejercicios?> get() = _ejercicioSeleccionado
 
     fun getOne(id: String) {
-        Log.d("Mensaje", "${id} cargado")
         viewModelScope.launch {
             _ejercicioSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
         }

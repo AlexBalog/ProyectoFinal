@@ -94,11 +94,14 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    val parentEntry = remember(navController) {
+    val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
+    val parentEntry = remember(navController) {
+        navController.getBackStackEntry("main")
+    }
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
-    val usuariosViewModel: UsuariosViewModel = hiltViewModel(parentEntry)
+    val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
     val eventosUsuariosViewModel: EventosUsuarioViewModel = hiltViewModel()
     val eventosViewModel: EventosViewModel = hiltViewModel()
 
