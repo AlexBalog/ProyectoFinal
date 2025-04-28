@@ -11,6 +11,7 @@ import com.example.proyectofinalandroid.Model.EjercicioRealizado
 import com.example.proyectofinalandroid.Repository.EjercicioRealizadoRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.proyectofinalandroid.Model.Ejercicios
 
 @HiltViewModel
 class EjercicioRealizadoViewModel @Inject constructor(private val repository: EjercicioRealizadoRepository) : ViewModel() {
@@ -26,6 +27,23 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
 
     private val _ejerciciosRealizados = MutableStateFlow<List<EjercicioRealizado>?>(emptyList())
     val ejerciciosRealizados: StateFlow<List<EjercicioRealizado>?> get() = _ejerciciosRealizados
+
+    fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+        getAll()
+    }
+
+    fun actualizarIds(id: String) {
+        _ejerciciosRealizados.value!!.forEach { ejercicio ->
+            ejercicio.entrenamientoRealizado = id
+        }
+        _ejerciciosRealizados.value = _ejerciciosRealizados.value
+    }
+
+
+    fun vaciarLista() {
+        _ejerciciosRealizados.value = emptyList()
+    }
 
     private fun getAll() {
         viewModelScope.launch {
@@ -70,4 +88,24 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
             }
         }
     }
+
+    fun guardarALista(ejercicio: Ejercicios, entrenamientoId: String) {
+        val ejerReal = EjercicioRealizado(
+            _id = "",
+            entrenamiento = entrenamientoId,
+            ejercicio = ejercicio._id,
+            nombre = ejercicio.nombre,
+            series = emptyList()
+        )
+        val listaActual = _ejerciciosRealizados.value?.toMutableList() ?: mutableListOf()
+        listaActual.add(ejerReal)
+        _ejerciciosRealizados.value = listaActual
+    }
+
+    fun guardarAListaRealizados(ejercicioRealizado: EjercicioRealizado) {
+        val listaActual = _ejerciciosRealizados.value?.toMutableList() ?: mutableListOf()
+        listaActual.add(ejercicioRealizado)
+        _ejerciciosRealizados.value = listaActual
+    }
+
 }

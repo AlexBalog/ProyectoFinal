@@ -5,6 +5,9 @@ const SerieRealizadaSchema = mongoose.Schema({
         required: true,
         type: String
     },
+    ejercicioRealizado: {
+        type: String
+    },
     numeroSerie: {
         required: true,
         type: Number

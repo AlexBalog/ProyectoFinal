@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const EjercicioRealizadoSchema = mongoose.Schema({
     _id: { type: String },
+    entrenamientoRealizado: {
+        type: String
+    },
     entrenamiento: {
         required: true,
         type: String

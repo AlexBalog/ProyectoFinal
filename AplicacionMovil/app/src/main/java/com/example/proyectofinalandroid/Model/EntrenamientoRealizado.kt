@@ -12,7 +12,7 @@ data class EntrenamientoRealizado(
     @SerializedName("entrenamiento")
     val entrenamiento: String,
     @SerializedName("duracion")
-    val duracion: Number,
+    val duracion: String,
     @SerializedName("fecha")
     val fecha: Date,
     @SerializedName("ejerciciosRealizados")

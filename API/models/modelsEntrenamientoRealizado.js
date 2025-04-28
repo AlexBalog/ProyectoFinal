@@ -11,7 +11,7 @@ const EntrenamientoRealizadoSchema = mongoose.Schema({
     },
     duracion: {
         required: true,
-        type: Number
+        type: String
     },
     fecha: {
         required: true,
@@ -51,7 +51,7 @@ EntrenamientoRealizadoSchema.pre('save', async function (next) {
                 if (match) {
                     const ultimoNumero = parseInt(match[1], 10);
                     const nuevoNumero = (ultimoNumero + 1).toString().padStart(5, '0');
-                    nuevoID = `EA${nuevoNumero}`;
+                    nuevoID = `ER${nuevoNumero}`;
                 }
             }
         }

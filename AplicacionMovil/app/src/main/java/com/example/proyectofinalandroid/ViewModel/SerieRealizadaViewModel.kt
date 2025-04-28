@@ -33,6 +33,25 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         _seriesRealizadas.value = listaActual
     }
 
+    fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+        getAll()
+    }
+
+    fun vaciarLista() {
+        _seriesRealizadas.value = emptyList()
+    }
+
+    fun actualizarIds(idEjercicioRealizado: String, idEjercicio: String) {
+        _seriesRealizadas.value = _seriesRealizadas.value?.map { serie ->
+            if (serie.ejercicio == idEjercicio) {
+                serie.copy(ejercicioRealizado = idEjercicioRealizado)
+            } else {
+                serie
+            }
+        }
+    }
+
     fun getAll() {
         viewModelScope.launch {
             try {

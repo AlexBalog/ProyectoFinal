@@ -58,6 +58,7 @@ router.get('/getFilter', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
+    console.log("Entra en el new de entrenamientoRealizado" + req.body);
     const data = new modelEntrenamientoRealizado({
         usuario: req.body.usuario,
         entrenamiento: req.body.entrenamiento,

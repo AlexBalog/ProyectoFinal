@@ -27,6 +27,7 @@ router.post('/getOne', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
+    console.log("Entra en el new de ejercicioRealizado" + req.body);
     const data = new modelEjercicioRealizado({
         ejercicio: req.body.ejercicio,
         nombre: req.body.nombre,
@@ -35,6 +36,7 @@ router.post('/new', async (req, res) => {
 
     try {
     const dataToSave = await data.save();
+    console.log("Respuesta exitosa: Código 200", dataToSave); // Log para éxito
     res.status(200).json(dataToSave);
     }
     catch (error) {

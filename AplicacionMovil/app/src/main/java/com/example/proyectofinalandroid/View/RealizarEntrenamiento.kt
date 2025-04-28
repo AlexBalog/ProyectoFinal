@@ -1,9 +1,7 @@
 package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -61,6 +59,7 @@ import com.example.proyectofinalandroid.ViewModel.EntrenamientoRealizadoViewMode
 import com.example.proyectofinalandroid.ViewModel.SerieRealizadaViewModel
 import com.example.proyectofinalandroid.ViewModel.EjercicioRealizadoViewModel
 import kotlinx.coroutines.flow.*
+import androidx.lifecycle.viewModelScope
 
 // Colores principales - extraídos para mejor mantenimiento
 private val primaryPurple = Color(0xFFAB47BC)
@@ -110,18 +109,6 @@ fun ComenzarEntrenamientoScreen(
     var tiempoActivo by remember { mutableStateOf(true) }
     val tiempoFormateado = formatearTiempo(tiempoTranscurrido)
 
-    // Animación para el cronómetro
-    val infiniteTransition = rememberInfiniteTransition(label = "cronometro")
-    val pulseSize by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse"
-    )
-
     // Iniciar cronómetro cuando se carga la pantalla
     LaunchedEffect(tiempoActivo) {
         while (tiempoActivo) {
@@ -130,11 +117,15 @@ fun ComenzarEntrenamientoScreen(
         }
     }
 
-    LaunchedEffect(true) {
-        Log.d("FalloRealizarEntrenamiento", "EntrenamientosViewModel: ${entrenamientoSeleccionado}")
-        Log.d("FalloRealizarEntrenamiento", "EjerciciosViewModel: ${ejerciciosViewModel.ejercicios.value}")
-        Log.d("FalloRealizarEntrenamiento", "EjerciciosViewModel: ${ejerciciosViewModel.ejercicios.value?.size}")
+    LaunchedEffect(usuario) {
+        val currentUser = usuario
+        currentUser?.let {
+            entrenamientoRealizadoViewModel.setUsuario(it)
+            ejercicioRealizadoViewModel.setUsuario(it)
+            serieRealizadaViewModel.setUsuario(it)
+        }
     }
+
 
     LaunchedEffect(true) {
         delay(100)
@@ -168,13 +159,14 @@ fun ComenzarEntrenamientoScreen(
             confirmButtonColor = darkPurple,
             onConfirm = {
                 tiempoActivo = false
-                entrenamientoRealizadoViewModel.guardarEntrenamiento(
-                    entrenamientoId = entrenamientoId,
-                    usuarioId = usuario!!._id,
-                    duracion = tiempoFormateado,
-                    viewModelEjercicio = ejercicioRealizadoViewModel,
-                    viewModelSerie = serieRealizadaViewModel
-                )
+                coroutineScope.launch {
+                    entrenamientoRealizadoViewModel.guardarEntrenamiento(
+                        entrenamientoId = entrenamientoId,
+                        duracion = tiempoFormateado,
+                        viewModelEjercicio = ejercicioRealizadoViewModel,
+                        viewModelSerie = serieRealizadaViewModel
+                    )
+                }
                 showFinishDialog = false
                 navController.popBackStack()
             },
@@ -204,7 +196,10 @@ fun ComenzarEntrenamientoScreen(
                     bitmap = base64ToImageBitmap(entrenamientoSeleccionado?.foto as String)!!,
                     contentDescription = "Imagen de entrenamiento",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().blur(15.dp).alpha(0.2f)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(15.dp)
+                        .alpha(0.2f)
                 )
 
                 // Overlay para mejorar legibilidad
@@ -236,7 +231,9 @@ fun ComenzarEntrenamientoScreen(
                             bitmap = base64ToImageBitmap(entrenamientoSeleccionado?.foto as String)!!,
                             contentDescription = "Imagen de entrenamiento",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                         )
 
                         // Degradado para legibilidad
@@ -301,8 +298,7 @@ fun ComenzarEntrenamientoScreen(
                                             colors = listOf(primaryPurple, darkPurple)
                                         ),
                                         shape = CircleShape
-                                    )
-                                    .scale(scale = pulseSize),
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -426,10 +422,12 @@ fun ComenzarEntrenamientoScreen(
                     ) {
                         // Guardamos la lista en una variable estable
                         val listaEjercicios = ejerciciosCargados ?: emptyList()
-
+                        Log.d("FalloRE0", "${listaEjercicios.size}")
                         // Usamos un bucle for en lugar de items de LazyColumn
                         for (ejercicio in listaEjercicios) {
                             if (ejercicio != null) {
+                                Log.d("FalloRE1", "$ejercicio")
+                                ejercicioRealizadoViewModel.guardarALista(ejercicio, entrenamientoId)
                                 EjercicioConSeries(ejercicio, serieRealizadaViewModel)
                             } else {
                                 TarjetaEjercicioCargando()
@@ -858,11 +856,10 @@ fun EjercicioConSeries(ejercicio: Ejercicios, serieRealizadaViewModel: SerieReal
         DialogAñadirSerie(
             onAddSerie = { peso, repeticiones ->
                 val numeroSerie = series.size + 1
-                Log.d("FalloSerie1", "Añadiendo serie: $peso kg, $repeticiones repeticiones, serie $numeroSerie, ejercicio ${ejercicio._id}")
                 val serieNueva = SerieRealizada(peso = peso.toFloat(),
                                     repeticiones = repeticiones.toInt(),
                                     numeroSerie = numeroSerie,
-                                    ejercicioRealizado = ejercicio._id
+                                    ejercicio = ejercicio._id
                 )
                 series.add(serieNueva)
                 serieRealizadaViewModel.anadirSerieALista(serieNueva)

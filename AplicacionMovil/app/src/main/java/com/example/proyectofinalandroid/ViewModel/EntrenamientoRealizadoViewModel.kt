@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Model.SerieRealizada
 import com.example.proyectofinalandroid.Repository.EntrenamientoRealizadoRepository
+import com.example.proyectofinalandroid.View.EntrenamientoItem
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 import kotlin.collections.forEachIndexed
+import kotlinx.coroutines.async
 
 @HiltViewModel
 class EntrenamientoRealizadoViewModel @Inject constructor(private val repository: EntrenamientoRealizadoRepository) : ViewModel() {
@@ -30,6 +33,11 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
 
     private val _entrenamientoRealizado = MutableStateFlow<List<EntrenamientoRealizado>?>(emptyList())
     val entrenamientoRealizado: StateFlow<List<EntrenamientoRealizado>?> get() = _entrenamientoRealizado
+
+    fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+        getAll()
+    }
 
     private fun getAll() {
         viewModelScope.launch {
@@ -77,80 +85,93 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
         }
     }
 
-    fun new(entrenamientoRealizado: EntrenamientoRealizado) {
-        viewModelScope.launch {
-            try {
-                val creado = repository.new(entrenamientoRealizado)
-                if (creado != null) {
-                    _entrenamientoRealizadoSeleccionado.value = creado
-                    _errorMessage.value = null
-                } else {
-                    _errorMessage.value = "Error al crear el usuario"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
+    suspend fun new(entrenamientoRealizado: EntrenamientoRealizado) {
+        try {
+            // Llamamos al repositorio para crear el entrenamiento en la base de datos
+            val creado = repository.new(entrenamientoRealizado) // Esta llamada es suspensiva y debe esperar a completarse
+            if (creado != null) {
+                // Si se crea correctamente, actualizamos el valor en el ViewModel
+                _entrenamientoRealizadoSeleccionado.value = creado
+                Log.d("FalloNew1", "Se crea correctamente")
+                _errorMessage.value = null
+            } else {
+                _errorMessage.value = "Error al crear el entrenamiento"
             }
+        } catch (e: Exception) {
+            // En caso de error, guardamos el mensaje
+            _errorMessage.value = e.message
         }
     }
 
-    fun guardarEntrenamiento(
+
+    suspend fun guardarEntrenamiento(
         entrenamientoId: String,
-        usuarioId: String,
         duracion: String,
         viewModelEjercicio: EjercicioRealizadoViewModel,
         viewModelSerie: SerieRealizadaViewModel
     ) {
-        viewModelScope.launch {
-            /*try {
-                val ejerciciosRealizadosIds = mutableListOf<String>()
+        try {
+            val entrenamientoRealizado = EntrenamientoRealizado(
+                usuario = _usuario.value!!._id,
+                entrenamiento = entrenamientoId,
+                duracion = duracion,
+                fecha = Date(),
+                ejerciciosRealizados = emptyList()
+            )
 
-                // Iterar sobre los ejercicios y sus series
-                for ((ejercicioId, series) in ejerciciosConSeries) {
-                    val seriesRealizadasIds = mutableListOf<String>()
+            // Llamamos a new y esperamos el resultado
+            val resultado = repository.new(entrenamientoRealizado)
+            Log.d("FalloERVM1", "Llega despues de crear en la bbdd el entrenamientoRealizado")
 
-                    // Guardar cada SerieRealizada
-                    series.forEachIndexed { index, serie ->
-                        val serieRealizada = SerieRealizada(
-                            numeroSerie = index + 1,
-                            repeticiones = serie.repeticiones.toInt(),
-                            peso = serie.peso.toFloat(),
-                            ejercicioRealizado = ejercicioId
-                        )
-                        viewModelSerie.new(serieRealizada)
-                        viewModelSerie.serieRealizadaSeleccionada.collect { serieGuardada ->
-                            serieGuardada?.let {
-                                seriesRealizadasIds.add(it._id)
-                            }
-                        }
-                    }
+            // Si el resultado es null, lanzamos una excepción temprana
+            if (resultado == null) {
+                throw Exception("El servidor no devolvió el entrenamiento creado")
+            }
 
-                    // Crear y guardar EjercicioRealizado
-                    val ejercicioRealizado = EjercicioRealizado(
-                        ejercicio = ejercicioId,
-                        nombre = "Ejercicio $ejercicioId",
-                        series = seriesRealizadasIds,
-                        entrenamientoRealizado = entrenamientoId
-                    )
-                    viewModelEjercicio.new(ejercicioRealizado)
-                    viewModelEjercicio.ejercicioRealizadoSeleccionado.collect { ejercicioGuardado ->
-                        ejercicioGuardado?.let {
-                            ejerciciosRealizadosIds.add(it._id)
-                        }
-                    }
-                }
+            // Actualizamos el valor en el StateFlow y usamos directamente el resultado
+            _entrenamientoRealizadoSeleccionado.value = resultado
+            val entrenamientoRealizadoId = resultado._id
 
-                // Crear y guardar EntrenamientoRealizado
-                val entrenamientoRealizado = EntrenamientoRealizado(
-                    usuario = usuarioId,
-                    entrenamiento = entrenamientoId,
-                    duracion = duracion,
-                    fecha = Date(),
-                    ejerciciosRealizados = ejerciciosRealizadosIds
-                )
-                new(entrenamientoRealizado)
-            } catch (e: Exception) {
-                Log.e("GuardarEntrenamiento", "Error al guardar: ${e.message}")
-            }*/
+            Log.d("FalloERVM1.5", "ID del entrenamiento creado: $entrenamientoRealizadoId")
+
+            // Verificamos que tengamos un ID válido
+            if (entrenamientoRealizadoId.isNullOrBlank()) {
+                throw Exception("ID de entrenamiento no válido")
+            }
+
+            viewModelEjercicio.actualizarIds(entrenamientoRealizadoId)
+
+            Log.d("FalloERVM2", "Llega despues de actualizar ids de ejercicios ${viewModelEjercicio.ejerciciosRealizados.value}")
+
+            val listaEjerciciosRealizados = viewModelEjercicio.ejerciciosRealizados.value!!
+            viewModelEjercicio.vaciarLista()
+
+            Log.d("FalloERVM3", "Llega despues de vaciar la lista")
+
+            for (ejercicioRealizado in listaEjerciciosRealizados) {
+                viewModelEjercicio.new(ejercicioRealizado)
+                viewModelEjercicio.guardarAListaRealizados(ejercicioRealizado)
+            }
+
+            Log.d("FalloERVM4", "Llega despues de crear ejerciciosRealizados")
+
+            for (ejercicioRealizado in viewModelEjercicio.ejerciciosRealizados.value) {
+                viewModelSerie.actualizarIds(idEjercicioRealizado = ejercicioRealizado._id, idEjercicio = ejercicioRealizado.ejercicio)
+            }
+
+            Log.d("FalloERVM5", "Llega despues de actualizar ids de las series")
+
+            val listaSeriesRealizadas = viewModelSerie.seriesRealizadas.value!!
+            viewModelSerie.vaciarLista()
+            for (serieRealizada in listaSeriesRealizadas) {
+                viewModelSerie.new(serieRealizada)
+                viewModelSerie.anadirSerieALista(serieRealizada)
+            }
+
+            Log.d("FalloERVM6", "Llega despues de crear las series")
+
+        } catch (e: Exception) {
+            Log.e("FalloGuardarEntrenamiento", "Error al guardar: ${e.message}")
         }
     }
 }
