@@ -36,7 +36,6 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
 
     fun setUsuario(usuario: Usuarios) {
         _usuario.value = usuario
-        getAll()
     }
 
     private fun getAll() {
@@ -132,7 +131,6 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
             _entrenamientoRealizadoSeleccionado.value = resultado
             val entrenamientoRealizadoId = resultado._id
 
-            Log.d("FalloERVM1.5", "ID del entrenamiento creado: $entrenamientoRealizadoId")
 
             // Verificamos que tengamos un ID válido
             if (entrenamientoRealizadoId.isNullOrBlank()) {
@@ -141,34 +139,37 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
 
             viewModelEjercicio.actualizarIds(entrenamientoRealizadoId)
 
-            Log.d("FalloERVM2", "Llega despues de actualizar ids de ejercicios ${viewModelEjercicio.ejerciciosRealizados.value}")
 
             val listaEjerciciosRealizados = viewModelEjercicio.ejerciciosRealizados.value!!
             viewModelEjercicio.vaciarLista()
 
-            Log.d("FalloERVM3", "Llega despues de vaciar la lista")
+            Log.d("FalloERVM3", "Llega despues de vaciar la lista ${viewModelEjercicio.ejerciciosRealizados.value}")
 
             for (ejercicioRealizado in listaEjerciciosRealizados) {
-                viewModelEjercicio.new(ejercicioRealizado)
-                viewModelEjercicio.guardarAListaRealizados(ejercicioRealizado)
+                Log.d("FalloERVM3.5", "${ejercicioRealizado}")
+                val creado = viewModelEjercicio.new(ejercicioRealizado) // Asegúrate de que `new` devuelva el objeto creado
+                if (creado != null) {
+                    Log.d("FalloERVM3.7", "${creado}")
+                    viewModelEjercicio.guardarAListaRealizados(creado)
+                } else {
+                    Log.e("Error", "No se pudo crear el ejercicio realizado")
+                }
             }
 
-            Log.d("FalloERVM4", "Llega despues de crear ejerciciosRealizados")
+            Log.d("FalloERVM4", "Llega despues de crear ejerciciosRealizados ${viewModelEjercicio.ejerciciosRealizados.value}")
 
             for (ejercicioRealizado in viewModelEjercicio.ejerciciosRealizados.value) {
                 viewModelSerie.actualizarIds(idEjercicioRealizado = ejercicioRealizado._id, idEjercicio = ejercicioRealizado.ejercicio)
             }
 
-            Log.d("FalloERVM5", "Llega despues de actualizar ids de las series")
-
             val listaSeriesRealizadas = viewModelSerie.seriesRealizadas.value!!
             viewModelSerie.vaciarLista()
             for (serieRealizada in listaSeriesRealizadas) {
                 viewModelSerie.new(serieRealizada)
-                viewModelSerie.anadirSerieALista(serieRealizada)
+                viewModelSerie.anadirSerieALista(viewModelSerie.serieRealizadaSeleccionada.value as SerieRealizada)
             }
 
-            Log.d("FalloERVM6", "Llega despues de crear las series")
+            Log.d("FalloERVM6", "Llega despues de crear las series ${viewModelSerie.seriesRealizadas.value}")
 
         } catch (e: Exception) {
             Log.e("FalloGuardarEntrenamiento", "Error al guardar: ${e.message}")

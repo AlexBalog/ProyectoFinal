@@ -6,14 +6,11 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,12 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,19 +33,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.proyectofinalandroid.Model.Ejercicios
-import com.example.proyectofinalandroid.Model.Entrenamientos
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.EjerciciosViewModel
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
-import com.example.proyectofinalandroid.utils.base64ToBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import com.example.proyectofinalandroid.Model.SerieRealizada
 import com.example.proyectofinalandroid.utils.base64ToImageBitmap
@@ -58,8 +47,8 @@ import kotlin.String
 import com.example.proyectofinalandroid.ViewModel.EntrenamientoRealizadoViewModel
 import com.example.proyectofinalandroid.ViewModel.SerieRealizadaViewModel
 import com.example.proyectofinalandroid.ViewModel.EjercicioRealizadoViewModel
-import kotlinx.coroutines.flow.*
-import androidx.lifecycle.viewModelScope
+import com.example.proyectofinalandroid.ViewModel.CronometroViewModel
+
 
 // Colores principales - extraídos para mejor mantenimiento
 private val primaryPurple = Color(0xFFAB47BC)
@@ -70,6 +59,45 @@ private val darkGray = Color(0xFF252525)
 private val lightGray = Color.LightGray
 
 
+
+// Componente aislado para el cronómetro - sin recomposiciones innecesarias
+@Composable
+fun CronometroComponent(viewModel: CronometroViewModel) {
+    // Efecto para iniciar/detener el cronómetro con el ciclo de vida del composable
+    DisposableEffect(key1 = viewModel) {
+        viewModel.iniciarCronometro()
+        onDispose {
+            // No detenemos el cronómetro aquí para mantener el tiempo cuando se recompone
+        }
+    }
+
+    // Observar el tiempo - collectAsState minimiza recomposiciones
+    val tiempo by viewModel.tiempoTranscurrido.collectAsState()
+
+    // Derivar el tiempo formateado
+    val tiempoFormateado by remember(tiempo) {
+        derivedStateOf { formatearTiempo(tiempo) }
+    }
+
+    // Mostrar el tiempo
+    Text(
+        text = tiempoFormateado,
+        style = TextStyle(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    )
+}
+
+// Función para formatear tiempo HH:MM:SS
+fun formatearTiempo(segundos: Long): String {
+    val horas = segundos / 3600
+    val minutos = (segundos % 3600) / 60
+    val segs = segundos % 60
+    return String.format("%02d:%02d:%02d", horas, minutos, segs)
+}
+
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,63 +105,56 @@ fun ComenzarEntrenamientoScreen(
     navController: NavController,
     entrenamientoId: String
 ) {
+    // Entradas de la pila de navegación
     val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
     val parentEntry = remember(navController) {
         navController.getBackStackEntry("main")
     }
+
+    // ViewModels de la aplicación
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel(parentEntry)
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
     val entrenamientoRealizadoViewModel: EntrenamientoRealizadoViewModel = hiltViewModel()
     val ejercicioRealizadoViewModel: EjercicioRealizadoViewModel = hiltViewModel()
     val serieRealizadaViewModel: SerieRealizadaViewModel = hiltViewModel()
+
+    // ViewModel dedicado para el cronómetro - clave para evitar recomposiciones
+    val cronometroViewModel: CronometroViewModel = hiltViewModel()
+
+    // Estados de la aplicación
     val ejerciciosRealizados by ejercicioRealizadoViewModel.ejerciciosRealizados.collectAsState()
-    val series by serieRealizadaViewModel.seriesRealizadas.collectAsState()
+    //val series by serieRealizadaViewModel.seriesRealizadas.collectAsState()
     val usuario by usuariosViewModel.usuario.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-
-
     var isAnimatedIn by remember { mutableStateOf(false) }
     val ejerciciosCargados by ejerciciosViewModel.ejercicios.collectAsState()
     val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
-    val isLoading by entrenamientosViewModel.isLoading.collectAsState()
+    //val isLoading by entrenamientosViewModel.isLoading.collectAsState()
 
-    // Estado para controlar los diálogos
+    // Estados para los diálogos
     var showCancelDialog by remember { mutableStateOf(false) }
     var showFinishDialog by remember { mutableStateOf(false) }
 
-    // Estado para el cronómetro con animación
-    var tiempoTranscurrido by remember { mutableStateOf(0L) }
-    var tiempoActivo by remember { mutableStateOf(true) }
-    val tiempoFormateado = formatearTiempo(tiempoTranscurrido)
-
-    // Iniciar cronómetro cuando se carga la pantalla
-    LaunchedEffect(tiempoActivo) {
-        while (tiempoActivo) {
-            delay(1000)
-            tiempoTranscurrido += 1
-        }
+    // Efecto para iniciar la animación
+    LaunchedEffect(entrenamientoId) {
+        delay(100)
+        isAnimatedIn = true
     }
 
+    // Efecto para configurar el usuario
     LaunchedEffect(usuario) {
-        val currentUser = usuario
-        currentUser?.let {
+        // Configuramos el usuario
+        usuario?.let {
             entrenamientoRealizadoViewModel.setUsuario(it)
             ejercicioRealizadoViewModel.setUsuario(it)
             serieRealizadaViewModel.setUsuario(it)
         }
     }
 
-
-    LaunchedEffect(true) {
-        delay(100)
-        isAnimatedIn = true
-    }
-
-
-    // Diálogos
+    // Diálogo para cancelar entrenamiento
     if (showCancelDialog) {
         AlertaConfirmacion(
             titulo = "Cancelar entrenamiento",
@@ -141,7 +162,7 @@ fun ComenzarEntrenamientoScreen(
             confirmButtonText = "Abandonar",
             confirmButtonColor = Color(0xFFE57373),
             onConfirm = {
-                tiempoActivo = false
+                cronometroViewModel.detenerCronometro()
                 showCancelDialog = false
                 navController.popBackStack()
             },
@@ -151,14 +172,18 @@ fun ComenzarEntrenamientoScreen(
         )
     }
 
+    // Diálogo para finalizar entrenamiento
     if (showFinishDialog) {
+        // Capturar el tiempo formateado solo cuando se muestra el diálogo
+        val tiempoFormateado = cronometroViewModel.getTiempoFormateado()
+
         AlertaConfirmacion(
             titulo = "Finalizar entrenamiento",
             mensaje = "¿Estás seguro de que deseas finalizar el entrenamiento? Se guardarán tus progresos.",
             confirmButtonText = "Finalizar",
             confirmButtonColor = darkPurple,
             onConfirm = {
-                tiempoActivo = false
+                cronometroViewModel.detenerCronometro()
                 coroutineScope.launch {
                     entrenamientoRealizadoViewModel.guardarEntrenamiento(
                         entrenamientoId = entrenamientoId,
@@ -168,7 +193,7 @@ fun ComenzarEntrenamientoScreen(
                     )
                 }
                 showFinishDialog = false
-                navController.popBackStack()
+                navController.navigate("principal")
             },
             onDismiss = {
                 showFinishDialog = false
@@ -176,6 +201,7 @@ fun ComenzarEntrenamientoScreen(
         )
     }
 
+    // UI PRINCIPAL
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -191,7 +217,7 @@ fun ComenzarEntrenamientoScreen(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-
+                // Imagen de fondo con blur
                 Image(
                     bitmap = base64ToImageBitmap(entrenamientoSeleccionado?.foto as String)!!,
                     contentDescription = "Imagen de entrenamiento",
@@ -218,7 +244,6 @@ fun ComenzarEntrenamientoScreen(
 
             // Contenido principal con layout mejorado
             Box(modifier = Modifier.fillMaxSize()) {
-                // Header con cronómetro prominente
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Encabezado con efecto de vidrio y cronómetro central
                     Box(
@@ -270,15 +295,12 @@ fun ComenzarEntrenamientoScreen(
                                         offset = Offset(2f, 2f)
                                     ),
                                     brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            primaryPurple,
-                                            darkPurple
-                                        )
+                                        colors = listOf(primaryPurple, darkPurple)
                                     )
                                 )
                             )
 
-                            // Cronómetro con animación y mejor visibilidad
+                            // CRONÓMETRO - COMPONENTE AISLADO CLAVE
                             Box(
                                 modifier = Modifier
                                     .padding(top = 8.dp)
@@ -301,14 +323,10 @@ fun ComenzarEntrenamientoScreen(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = tiempoFormateado,
-                                    style = TextStyle(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                )
+                                // Usar remember con la clave Unit para mantener estable el componente
+                                key(Unit) {
+                                    CronometroComponent(viewModel = cronometroViewModel)
+                                }
                             }
                         }
 
@@ -422,18 +440,25 @@ fun ComenzarEntrenamientoScreen(
                     ) {
                         // Guardamos la lista en una variable estable
                         val listaEjercicios = ejerciciosCargados ?: emptyList()
-                        Log.d("FalloRE0", "${listaEjercicios.size}")
-                        // Usamos un bucle for en lugar de items de LazyColumn
                         for (ejercicio in listaEjercicios) {
                             if (ejercicio != null) {
-                                Log.d("FalloRE1", "$ejercicio")
-                                ejercicioRealizadoViewModel.guardarALista(ejercicio, entrenamientoId)
+                                // CAMBIO IMPORTANTE: Comprobamos si el ejercicio ya existe antes de añadirlo
+                                // Usamos also para evitar evaluación repetida
+                                ejercicio.also { ej ->
+                                    // Verificamos si el ejercicio ya está en la lista por su ID
+                                    val yaExiste = ejerciciosRealizados?.any { it.ejercicio == ej._id } == true
+
+                                    if (!yaExiste) {
+                                        ejercicioRealizadoViewModel.guardarALista(ej, entrenamientoId)
+                                    }
+                                }
+
                                 EjercicioConSeries(ejercicio, serieRealizadaViewModel)
                             } else {
                                 TarjetaEjercicioCargando()
                             }
                         }
-
+                        Log.d("FalloRE1", "lista ejercicios realizados ${ejercicioRealizadoViewModel.ejerciciosRealizados.value}")
                         // Espacio al final para el botón flotante
                         Spacer(modifier = Modifier.height(180.dp))
                     }
@@ -479,34 +504,6 @@ fun ComenzarEntrenamientoScreen(
     }
 }
 
-/*@Composable
-fun LoadingScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            CircularProgressIndicator(
-                color = primaryPurple,
-                modifier = Modifier.size(60.dp),
-                strokeWidth = 4.dp
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Cargando entrenamiento...",
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium
-                )
-            )
-        }
-    }
-}*/
 
 @Composable
 fun EjercicioConSeries(ejercicio: Ejercicios, serieRealizadaViewModel: SerieRealizadaViewModel) {
@@ -1014,8 +1011,9 @@ fun DialogAñadirSerie(
                             unfocusedContainerColor = darkGray,
                             cursorColor = primaryPurple,
                             focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
+                            unfocusedTextColor = Color.White,
+                            errorTextColor = Color.White
+                    ),
                         isError = pesoError,
                         trailingIcon = {
                             if (pesoError) {
@@ -1268,13 +1266,4 @@ fun AlertaConfirmacion(
             }
         }
     }
-}
-
-// Función para formatear el tiempo en HH:MM:SS
-fun formatearTiempo(segundos: Long): String {
-    val horas = segundos / 3600
-    val minutos = (segundos % 3600) / 60
-    val segs = segundos % 60
-
-    return String.format("%02d:%02d:%02d", horas, minutos, segs)
 }

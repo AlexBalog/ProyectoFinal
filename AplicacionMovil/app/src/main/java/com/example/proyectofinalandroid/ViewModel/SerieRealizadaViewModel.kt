@@ -35,21 +35,20 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
 
     fun setUsuario(usuario: Usuarios) {
         _usuario.value = usuario
-        getAll()
     }
 
     fun vaciarLista() {
-        _seriesRealizadas.value = emptyList()
+        val listaVacia: List<SerieRealizada> = emptyList()
+        _seriesRealizadas.value = listaVacia
     }
 
     fun actualizarIds(idEjercicioRealizado: String, idEjercicio: String) {
-        _seriesRealizadas.value = _seriesRealizadas.value?.map { serie ->
+        _seriesRealizadas.value!!.forEach { serie ->
             if (serie.ejercicio == idEjercicio) {
-                serie.copy(ejercicioRealizado = idEjercicioRealizado)
-            } else {
-                serie
+                serie.ejercicioRealizado = idEjercicioRealizado
             }
         }
+        _seriesRealizadas.value = _seriesRealizadas.value
     }
 
     fun getAll() {
@@ -98,12 +97,13 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         }
     }
 
-    fun new(serieRealizada: SerieRealizada) {
+    suspend fun new(serieRealizada: SerieRealizada) {
         viewModelScope.launch {
             try {
                 val creado = repository.new(serieRealizada)
                 if (creado != null) {
                     _serieRealizadaSeleccionado.value = creado
+                    Log.d("FalloSRVM1", "$creado")
                     _errorMessage.value = null
                 } else {
                     _errorMessage.value = "Error al crear el usuario"

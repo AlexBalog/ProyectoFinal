@@ -19,6 +19,7 @@ router.post('/getOne', async (req, res) => {
     if (!data) {
         return res.status(404).json({ message: 'Documento no encontrado' });
     }
+    console.log("Respuesta exitosa: Código 200", dataToSave); // Log para éxito
     res.status(200).json(data);
     }
     catch(error){
@@ -29,6 +30,8 @@ router.post('/getOne', async (req, res) => {
 router.post('/new', async (req, res) => {
     console.log("Entra en el new de serieRealizada" + req.body);
     const data = new modelSerieRealizada({
+        ejercicio: req.body.ejercicio,
+        ejercicioRealizado: req.body.ejercicioRealizado,
         numeroSerie: req.body.numeroSerie,
         repeticiones: req.body.repeticiones,
         peso: req.body.peso
@@ -50,6 +53,8 @@ router.patch("/update", async (req, res) => {
 
     const resultado = await modelSerieRealizada.updateOne(
     { _id: id }, { $set: {
+        ejercicio: req.body.ejercicio,
+        ejercicioRealizado: req.body.ejercicioRealizado,
         numeroSerie: req.body.numeroSerie,
         repeticiones: req.body.repeticiones,
         peso: req.body.peso

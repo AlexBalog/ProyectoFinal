@@ -51,7 +51,7 @@ SerieRealizadaSchema.pre('save', async function (next) {
                 if (match) {
                     const ultimoNumero = parseInt(match[1], 10);
                     const nuevoNumero = (ultimoNumero + 1).toString().padStart(5, '0');
-                    nuevoID = `RE${nuevoNumero}`;
+                    nuevoID = `SR${nuevoNumero}`;
                 }
             }
         }

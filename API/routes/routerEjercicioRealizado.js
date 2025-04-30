@@ -29,6 +29,8 @@ router.post('/getOne', async (req, res) => {
 router.post('/new', async (req, res) => {
     console.log("Entra en el new de ejercicioRealizado" + req.body);
     const data = new modelEjercicioRealizado({
+        entrenamiento: req.body.entrenamiento,
+        entrenamientoRealizado: req.body.entrenamientoRealizado,
         ejercicio: req.body.ejercicio,
         nombre: req.body.nombre,
         series: req.body.series
@@ -50,6 +52,8 @@ router.patch("/update", async (req, res) => {
 
     const resultado = await modelEjercicioRealizado.updateOne(
     { _id: id }, { $set: {
+        entrenamiento: req.body.entrenamiento,
+        entrenamientoRealizado: req.body.entrenamientoRealizado,
         ejercicio: req.body.ejercicio,
         nombre: req.body.nombre,
         series: req.body.series

@@ -69,6 +69,7 @@ router.post('/new', async (req, res) => {
 
     try {
     const dataToSave = await data.save();
+    console.log("Respuesta exitosa: Código 200", dataToSave); // Log para éxito
     res.status(200).json(dataToSave);
     }
     catch (error) {

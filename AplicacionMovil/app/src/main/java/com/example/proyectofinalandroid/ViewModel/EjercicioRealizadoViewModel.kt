@@ -30,7 +30,6 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
 
     fun setUsuario(usuario: Usuarios) {
         _usuario.value = usuario
-        getAll()
     }
 
     fun actualizarIds(id: String) {
@@ -73,19 +72,19 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
         }
     }
 
-    fun new(ejercicioRealizado: EjercicioRealizado) {
-        viewModelScope.launch {
-            try {
-                val creado = repository.new(ejercicioRealizado)
-                if (creado != null) {
-                    _ejercicioRealizadoSeleccionado.value = creado
-                    _errorMessage.value = null
-                } else {
-                    _errorMessage.value = "Error al crear el usuario"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
+    suspend fun new(ejercicioRealizado: EjercicioRealizado): EjercicioRealizado? {
+        return try {
+            val creado = repository.new(ejercicioRealizado)
+            if (creado != null) {
+                _ejercicioRealizadoSeleccionado.value = creado
+                _errorMessage.value = null
+            } else {
+                _errorMessage.value = "Error al crear el ejercicio realizado"
             }
+            creado
+        } catch (e: Exception) {
+            _errorMessage.value = e.message
+            null
         }
     }
 
