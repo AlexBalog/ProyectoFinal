@@ -42,13 +42,15 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         _seriesRealizadas.value = listaVacia
     }
 
-    fun actualizarIds(idEjercicioRealizado: String, idEjercicio: String) {
-        _seriesRealizadas.value!!.forEach { serie ->
+    fun actualizarIds(idEjercicioRealizado: String, idEjercicio: String): List<SerieRealizada> {
+        // Devolver lista nueva en lugar de modificar state
+        return _seriesRealizadas.value?.map { serie ->
             if (serie.ejercicio == idEjercicio) {
-                serie.ejercicioRealizado = idEjercicioRealizado
+                serie.copy(ejercicioRealizado = idEjercicioRealizado)
+            } else {
+                serie
             }
-        }
-        _seriesRealizadas.value = _seriesRealizadas.value
+        } ?: emptyList()
     }
 
     fun getAll() {
@@ -97,20 +99,20 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         }
     }
 
-    suspend fun new(serieRealizada: SerieRealizada) {
-        viewModelScope.launch {
-            try {
-                val creado = repository.new(serieRealizada)
-                if (creado != null) {
-                    _serieRealizadaSeleccionado.value = creado
-                    Log.d("FalloSRVM1", "$creado")
-                    _errorMessage.value = null
-                } else {
-                    _errorMessage.value = "Error al crear el usuario"
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
+    suspend fun new(serieRealizada: SerieRealizada): SerieRealizada? {
+        return try {
+            val creado = repository.new(serieRealizada)
+            if (creado != null) {
+                _serieRealizadaSeleccionado.value = creado
+                Log.d("FalloSRVM1", "$creado")
+                _errorMessage.value = null
+            } else {
+                _errorMessage.value = "Error al crear el usuario"
             }
+            creado
+        } catch (e: Exception) {
+            _errorMessage.value = e.message
+            null
         }
     }
 

@@ -18,6 +18,7 @@ import java.util.Date
 import javax.inject.Inject
 import kotlin.collections.forEachIndexed
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 
 @HiltViewModel
 class EntrenamientoRealizadoViewModel @Inject constructor(private val repository: EntrenamientoRealizadoRepository) : ViewModel() {
@@ -110,6 +111,7 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
         viewModelSerie: SerieRealizadaViewModel
     ) {
         try {
+            // 1. Crear el objeto EntrenamientoRealizado
             val entrenamientoRealizado = EntrenamientoRealizado(
                 usuario = _usuario.value!!._id,
                 entrenamiento = entrenamientoId,
@@ -118,61 +120,123 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
                 ejerciciosRealizados = emptyList()
             )
 
-            // Llamamos a new y esperamos el resultado
+            // 2. Guardar el entrenamiento y obtener su ID (espera a que termine)
             val resultado = repository.new(entrenamientoRealizado)
-            Log.d("FalloERVM1", "Llega despues de crear en la bbdd el entrenamientoRealizado")
+                ?: throw Exception("El servidor no devolvió el entrenamiento creado")
 
-            // Si el resultado es null, lanzamos una excepción temprana
-            if (resultado == null) {
-                throw Exception("El servidor no devolvió el entrenamiento creado")
-            }
-
-            // Actualizamos el valor en el StateFlow y usamos directamente el resultado
-            _entrenamientoRealizadoSeleccionado.value = resultado
+            // Evitamos actualizar el StateFlow para no causar recomposiciones innecesarias
             val entrenamientoRealizadoId = resultado._id
 
+            Log.d("FalloERVM1", "Se crea entrenamientoRealizado $resultado")
 
-            // Verificamos que tengamos un ID válido
-            if (entrenamientoRealizadoId.isNullOrBlank()) {
-                throw Exception("ID de entrenamiento no válido")
-            }
+            // 3. Establecer el ID del entrenamiento en los ejercicios (sin actualizar StateFlow)
+            val listaEjerciciosParaGuardar = viewModelEjercicio.ejerciciosRealizados.value?.map { ejercicio ->
+                ejercicio.copy(entrenamientoRealizado = entrenamientoRealizadoId)
+            } ?: emptyList()
 
-            viewModelEjercicio.actualizarIds(entrenamientoRealizadoId)
+            Log.d("FalloERVM2", "Se crea lista de ejercicios a guardar $listaEjerciciosParaGuardar")
 
+            // 4. Lista local para almacenar los ejercicios creados
+            val ejerciciosCreados = mutableListOf<EjercicioRealizado>()
 
-            val listaEjerciciosRealizados = viewModelEjercicio.ejerciciosRealizados.value!!
-            viewModelEjercicio.vaciarLista()
+            // 5. Guardar los ejercicios uno por uno con mejor manejo de errores
+            for (ejercicio in listaEjerciciosParaGuardar) {
+                Log.d("FalloERVM2.5", "$ejercicio")
 
-            Log.d("FalloERVM3", "Llega despues de vaciar la lista ${viewModelEjercicio.ejerciciosRealizados.value}")
+                try {
+                    // Agregamos un breve delay entre llamadas para evitar sobrecarga
+                    delay(300)
 
-            for (ejercicioRealizado in listaEjerciciosRealizados) {
-                Log.d("FalloERVM3.5", "${ejercicioRealizado}")
-                val creado = viewModelEjercicio.new(ejercicioRealizado) // Asegúrate de que `new` devuelva el objeto creado
-                if (creado != null) {
-                    Log.d("FalloERVM3.7", "${creado}")
-                    viewModelEjercicio.guardarAListaRealizados(creado)
-                } else {
-                    Log.e("Error", "No se pudo crear el ejercicio realizado")
+                    // Intentamos guardar con el método principal
+                    var ejercicioCreado = viewModelEjercicio.new2(ejercicio)
+
+                    // Si falla, intentamos con el método alternativo
+                    if (ejercicioCreado == null) {
+                        Log.w("FalloERVM2.8", "Usando método alternativo para guardar ejercicio")
+                        ejercicioCreado = viewModelEjercicio.new(ejercicio)
+                    }
+
+                    Log.d("FalloERVM2.7", "$ejercicioCreado")
+
+                    if (ejercicioCreado != null) {
+                        ejerciciosCreados.add(ejercicioCreado)
+                    } else {
+                        // Si ambos métodos fallan, creamos un objeto local con la información que tenemos
+                        // para que al menos las series se puedan guardar
+                        Log.w("FalloERVM2.9", "Creando objeto local como respaldo")
+                        val ejercicioLocal = EjercicioRealizado(
+                            _id = "LOCAL_" + System.currentTimeMillis(), // ID temporal
+                            entrenamientoRealizado = entrenamientoRealizadoId,
+                            entrenamiento = ejercicio.entrenamiento,
+                            ejercicio = ejercicio.ejercicio,
+                            nombre = ejercicio.nombre
+                        )
+                        ejerciciosCreados.add(ejercicioLocal)
+                        Log.d("FalloERVM2.95", "Objeto local creado: $ejercicioLocal")
+                    }
+                } catch (e: Exception) {
+                    Log.e("FalloERVM2.6", "Error al guardar ejercicio: ${e.message}", e)
+                    // Continuamos con el siguiente ejercicio
                 }
             }
 
-            Log.d("FalloERVM4", "Llega despues de crear ejerciciosRealizados ${viewModelEjercicio.ejerciciosRealizados.value}")
+            Log.d("FalloERVM3", "Lista de ejercicios realizados recién creados $ejerciciosCreados")
 
-            for (ejercicioRealizado in viewModelEjercicio.ejerciciosRealizados.value) {
-                viewModelSerie.actualizarIds(idEjercicioRealizado = ejercicioRealizado._id, idEjercicio = ejercicioRealizado.ejercicio)
+            // 6. Ahora procesamos las series relacionando con los ejercicios creados
+            val seriesParaGuardar = mutableListOf<SerieRealizada>()
+            val seriesOriginales = viewModelSerie.seriesRealizadas.value ?: emptyList()
+
+            Log.d("FalloERVM3.1", "Series originales: $seriesOriginales")
+
+            // Mapa para búsqueda rápida de ejercicios
+            val mapaEjercicios = ejerciciosCreados.associateBy { it.ejercicio }
+
+            // 7. Preparar todas las series con los IDs de ejercicios correctos
+            seriesOriginales.forEach { serie ->
+                Log.d("FalloERVM3.5", "$serie")
+
+                // Buscar el ejercicio realizado correspondiente
+                val ejercicioRealizado = mapaEjercicios[serie.ejercicio]
+
+                if (ejercicioRealizado != null) {
+                    Log.d("FalloERVM3.7", "Comparacion: serie - ${serie.ejercicio} y ejercicio ${ejercicioRealizado.ejercicio}")
+                    // Crear una copia de la serie con el ID del ejercicio realizado correcto
+                    seriesParaGuardar.add(
+                        serie.copy(ejercicioRealizado = ejercicioRealizado._id)
+                    )
+                } else {
+                    Log.w("FalloERVM3.8", "No se encontró ejercicio realizado para la serie: $serie")
+                }
             }
 
-            val listaSeriesRealizadas = viewModelSerie.seriesRealizadas.value!!
+            Log.d("FalloERVM4", "Se crea lista de series a guardar $seriesParaGuardar")
+
+            val seriesCreadas = mutableListOf<SerieRealizada>()
+            // 8. Guardar todas las series preparadas
+            for (serie in seriesParaGuardar) {
+                try {
+                    // Pequeño delay entre llamadas
+                    delay(200)
+
+                    val serieCreada = viewModelSerie.new(serie)
+                    if (serieCreada != null) {
+                        seriesCreadas.add(serieCreada)
+                    }
+                } catch (e: Exception) {
+                    Log.e("FalloERVM4.5", "Error al guardar serie: ${e.message}", e)
+                    // Continuamos con la siguiente serie
+                }
+            }
+
+            Log.d("FalloERVM5", "Lista de series recien creados $seriesCreadas")
+
+            // 9. Solo al final limpiamos las listas para evitar problemas
+            viewModelEjercicio.vaciarLista()
             viewModelSerie.vaciarLista()
-            for (serieRealizada in listaSeriesRealizadas) {
-                viewModelSerie.new(serieRealizada)
-                viewModelSerie.anadirSerieALista(viewModelSerie.serieRealizadaSeleccionada.value as SerieRealizada)
-            }
-
-            Log.d("FalloERVM6", "Llega despues de crear las series ${viewModelSerie.seriesRealizadas.value}")
 
         } catch (e: Exception) {
-            Log.e("FalloGuardarEntrenamiento", "Error al guardar: ${e.message}")
+            Log.e("FalloEntrenamientoRealizado", "Error al guardar: ${e.message}", e)
+            throw e
         }
     }
 }

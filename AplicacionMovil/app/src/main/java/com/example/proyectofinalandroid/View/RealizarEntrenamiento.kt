@@ -48,6 +48,8 @@ import com.example.proyectofinalandroid.ViewModel.EntrenamientoRealizadoViewMode
 import com.example.proyectofinalandroid.ViewModel.SerieRealizadaViewModel
 import com.example.proyectofinalandroid.ViewModel.EjercicioRealizadoViewModel
 import com.example.proyectofinalandroid.ViewModel.CronometroViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 // Colores principales - extraídos para mejor mantenimiento
@@ -131,7 +133,9 @@ fun ComenzarEntrenamientoScreen(
     val coroutineScope = rememberCoroutineScope()
     var isAnimatedIn by remember { mutableStateOf(false) }
     val ejerciciosCargados by ejerciciosViewModel.ejercicios.collectAsState()
-    val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
+    val entrenamientoSeleccionado by remember(entrenamientoId) {
+        derivedStateOf { entrenamientosViewModel.entrenamientoSeleccionado.value }
+    }
     //val isLoading by entrenamientosViewModel.isLoading.collectAsState()
 
     // Estados para los diálogos
@@ -139,7 +143,7 @@ fun ComenzarEntrenamientoScreen(
     var showFinishDialog by remember { mutableStateOf(false) }
 
     // Efecto para iniciar la animación
-    LaunchedEffect(entrenamientoId) {
+    LaunchedEffect(Unit) {
         delay(100)
         isAnimatedIn = true
     }
@@ -185,15 +189,25 @@ fun ComenzarEntrenamientoScreen(
             onConfirm = {
                 cronometroViewModel.detenerCronometro()
                 coroutineScope.launch {
-                    entrenamientoRealizadoViewModel.guardarEntrenamiento(
-                        entrenamientoId = entrenamientoId,
-                        duracion = tiempoFormateado,
-                        viewModelEjercicio = ejercicioRealizadoViewModel,
-                        viewModelSerie = serieRealizadaViewModel
-                    )
+                    try {
+                        entrenamientoRealizadoViewModel.guardarEntrenamiento(
+                            entrenamientoId = entrenamientoId,
+                            duracion = tiempoFormateado,
+                            viewModelEjercicio = ejercicioRealizadoViewModel,
+                            viewModelSerie = serieRealizadaViewModel
+                        )
+                        // Navegar solo si todo fue exitoso
+                        withContext(Dispatchers.Main) {
+                            showFinishDialog = false
+                            navController.navigate("principal") {
+                                popUpTo("principal") { inclusive = true }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("Error", "Error al guardar: ${e.message}")
+                        // Opcional: Mostrar error al usuario
+                    }
                 }
-                showFinishDialog = false
-                navController.navigate("principal")
             },
             onDismiss = {
                 showFinishDialog = false

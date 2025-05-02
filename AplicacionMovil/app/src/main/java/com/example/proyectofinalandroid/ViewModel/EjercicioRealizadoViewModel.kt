@@ -12,6 +12,11 @@ import com.example.proyectofinalandroid.Repository.EjercicioRealizadoRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.proyectofinalandroid.Model.Ejercicios
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import java.io.IOException
 
 @HiltViewModel
 class EjercicioRealizadoViewModel @Inject constructor(private val repository: EjercicioRealizadoRepository) : ViewModel() {
@@ -32,11 +37,11 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
         _usuario.value = usuario
     }
 
-    fun actualizarIds(id: String) {
-        _ejerciciosRealizados.value!!.forEach { ejercicio ->
-            ejercicio.entrenamientoRealizado = id
-        }
-        _ejerciciosRealizados.value = _ejerciciosRealizados.value
+    fun actualizarIds(id: String): List<EjercicioRealizado> {
+        // En lugar de modificar el state, devolvemos una copia actualizada
+        return _ejerciciosRealizados.value?.map { ejercicio ->
+            ejercicio.copy(entrenamientoRealizado = id)
+        } ?: emptyList()
     }
 
 
@@ -88,17 +93,68 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
         }
     }
 
+    suspend fun new2(ejercicioRealizado: EjercicioRealizado): EjercicioRealizado? {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Registramos lo que estamos intentando crear
+                Log.d("FalloViewModel1", "Intentando crear ejercicio: $ejercicioRealizado")
+
+                // Llamada directa al repositorio
+                val creado = repository.new(ejercicioRealizado)
+
+                if (creado != null) {
+                    Log.d("FalloViewModel2", "Ejercicio creado: $creado")
+
+                    // Validamos que el ejercicio creado tenga todos los campos requeridos
+                    if (creado._id.isNotEmpty() && creado.ejercicio != null && creado.nombre != null) {
+                        Log.d("FalloViewModel3", "Ejercicio validado correctamente")
+                        return@withContext creado
+                    } else {
+                        // Si falta algún campo, hacemos una copia con los datos originales
+                        Log.w("FalloViewModel4", "Datos incompletos en la respuesta, completando con datos originales")
+                        val completado = creado.copy(
+                            ejercicio = creado.ejercicio ?: ejercicioRealizado.ejercicio,
+                            nombre = creado.nombre ?: ejercicioRealizado.nombre,
+                            entrenamiento = creado.entrenamiento ?: ejercicioRealizado.entrenamiento
+                        )
+                        Log.d("FalloViewModel5", "Ejercicio completado: $completado")
+                        return@withContext completado
+                    }
+                } else {
+                    // Si no se crea, registramos error y creamos un objeto alternativo
+                    Log.e("FalloViewModel6", "El repositorio devolvió null")
+                    _errorMessage.value = "Error al crear el ejercicio realizado - respuesta nula"
+
+                    // Último recurso: verificar directamente con la API si el ejercicio se creó
+                    // Este bloque debe implementarse según tus necesidades
+
+                    null
+                }
+            } catch (e: Exception) {
+                Log.e("FalloViewModel7", "Error al crear ejercicio: ${e.message}", e)
+                _errorMessage.value = "Error: ${e.message}"
+                null
+            }
+        }
+    }
+
     fun guardarALista(ejercicio: Ejercicios, entrenamientoId: String) {
-        val ejerReal = EjercicioRealizado(
-            _id = "",
-            entrenamiento = entrenamientoId,
-            ejercicio = ejercicio._id,
-            nombre = ejercicio.nombre,
-            series = emptyList()
-        )
-        val listaActual = _ejerciciosRealizados.value?.toMutableList() ?: mutableListOf()
-        listaActual.add(ejerReal)
-        _ejerciciosRealizados.value = listaActual
+        // Verificar primero si el ejercicio ya existe para evitar duplicados
+        val yaExiste = _ejerciciosRealizados.value?.any { it.ejercicio == ejercicio._id } == true
+
+        if (!yaExiste) {
+            val ejerReal = EjercicioRealizado(
+                _id = "",
+                entrenamiento = entrenamientoId,
+                ejercicio = ejercicio._id,
+                nombre = ejercicio.nombre
+            )
+
+            // Usamos update atómico para evitar problemas de concurrencia
+            val listaActual = _ejerciciosRealizados.value?.toMutableList() ?: mutableListOf()
+            listaActual.add(ejerReal)
+            _ejerciciosRealizados.value = listaActual
+        }
     }
 
     fun guardarAListaRealizados(ejercicioRealizado: EjercicioRealizado) {

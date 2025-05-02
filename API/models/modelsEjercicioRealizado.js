@@ -17,8 +17,8 @@ const EjercicioRealizadoSchema = mongoose.Schema({
         type: String
     },
     series: {
-        required: true,
-        type: [String]
+        type: [String],
+        default: []
     }
 })
 

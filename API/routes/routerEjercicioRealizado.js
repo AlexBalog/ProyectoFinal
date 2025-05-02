@@ -33,7 +33,7 @@ router.post('/new', async (req, res) => {
         entrenamientoRealizado: req.body.entrenamientoRealizado,
         ejercicio: req.body.ejercicio,
         nombre: req.body.nombre,
-        series: req.body.series
+       // series: req.body.series
     })
 
     try {
