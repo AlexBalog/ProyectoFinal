@@ -15,6 +15,9 @@ const EventosUsuarioSchema = new mongoose.Schema({
     hora: {
         required: true,
         type: String
+    },
+    notas: {
+        type: String
     }
 }, {__v: false});
 
@@ -46,7 +49,7 @@ EventosUsuarioSchema.pre('save', async function (next) {
                 if (match) {
                     const ultimoNumero = parseInt(match[1], 10);
                     const nuevoNumero = (ultimoNumero + 1).toString().padStart(5, '0');
-                    nuevoID = `E${nuevoNumero}`;
+                    nuevoID = `EVU${nuevoNumero}`;
                 }
             }
         }

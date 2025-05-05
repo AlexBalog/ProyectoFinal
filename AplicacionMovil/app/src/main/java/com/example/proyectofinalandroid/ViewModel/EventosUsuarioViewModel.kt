@@ -36,6 +36,11 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
     private val _eventosUsuario = MutableStateFlow<EventosUsuario?>(null)
     val eventosUsuario: StateFlow<EventosUsuario?> get() = _eventosUsuario
 
+
+    suspend fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+    }
+
     suspend fun update(updatedData: Map<String, String>): Boolean {
         return withContext(Dispatchers.IO) {
             _usuario.value?.let { currentUser ->
@@ -77,7 +82,7 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
     }
 
 
-    fun getAll() {
+    suspend fun getAll() {
         viewModelScope.launch {
             try {
                 val lista = repository.getAll(token = _usuario.value?.token.toString())

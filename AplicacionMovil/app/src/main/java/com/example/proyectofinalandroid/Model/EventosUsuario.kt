@@ -6,7 +6,7 @@ import java.util.Date
 
 data class EventosUsuario(
     @SerializedName("_id")
-    val _id: String,
+    val _id: String = "",
     @SerializedName("evento")
     val evento: String,
     @SerializedName("usuario")
@@ -14,5 +14,7 @@ data class EventosUsuario(
     @SerializedName("fecha")
     val fecha: Date,
     @SerializedName("hora")
-    val hora: String
+    val hora: String,
+    @SerializedName("notas")
+    val notas: String
 ) : Serializable

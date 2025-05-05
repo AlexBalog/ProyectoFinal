@@ -61,6 +61,7 @@ import com.example.proyectofinalandroid.ViewModel.EventosUsuarioViewModel
 import com.example.proyectofinalandroid.utils.base64ToBitmap
 import com.example.proyectofinalandroid.ViewModel.EventosViewModel
 import com.example.proyectofinalandroid.Model.EventosUsuario
+import com.example.proyectofinalandroid.Model.Eventos
 import com.example.proyectofinalandroid.Model.Usuarios
 import com.example.proyectofinalandroid.utils.base64ToImageBitmap
 import androidx.activity.OnBackPressedCallback
@@ -68,6 +69,7 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.ui.platform.LocalContext
 import android.app.Activity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -110,6 +112,8 @@ fun HomeScreen(navController: NavController) {
     LaunchedEffect(usuario) {
         usuario?.let {
             entrenamientosViewModel.setUsuario(usuario!!)
+            eventosViewModel.setUsuario(usuario!!)
+            eventosUsuariosViewModel.setUsuario(usuario!!)
         }
     }
 
@@ -132,6 +136,9 @@ fun HomeScreen(navController: NavController) {
     // Animación de entrada
     LaunchedEffect(Unit) {
         delay(100)
+        eventosViewModel.cargarEventosYTipos()
+        eventosUsuariosViewModel.getAll()
+        Log.d("FalloRecomposicion", "a")
         isAnimatedIn = true
     }
 
@@ -197,7 +204,8 @@ fun HomeScreen(navController: NavController) {
                     // Eventos programados para la fecha seleccionada
                     ProgrammedEventsSection(
                         date = selectedDate,
-                        eventos = eventosUsuario as List<EventosUsuario>
+                        eventosUsuarioViewModel = eventosUsuariosViewModel,
+                        eventosViewModel = eventosViewModel
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -424,8 +432,10 @@ fun DiasDelMes(
 @Composable
 fun ProgrammedEventsSection(
     date: LocalDate,
-    eventos: List<EventosUsuario>
+    eventosViewModel: EventosViewModel,
+    eventosUsuarioViewModel: EventosUsuarioViewModel
 ) {
+    val eventos by eventosUsuarioViewModel.eventosUsuarioLista.collectAsState()
     var showAddSerieDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
@@ -469,7 +479,7 @@ fun ProgrammedEventsSection(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (eventos.isEmpty()) {
+            if (eventos!!.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -484,9 +494,10 @@ fun ProgrammedEventsSection(
                     )
                 }
             } else {
-                eventos.forEach { evento ->
-                  //  EventoItem(evento = evento)
-                    if (evento != eventos.last()) {
+                eventosUsuarioViewModel.eventosUsuarioLista.value!!.forEach { evento ->
+                    Log.d("FalloMostrarEventos", "$evento")
+                    EventoItem(evento = evento, eventosViewModel = eventosViewModel)
+                    if (evento != eventos!!.last()) {
                         Divider(
                             modifier = Modifier.padding(vertical = 8.dp),
                             color = Color(0xFF2A2A2A)
@@ -497,18 +508,29 @@ fun ProgrammedEventsSection(
         }
         if (showAddSerieDialog) {
             DialogoEventos(
-                onConfirm = { peso, repeticiones ->
+                onConfirm = { evento, hora, notas ->
                   //  eventos.new(Serie(peso, repeticiones))
                     showAddSerieDialog = false
                 },
-                onDismiss = { showAddSerieDialog = false }
+                onDismiss = { showAddSerieDialog = false },
+                eventosViewModel = eventosViewModel,
+                eventosUsuarioViewModel = eventosUsuarioViewModel
             )
         }
     }
 }
 
-/*@Composable
-fun EventoItem(evento: EventosUsuario) {
+@Composable
+fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel) {
+
+    LaunchedEffect(Unit) {
+        eventosViewModel.getOne(evento.evento)
+    }
+
+    val ev by eventosViewModel.eventoSeleccionado.collectAsState()
+
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -523,12 +545,14 @@ fun EventoItem(evento: EventosUsuario) {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = when (evento.tipo) {
-                    TipoEvento.ENTRENAMIENTO -> Icons.Default.FitnessCenter
-                    TipoEvento.MEDICION -> Icons.Default.Monitor
-                    TipoEvento.NUTRICION -> Icons.Default.Restaurant
+                imageVector = when (ev!!.tipo) {
+                    "Entrenamiento" -> Icons.Default.FitnessCenter
+                    "Nutrición" -> Icons.Default.Restaurant
+                    "Progreso" -> Icons.Default.TrendingUp
+                    "Salud" -> Icons.Default.Favorite
+                    else -> Icons.Default.Event
                 },
-                contentDescription = evento.tipo.name,
+                contentDescription = "Tipo de evento",
                 tint = Color(0xFFAB47BC)
             )
         }
@@ -537,14 +561,14 @@ fun EventoItem(evento: EventosUsuario) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = evento.titulo,
+                text = ev!!.nombre,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
             )
 
             Text(
-                text = evento.descripcion,
+                text = ev!!.descripcion,
                 fontSize = 14.sp,
                 color = Color.Gray,
                 maxLines = 1,
@@ -553,13 +577,13 @@ fun EventoItem(evento: EventosUsuario) {
         }
 
         Text(
-            text = evento.hora,
+            text = evento!!.hora,
             fontSize = 14.sp,
             color = Color(0xFFAB47BC),
             fontWeight = FontWeight.Medium
         )
     }
-}*/
+}
 
 @Composable
 fun MisEntrenamientosSection(
@@ -1127,72 +1151,362 @@ fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogoEventos(
-    onConfirm: (String, String) -> Unit,
-    onDismiss: () -> Unit
+    onConfirm: (String, String, String) -> Unit, // Modificado para incluir notas
+    onDismiss: () -> Unit,
+    eventosUsuarioViewModel: EventosUsuarioViewModel,
+    eventosViewModel: EventosViewModel
 ) {
-    var peso by remember { mutableStateOf("") }
-    var repeticiones by remember { mutableStateOf("") }
+    var selectedEventName by remember { mutableStateOf<String?>(null) }
+    var expandedEventType by remember { mutableStateOf(false) }
+    var expandedEvent by remember { mutableStateOf(false) }
+    var selectedHour by remember { mutableStateOf(8) }
+    var selectedMinute by remember { mutableStateOf(0) }
+    var notas by remember { mutableStateOf("") }
+
+    // Simulated event types and events - replace with your actual data
+    var selectedEvent by remember { mutableStateOf<Eventos?>(null) }
+    val eventTypes by eventosViewModel.tipoEventos.collectAsState()
+    var selectedType by remember { mutableStateOf<String?>(null) }
+    val allEvents by eventosViewModel.eventos.collectAsState()
+    val filteredEvents = remember(allEvents, selectedType) {
+        if (selectedType == null) allEvents else allEvents.filter { it.tipo == selectedType }
+    }
+
+    Log.d("FalloEventosTipo", "${eventTypes}")
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF252525))
+                .fillMaxWidth(1.35f) // Aumentado para que ocupe más espacio
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Header
                 Text(
-                    text = "Añadir Serie",
+                    text = "Programar Evento",
                     style = androidx.compose.ui.text.TextStyle(
-                        fontSize = 18.sp,
+                        fontSize = 24.sp, // Aumentado
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFAB47BC)
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
                     ),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 20.dp)
                 )
 
-                // Campo de peso
-                OutlinedTextField(
-                    value = peso,
-                    onValueChange = { peso = it },
-                    label = { Text("Peso (kg)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        //textColor = Color.White,
-                        cursorColor = Color(0xFFAB47BC),
-                        focusedBorderColor = Color(0xFFAB47BC),
-                        unfocusedBorderColor = Color.Gray,
-                        focusedLabelColor = Color(0xFFAB47BC)
+                // Event Type Dropdown
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Tipo de evento",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF252525))
+                            .clickable { expandedEventType = true }
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = selectedType ?: "Selecciona un tipo",
+                                color = if (selectedType != null) Color.White else Color.Gray
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Expandir",
+                                tint = Color(0xFFAB47BC)
+                            )
+                        }
+                    }
 
-                // Campo de repeticiones
-                OutlinedTextField(
-                    value = repeticiones,
-                    onValueChange = { repeticiones = it },
-                    label = { Text("Repeticiones") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        cursorColor = Color(0xFFAB47BC),
-                        focusedBorderColor = Color(0xFFAB47BC),
-                        unfocusedBorderColor = Color.Gray,
-                        focusedLabelColor = Color(0xFFAB47BC)
-                    )
-                )
+                    DropdownMenu(
+                        expanded = expandedEventType,
+                        onDismissRequest = { expandedEventType = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFF252525))
+                    ) {
+                        eventTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(text = type, color = Color.White) },
+                                onClick = {
+                                    selectedType = type
+                                    selectedEventName = null
+                                    expandedEventType = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = when (type) {
+                                            "Entrenamiento" -> Icons.Default.FitnessCenter
+                                            "Nutrición" -> Icons.Default.Restaurant
+                                            "Progreso" -> Icons.Default.TrendingUp
+                                            "Salud" -> Icons.Default.Favorite
+                                            else -> Icons.Default.Event
+                                        },
+                                        contentDescription = type,
+                                        tint = Color(0xFFAB47BC)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Botones de acción
+                // Event Dropdown (only visible if event type is selected)
+                if (selectedType != null) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Evento",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF252525))
+                                .clickable { expandedEvent = true }
+                                .padding(16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = selectedEventName ?: "Selecciona un evento",
+                                    color = if (selectedEventName != null) Color.White else Color.Gray
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Expandir",
+                                    tint = Color(0xFFAB47BC)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = expandedEvent,
+                            onDismissRequest = { expandedEvent = false },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF252525))
+                        ) {
+                            filteredEvents?.forEach { evento ->
+                                DropdownMenuItem(
+                                    text = { Text(text = evento.nombre, color = Color.White) },
+                                    onClick = {
+                                        selectedEventName = evento.nombre
+                                        selectedEvent = evento
+                                        expandedEvent = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = when (selectedType) {
+                                                "Entrenamiento" -> Icons.Default.FitnessCenter
+                                                "Nutrición" -> Icons.Default.Restaurant
+                                                "Progreso" -> Icons.Default.TrendingUp
+                                                "Salud" -> Icons.Default.Favorite
+                                                else -> Icons.Default.Event
+                                            },
+                                            contentDescription = selectedType,
+                                            tint = Color(0xFFAB47BC)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Time Selector - MEJORADO
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Hora",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically // Alineación vertical central
+                    ) {
+                        // Hour selector (formato 24 horas)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(54.dp) // Altura fija para uniformidad
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF252525)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        if (selectedHour > 0) selectedHour-- else selectedHour = 23
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Remove,
+                                        contentDescription = "Disminuir hora",
+                                        tint = Color(0xFFAB47BC)
+                                    )
+                                }
+
+                                Text(
+                                    text = String.format("%02d", selectedHour),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+
+                                IconButton(
+                                    onClick = {
+                                        if (selectedHour < 23) selectedHour++ else selectedHour = 0
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Aumentar hora",
+                                        tint = Color(0xFFAB47BC)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Dos puntos centrados verticalmente
+                        Text(
+                            text = ":",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .wrapContentHeight() // Para centrar verticalmente
+                        )
+
+                        // Minute selector
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(54.dp) // Altura fija para uniformidad
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF252525)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        if (selectedMinute > 0) selectedMinute -= 5 else selectedMinute = 55
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Remove,
+                                        contentDescription = "Disminuir minutos",
+                                        tint = Color(0xFFAB47BC)
+                                    )
+                                }
+
+                                Text(
+                                    text = String.format("%02d", selectedMinute),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+
+                                IconButton(
+                                    onClick = {
+                                        if (selectedMinute < 55) selectedMinute += 5 else selectedMinute = 0
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Aumentar minutos",
+                                        tint = Color(0xFFAB47BC)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Nuevo campo de notas
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Notas",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = notas,
+                        onValueChange = { notas = it },
+                        placeholder = { Text("Escribe notas sobre este evento...", color = Color.Gray) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp) // Altura fija para el campo de notas
+                            .clip(RoundedCornerShape(12.dp)),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color(0xFF252525),
+                            cursorColor = Color(0xFFAB47BC),
+                            focusedBorderColor = Color(0xFFAB47BC),
+                            unfocusedBorderColor = Color(0xFF3A3A3A)
+                        ),
+                        textStyle = androidx.compose.ui.text.TextStyle(color = Color.White)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -1203,17 +1517,41 @@ fun DialogoEventos(
                             contentColor = Color.Gray
                         )
                     ) {
-                        Text("Cancelar")
+                        Text("Cancelar", fontSize = 16.sp)
                     }
 
-                    TextButton(
-                        onClick = { onConfirm(peso, repeticiones) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFFAB47BC)
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            val formattedHour = String.format(
+                                "%02d:%02d",
+                                selectedHour,
+                                selectedMinute
+                            )
+                            onConfirm(selectedEventName ?: "", formattedHour, notas)
+                            Log.d("FalloGuardar", "Hora: ${formattedHour}, evento: ${selectedEvent!!._id}, usuario: ${eventosViewModel.usuario.value!!._id}, fecha: ${Date()}, notas: ${notas}")
+                            eventosUsuarioViewModel.new(
+                                EventosUsuario(
+                                    evento = selectedEvent!!._id,
+                                    usuario = eventosViewModel.usuario.value!!._id,
+                                    fecha = Date(),
+                                    hora = formattedHour,
+                                    notas = notas
+                                )
+                            )
+                        },
+                        enabled = selectedEventName != null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFAB47BC),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFF7B1FA2).copy(alpha = 0.5f),
+                            disabledContentColor = Color.White.copy(alpha = 0.5f)
                         ),
-                        enabled = peso.isNotEmpty() && repeticiones.isNotEmpty()
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(48.dp)
                     ) {
-                        Text("Guardar")
+                        Text("Guardar", fontSize = 16.sp)
                     }
                 }
             }

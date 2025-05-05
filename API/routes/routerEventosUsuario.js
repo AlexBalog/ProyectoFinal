@@ -58,7 +58,8 @@ router.post('/new', async (req, res) => {
         evento: req.body.evento,
         usuario: req.body.usuario,
         fecha: req.body.fecha,
-        hora: req.body.hora
+        hora: req.body.hora,
+        notas: req.body.notas
     })
 
     try {
@@ -79,7 +80,8 @@ router.patch("/update", async (req, res) => {
         evento: req.body.evento,
         usuario: req.body.usuario,
         fecha: req.body.fecha,
-        hora: req.body.hora
+        hora: req.body.hora,
+        notas: req.body.notas
     }});
     
     if (resultado.modifiedCount === 0) {

@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.Repository
 
+import com.example.proyectofinalandroid.Model.EjerciciosRealizadosRequest
 import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Remote.EntrenamientoRealizadoApi
 import kotlinx.coroutines.Dispatchers
@@ -13,10 +14,15 @@ class EntrenamientoRealizadoRepository @Inject constructor(private val api: Entr
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun update(_id: String, updatedData: Map<String, String>, token: String): Boolean {
-        val request = mutableMapOf<String, String>("_id" to _id)
+    suspend fun update(_id: String, updatedData: Map<String, Any>, token: String): Boolean {
+        val request = mutableMapOf<String, Any>("_id" to _id)
         request.putAll(updatedData)
         val response = api.update("Bearer $token", request)
+        return response.isSuccessful
+    }
+
+    suspend fun updateEjerciciosRealizados(_id: String, updatedData: EjerciciosRealizadosRequest, token: String): Boolean {
+        val response = api.updateEjerciciosRealizados(_id = _id, auth = "Bearer $token", request = updatedData)
         return response.isSuccessful
     }
 

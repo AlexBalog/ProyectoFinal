@@ -4,6 +4,7 @@ import com.example.proyectofinalandroid.Model.EjercicioRealizado
 import com.example.proyectofinalandroid.Remote.EjercicioRealizadoApi
 import javax.inject.Inject
 import android.util.Log
+import com.example.proyectofinalandroid.Model.SeriesRealizadasRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -21,6 +22,11 @@ class EjercicioRealizadoRepository @Inject constructor(private val api: Ejercici
         val request = mutableMapOf<String, String>("_id" to _id)
         request.putAll(updatedData)
         val response = api.update("Bearer $token", request)
+        return response.isSuccessful
+    }
+
+    suspend fun updateSeriesRealizadas(_id: String, updatedData: SeriesRealizadasRequest, token: String): Boolean {
+        val response = api.updateSeriesRealizadas(_id = _id, auth = "Bearer $token", request = updatedData)
         return response.isSuccessful
     }
 

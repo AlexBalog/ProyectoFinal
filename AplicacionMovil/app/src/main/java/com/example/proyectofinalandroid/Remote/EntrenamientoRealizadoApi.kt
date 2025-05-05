@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.Remote
 
+import com.example.proyectofinalandroid.Model.EjerciciosRealizadosRequest
 import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import retrofit2.Response
 import retrofit2.http.*
@@ -14,7 +15,14 @@ interface EntrenamientoRealizadoApi {
     @PATCH("entrenamientoRealizado/update")
     suspend fun update(
         @Header("Authorization") auth: String,
-        @Body request: Map<String, String>
+        @Body request: Map<String, Any>
+    ): Response<Map<String, Any>>
+
+    @PATCH("entrenamientoRealizado/update/{id}")
+    suspend fun updateEjerciciosRealizados(
+        @Path("id") _id: String,
+        @Header("Authorization") auth: String,
+        @Body request: EjerciciosRealizadosRequest
     ): Response<Map<String, String>>
 
     // Endpoint para eliminar entreno (requiere token)

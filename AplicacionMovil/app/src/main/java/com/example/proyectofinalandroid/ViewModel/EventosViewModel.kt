@@ -20,34 +20,52 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class EventosViewModel @Inject constructor(private val repository: EventosRepository) : ViewModel() {
-    // Estados con StateFlow
+class EventosViewModel @Inject constructor(
+    private val repository: EventosRepository
+) : ViewModel() {
+
     private val _usuario = MutableStateFlow<Usuarios?>(null)
     val usuario: StateFlow<Usuarios?> get() = _usuario
 
-    val _errorMessage = MutableStateFlow<String?>(null)
+    private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> get() = _errorMessage
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
 
-    private val _eventos = MutableStateFlow<List<Eventos>?>(emptyList())
-    val eventos: StateFlow<List<Eventos>?> get() = _eventos
+    private val _eventos = MutableStateFlow<List<Eventos>>(emptyList())
+    val eventos: StateFlow<List<Eventos>> get() = _eventos
 
-    fun getAll() {
+    private val _tipoEventos = MutableStateFlow<List<String>>(emptyList())
+    val tipoEventos: StateFlow<List<String>> get() = _tipoEventos
+
+    fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+    }
+
+    fun cargarEventosYTipos() {
         viewModelScope.launch {
             try {
-                val lista = repository.getAll(token = _usuario.value?.token.toString())
-                if (lista != null) {
-                    _eventos.value = lista
-                    Log.d("Habitaciones", "Datos cargados: $lista")
-                } else {
-                    _eventos.value = emptyList()
-                    Log.d("Habitaciones", "Respuesta nula o lista vacía.")
-                }
+                _isLoading.value = true
+                val token = _usuario.value?.token.orEmpty()
+                val lista = repository.getAll(token)
+                _eventos.value = lista ?: emptyList()
+
+                // Extraer tipos únicos de los eventos
+                val tipos = _eventos.value
+                    .mapNotNull { it.tipo }
+                    .toSet()
+                    .toList()
+
+                _tipoEventos.value = tipos
+                _errorMessage.value = null
             } catch (e: Exception) {
-                Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
                 _eventos.value = emptyList()
+                _tipoEventos.value = emptyList()
+                _errorMessage.value = "Error al cargar eventos: ${e.message}"
+                Log.e("EventosViewModel", "Error: ${e.message}", e)
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -55,27 +73,26 @@ class EventosViewModel @Inject constructor(private val repository: EventosReposi
     private val _eventoSeleccionado = MutableStateFlow<Eventos?>(null)
     val eventoSeleccionado: StateFlow<Eventos?> get() = _eventoSeleccionado
 
-    fun getOne(id: String) {
-        Log.d("Mensaje", "${id} cargado")
+    suspend fun getOne(id: String) {
         viewModelScope.launch {
-            _eventoSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
+            try {
+                val token = _usuario.value?.token.orEmpty()
+                _eventoSeleccionado.value = repository.getOne(id, token)
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al cargar evento: ${e.message}"
+            }
         }
     }
 
-    fun getFilter(filtros: Map<String, String>) {
+    suspend fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
-                val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
-                if (lista != null) {
-                    _eventos.value = lista
-                    Log.d("Habitaciones", "Datos filtrados cargados: $lista")
-                } else {
-                    _eventos.value = emptyList()
-                    Log.d("Habitaciones", "No se encontraron habitaciones con esos filtros.")
-                }
+                val token = _usuario.value?.token.orEmpty()
+                val lista = repository.getFilter(token, filtros)
+                _eventos.value = lista ?: emptyList()
             } catch (e: Exception) {
-                Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
                 _eventos.value = emptyList()
+                _errorMessage.value = "Error al filtrar eventos: ${e.message}"
             }
         }
     }

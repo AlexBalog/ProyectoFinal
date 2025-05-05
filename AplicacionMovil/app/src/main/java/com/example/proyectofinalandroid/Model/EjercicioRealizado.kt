@@ -14,6 +14,6 @@ data class EjercicioRealizado(
     val ejercicio: String,
     @SerializedName("nombre")
     val nombre: String,
-    @SerializedName("series")
+    @SerializedName("seriesRealizadas")
     val series: List<String>? = null
     ) : Serializable

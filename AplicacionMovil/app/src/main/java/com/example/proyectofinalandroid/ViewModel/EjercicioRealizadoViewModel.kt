@@ -12,6 +12,7 @@ import com.example.proyectofinalandroid.Repository.EjercicioRealizadoRepository
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.proyectofinalandroid.Model.Ejercicios
+import com.example.proyectofinalandroid.Model.SeriesRealizadasRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -161,6 +162,30 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
         val listaActual = _ejerciciosRealizados.value?.toMutableList() ?: mutableListOf()
         listaActual.add(ejercicioRealizado)
         _ejerciciosRealizados.value = listaActual
+    }
+
+    fun update(_id: String, updatedData: Map<String, String>) {
+        viewModelScope.launch {
+            _usuario.value?.let { currentUser ->
+                val token = currentUser.token ?: return@launch // Si no hay token, no hacemos nada
+                val success = repository.update(_id, updatedData, token)
+                if (!success) {
+                    _errorMessage.value = "Error al actualizar el usuario"
+                }
+            }
+        }
+    }
+
+    fun updateSeriesRealizadas(_id: String, lista: List<String>) {
+        viewModelScope.launch {
+            _usuario.value?.let { currentUser ->
+                val token = currentUser.token ?: return@launch // Si no hay token, no hacemos nada
+                val success = repository.updateSeriesRealizadas(_id, SeriesRealizadasRequest(lista), token)
+                if (!success) {
+                    _errorMessage.value = "Error al actualizar el usuario"
+                }
+            }
+        }
     }
 
 }

@@ -2,6 +2,8 @@ package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
 import android.util.Log
+import android.widget.Toast
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -22,6 +24,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -141,6 +144,8 @@ fun ComenzarEntrenamientoScreen(
     // Estados para los diálogos
     var showCancelDialog by remember { mutableStateOf(false) }
     var showFinishDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
 
     // Efecto para iniciar la animación
     LaunchedEffect(Unit) {
@@ -190,6 +195,7 @@ fun ComenzarEntrenamientoScreen(
                 cronometroViewModel.detenerCronometro()
                 coroutineScope.launch {
                     try {
+                        Toast.makeText(context, "Guardando entrenamiento...", Toast.LENGTH_LONG).show()
                         entrenamientoRealizadoViewModel.guardarEntrenamiento(
                             entrenamientoId = entrenamientoId,
                             duracion = tiempoFormateado,
@@ -198,6 +204,7 @@ fun ComenzarEntrenamientoScreen(
                         )
                         // Navegar solo si todo fue exitoso
                         withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "¡Entrenamiento guardado!", Toast.LENGTH_SHORT).show()
                             showFinishDialog = false
                             navController.navigate("principal") {
                                 popUpTo("principal") { inclusive = true }
@@ -472,7 +479,6 @@ fun ComenzarEntrenamientoScreen(
                                 TarjetaEjercicioCargando()
                             }
                         }
-                        Log.d("FalloRE1", "lista ejercicios realizados ${ejercicioRealizadoViewModel.ejerciciosRealizados.value}")
                         // Espacio al final para el botón flotante
                         Spacer(modifier = Modifier.height(180.dp))
                     }
@@ -1085,7 +1091,8 @@ fun DialogAñadirSerie(
                             unfocusedContainerColor = darkGray,
                             cursorColor = primaryPurple,
                             focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            unfocusedTextColor = Color.White,
+                            errorTextColor = Color.White
                         ),
                         isError = repeticionesError,
                         trailingIcon = {

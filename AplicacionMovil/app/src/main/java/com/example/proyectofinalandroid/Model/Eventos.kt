@@ -5,11 +5,11 @@ import java.io.Serializable
 
 data class Eventos(
     @SerializedName("_id")
-    val _id: String,
+    val _id: String = "",
     @SerializedName("nombre")
     val nombre: String,
     @SerializedName("descripcion")
     val descripcion: String,
     @SerializedName("tipo")
-    val tipo: Number
+    val tipo: String
 ) : Serializable

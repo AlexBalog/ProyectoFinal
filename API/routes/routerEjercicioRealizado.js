@@ -27,18 +27,15 @@ router.post('/getOne', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
-    console.log("Entra en el new de ejercicioRealizado" + req.body);
     const data = new modelEjercicioRealizado({
         entrenamiento: req.body.entrenamiento,
         entrenamientoRealizado: req.body.entrenamientoRealizado,
         ejercicio: req.body.ejercicio,
-        nombre: req.body.nombre,
-       // series: req.body.series
+        nombre: req.body.nombre
     })
 
     try {
     const dataToSave = await data.save();
-    console.log("Respuesta exitosa: Código 200", dataToSave); // Log para éxito
     res.status(200).json(dataToSave);
     }
     catch (error) {
@@ -56,7 +53,7 @@ router.patch("/update", async (req, res) => {
         entrenamientoRealizado: req.body.entrenamientoRealizado,
         ejercicio: req.body.ejercicio,
         nombre: req.body.nombre,
-        series: req.body.series
+        seriesRealizadas: req.body.seriesRealizadas
     },});
     
     if (resultado.modifiedCount === 0) {
@@ -69,6 +66,33 @@ router.patch("/update", async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
+
+router.patch("/update/:id", async (req, res) => {
+    try {
+    const id = req.params.id;
+
+    const resultado = await modelEjercicioRealizado.updateOne(
+    { _id: id }, { $set: {
+        entrenamiento: req.body.entrenamiento,
+        entrenamientoRealizado: req.body.entrenamientoRealizado,
+        ejercicio: req.body.ejercicio,
+        nombre: req.body.nombre,
+        seriesRealizadas: req.body.seriesRealizadas
+    },});
+    
+    if (resultado.modifiedCount === 0) {
+        return res.status(404).json({ message: "Documento no encontrado" });
+    }
+    
+    res.status(200).json({ message: "Documento actualizado exitosamente"
+    });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
 
 router.delete('/delete', async (req, res) => {
     try {

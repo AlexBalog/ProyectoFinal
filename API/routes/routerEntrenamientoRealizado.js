@@ -58,7 +58,6 @@ router.get('/getFilter', async (req, res) => {
 });
 
 router.post('/new', async (req, res) => {
-    console.log("Entra en el new de entrenamientoRealizado" + req.body);
     const data = new modelEntrenamientoRealizado({
         usuario: req.body.usuario,
         entrenamiento: req.body.entrenamiento,
@@ -69,7 +68,6 @@ router.post('/new', async (req, res) => {
 
     try {
     const dataToSave = await data.save();
-    console.log("Respuesta exitosa: Código 200", dataToSave); // Log para éxito
     res.status(200).json(dataToSave);
     }
     catch (error) {
@@ -100,6 +98,33 @@ router.patch("/update", async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
+
+router.patch("/update/:id", async (req, res) => {
+    try {
+    const id = req.params.id;
+
+    const resultado = await modelEntrenamientoRealizado.updateOne(
+    { _id: id }, { $set: {
+        usuario: req.body.usuario,
+        entrenamiento: req.body.entrenamiento,
+        duracion: req.body.duracion,
+        fecha: req.body.fecha,
+        ejerciciosRealizados: req.body.ejerciciosRealizados
+    }});
+    
+    if (resultado.modifiedCount === 0) {
+        return res.status(404).json({ message: "Documento no encontrado" });
+    }
+    
+    res.status(200).json({ message: "Documento actualizado exitosamente"
+    });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+
 
 router.delete('/delete', async (req, res) => {
     try {
