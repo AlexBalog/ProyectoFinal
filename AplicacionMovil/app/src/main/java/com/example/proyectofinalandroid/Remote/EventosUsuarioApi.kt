@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.Remote
 
+import com.example.proyectofinalandroid.Model.Eventos
 import com.example.proyectofinalandroid.Model.EventosUsuario
 import retrofit2.Response
 import retrofit2.http.*
@@ -35,4 +36,9 @@ interface EventosUsuarioApi {
     @POST("eventosUsuario/new")
     suspend fun new(@Body eventosUsuario: EventosUsuario): Response<EventosUsuario>
 
+    @POST("eventosUsuario/getFilter")
+    suspend fun getFilter(
+        @Header("Authorization") auth: String,
+        @Body request: Map<String, String>
+    ): Response<List<EventosUsuario>>
 }

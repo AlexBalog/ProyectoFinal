@@ -37,7 +37,7 @@ interface EventosApi {
     @POST("eventos/new")
     suspend fun new(@Body eventos: Eventos): Response<Eventos>
 
-    @GET("ejercicios/getFilter")
+    @POST("eventos/getFilter")
     suspend fun getFilter(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>

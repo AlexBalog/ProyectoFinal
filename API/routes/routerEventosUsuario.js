@@ -27,20 +27,19 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.get('/getFilter', async (req, res) => {
+router.post('/getFilter', async (req, res) => {
     try {
         const condiciones = {};
 
-        if (req.body.usuario !== null) {
+        if (typeof req.body.usuario !== null && req.body.usuario !== undefined) {
             condiciones.usuario = req.body.usuario;
         }
-        if (req.body.fecha !== null) {
+        if (typeof req.body.fecha !== null && req.body.fecha !== undefined) {
             condiciones.fecha = req.body.fecha;
         }
-        if (req.body.evento !== null) {
+        if (typeof req.body.evento !== null && req.body.evento !== undefined) {
             condiciones.evento = req.body.evento;
         }
-        
         const data = await modelEventosUsuario.find(condiciones);
         
         if (data.length === 0) {
@@ -109,5 +108,22 @@ router.delete('/delete', async (req, res) => {
         res.status(400).json({ message: error.message })
     }
     })
+
+    /*router.delete('/delete', async (req, res) => {
+        try {
+        const id = req.body._id;
+        const objeto = await modelEventosUsuario.findById({ id });
+        if (objeto) {
+            await objeto.deleteOne();
+        } else {
+            return res.status(404).json({ message: 'Documento no encontrado' });
+        }
+    
+        res.status(200).json({ message: `Document with ${id} has been deleted..` })
+        }
+        catch (error) {
+            res.status(400).json({ message: error.message })
+        }
+        })*/
 
 module.exports = router;

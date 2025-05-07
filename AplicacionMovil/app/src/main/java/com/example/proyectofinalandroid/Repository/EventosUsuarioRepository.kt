@@ -1,7 +1,10 @@
 package com.example.proyectofinalandroid.Repository
 
+import com.example.proyectofinalandroid.Model.Eventos
 import com.example.proyectofinalandroid.Model.EventosUsuario
 import com.example.proyectofinalandroid.Remote.EventosUsuarioApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class EventosUsuarioRepository @Inject constructor(private val api: EventosUsuarioApi) {
@@ -37,5 +40,16 @@ class EventosUsuarioRepository @Inject constructor(private val api: EventosUsuar
             throw Exception(errorMsg)
         }
         return response.body()
+    }
+
+    suspend fun getFilter(token: String, filtros: Map<String, String>): List<EventosUsuario>? {
+        return withContext(Dispatchers.IO) {
+            val response = api.getFilter(token, filtros)
+            if (response.isSuccessful) {
+                response.body()
+            } else {
+                null
+            }
+        }
     }
 }

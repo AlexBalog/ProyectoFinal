@@ -136,10 +136,10 @@ fun RegisterScreen(
 
         // Crear el objeto Usuario con los datos del formulario
         val newUser = Usuarios(
-            nombre = nombre,
-            apellido = apellido,
-            email = email,
-            contrasena = password
+            nombre = nombre.trim(),
+            apellido = apellido.trim(),
+            email = email.trim(),
+            contrasena = password.trim()
         )
 
         usuariosViewModel.registrar(newUser)

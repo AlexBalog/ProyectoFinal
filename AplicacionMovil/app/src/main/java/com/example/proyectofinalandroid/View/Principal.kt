@@ -42,7 +42,6 @@ import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import java.time.DayOfWeek
-import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -69,6 +68,10 @@ import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.ui.platform.LocalContext
 import android.app.Activity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import java.time.LocalDate
+import java.time.ZoneId
+import androidx.compose.ui.geometry.Offset
+import kotlinx.coroutines.launch
 
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
@@ -133,12 +136,14 @@ fun HomeScreen(navController: NavController) {
     val programasDestacados by remember { mutableStateOf(entrenamientosViewModel.obtenerProgramasDestacados()) }
     val eventosUsuario by eventosUsuariosViewModel.eventosUsuarioLista.collectAsState()
 
+    val fechasConEventos = remember(eventosUsuario) {
+        eventosUsuario?.map { it.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() } ?: emptyList()
+    }
     // Animación de entrada
     LaunchedEffect(Unit) {
         delay(100)
         eventosViewModel.cargarEventosYTipos()
-        eventosUsuariosViewModel.getAll()
-        Log.d("FalloRecomposicion", "a")
+        eventosUsuariosViewModel.getFilter(mapOf("usuario" to usuario!!._id))
         isAnimatedIn = true
     }
 
@@ -196,7 +201,8 @@ fun HomeScreen(navController: NavController) {
                         currentMonth = currentMonth,
                         selectedDate = selectedDate,
                         onDateSelected = { selectedDate = it },
-                        onMonthChanged = { newMonth -> currentMonth = newMonth }
+                        onMonthChanged = { newMonth -> currentMonth = newMonth },
+                        fechasConEventos = fechasConEventos
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -286,7 +292,8 @@ fun CalendarSection(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
-    onMonthChanged: (YearMonth) -> Unit
+    onMonthChanged: (YearMonth) -> Unit,
+    fechasConEventos: List<LocalDate>
 ) {
     Log.d("Investigar", "$currentMonth")
     Card(
@@ -362,7 +369,7 @@ fun CalendarSection(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Días del mes
-            DiasDelMes(currentMonth, selectedDate, onDateSelected)
+            DiasDelMes(currentMonth, selectedDate, onDateSelected, fechasConEventos = fechasConEventos)
         }
     }
 }
@@ -371,7 +378,8 @@ fun CalendarSection(
 fun DiasDelMes(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
+    fechasConEventos: List<LocalDate>
 ) {
     val firstDayOfWeek = DayOfWeek.MONDAY
     val daysInMonth = currentMonth.lengthOfMonth()
@@ -396,7 +404,7 @@ fun DiasDelMes(
                         val date = currentMonth.atDay(day)
                         val isSelected = date == selectedDate
                         val isToday = date == LocalDate.now()
-
+                        val tieneEvento = fechasConEventos.contains(date)
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -405,6 +413,7 @@ fun DiasDelMes(
                                     when {
                                         isSelected -> Color(0xFFAB47BC)
                                         isToday -> Color(0xFF7B1FA2).copy(alpha = 0.3f)
+                                        tieneEvento -> Color(0xFF3F51B5).copy(alpha = 0.3f)
                                         else -> Color.Transparent
                                     }
                                 )
@@ -417,6 +426,7 @@ fun DiasDelMes(
                                 color = when {
                                     isSelected -> Color.White
                                     isToday -> Color(0xFFAB47BC)
+                                    tieneEvento -> Color(0xFF9FA8DA)
                                     else -> Color.White
                                 },
                                 fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
@@ -436,7 +446,14 @@ fun ProgrammedEventsSection(
     eventosUsuarioViewModel: EventosUsuarioViewModel
 ) {
     val eventos by eventosUsuarioViewModel.eventosUsuarioLista.collectAsState()
-    var showAddSerieDialog by remember { mutableStateOf(false) }
+    val eventosFiltrados = remember(eventos, date) {
+        eventos?.filter { evento ->
+            val localDate = evento.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            localDate == date
+        } ?: emptyList()
+    }
+
+    var showAddEventoDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -462,7 +479,7 @@ fun ProgrammedEventsSection(
                 Spacer(modifier = Modifier.weight(1f))
 
                 IconButton(
-                    onClick = { showAddSerieDialog = true }
+                    onClick = { showAddEventoDialog = true }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
@@ -479,108 +496,183 @@ fun ProgrammedEventsSection(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (eventos!!.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Nada programado",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
+            when {
+                eventosFiltrados == null -> {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
                 }
-            } else {
-                eventosUsuarioViewModel.eventosUsuarioLista.value!!.forEach { evento ->
-                    Log.d("FalloMostrarEventos", "$evento")
-                    EventoItem(evento = evento, eventosViewModel = eventosViewModel)
-                    if (evento != eventos!!.last()) {
-                        Divider(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = Color(0xFF2A2A2A)
+                eventosFiltrados!!.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No hay eventos programados para este día",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
                         )
+                    }
+                }
+                else -> {
+                    eventosFiltrados?.forEach { evento ->
+                        EventoItem(evento = evento, eventosViewModel = eventosViewModel, eventosUsuarioViewModel = eventosUsuarioViewModel)
+                        if (evento != eventos?.last()) {
+                            Divider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                color = Color(0xFF2A2A2A)
+                            )
+                        }
                     }
                 }
             }
         }
-        if (showAddSerieDialog) {
+        if (showAddEventoDialog) {
             DialogoEventos(
                 onConfirm = { evento, hora, notas ->
-                  //  eventos.new(Serie(peso, repeticiones))
-                    showAddSerieDialog = false
+                    showAddEventoDialog = false
                 },
-                onDismiss = { showAddSerieDialog = false },
+                onDismiss = { showAddEventoDialog = false },
                 eventosViewModel = eventosViewModel,
-                eventosUsuarioViewModel = eventosUsuarioViewModel
+                eventosUsuarioViewModel = eventosUsuarioViewModel,
+                selectedDate = date
             )
         }
     }
 }
 
 @Composable
-fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel) {
+fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, eventosUsuarioViewModel: EventosUsuarioViewModel) {
+    var isLoading by remember { mutableStateOf(true) }
+    var showEditEventoDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(evento.evento) {
         eventosViewModel.getOne(evento.evento)
+        isLoading = false
     }
 
     val ev by eventosViewModel.eventoSeleccionado.collectAsState()
 
+    when {
+        isLoading -> {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+        }
+        ev == null -> {
+            Text("Error cargando evento", color = Color.Red)
+        }
+        else -> {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable{ showEditEventoDialog = true }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF7B1FA2).copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = when (ev!!.tipo) {
+                            "Entrenamiento" -> Icons.Default.FitnessCenter
+                            "Nutrición" -> Icons.Default.Restaurant
+                            "Progreso" -> Icons.Default.TrendingUp
+                            "Salud" -> Icons.Default.Favorite
+                            else -> Icons.Default.Event
+                        },
+                        contentDescription = "Tipo de evento",
+                        tint = Color(0xFFAB47BC)
+                    )
+                }
 
+                Spacer(modifier = Modifier.width(12.dp))
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = ev!!.nombre,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = ev!!.descripcion,
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Text(
+                    text = evento!!.hora,
+                    fontSize = 14.sp,
+                    color = Color(0xFFAB47BC),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+    if (showEditEventoDialog) {
+        DialogoEventos(
+            onConfirm = { _, _, _ ->
+                showEditEventoDialog = false
+            },
+            onDismiss = { showEditEventoDialog = false },
+            onEdit = { evento, hora, notas ->
+
+                showEditEventoDialog = false
+            },
+            onDelete = {
+                showDeleteDialog = true
+            },
+            eventosViewModel = eventosViewModel,
+            eventosUsuarioViewModel = eventosUsuarioViewModel,
+            selectedDate = evento.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+            eventoExistente = ev,
+            eventoUsuarioExistente = evento
+        )
+    }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(text = "¿Eliminar evento?") },
+            text = { Text(text = "¿Estás seguro de que quieres eliminar este evento?")},
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch {
+                        eventosUsuarioViewModel.delete(evento._id)
+                    }
+                    showDeleteDialog = false
+                    showEditEventoDialog = false
+                }) {
+                    Text(text = "Sí", color = Color(0xFF7B1FA2), fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(text = "Cancelar", color = Color(0xFF7B1FA2), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            },
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF7B1FA2).copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = when (ev!!.tipo) {
-                    "Entrenamiento" -> Icons.Default.FitnessCenter
-                    "Nutrición" -> Icons.Default.Restaurant
-                    "Progreso" -> Icons.Default.TrendingUp
-                    "Salud" -> Icons.Default.Favorite
-                    else -> Icons.Default.Event
-                },
-                contentDescription = "Tipo de evento",
-                tint = Color(0xFFAB47BC)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = ev!!.nombre,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-
-            Text(
-                text = ev!!.descripcion,
-                fontSize = 14.sp,
-                color = Color.Gray,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Text(
-            text = evento!!.hora,
-            fontSize = 14.sp,
-            color = Color(0xFFAB47BC),
-            fontWeight = FontWeight.Medium
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .shadow(
+                    elevation = 20.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            containerColor = Color(0xFF1A1A1A),
+            titleContentColor = Color.White,
+            textContentColor = Color.LightGray,
+            shape = RoundedCornerShape(24.dp)
         )
     }
 }
@@ -1148,36 +1240,62 @@ fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado
     )
 }
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogoEventos(
-    onConfirm: (String, String, String) -> Unit, // Modificado para incluir notas
+    onConfirm: (String, String, String) -> Unit,
     onDismiss: () -> Unit,
+    onEdit: ((String, String, String) -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
     eventosUsuarioViewModel: EventosUsuarioViewModel,
-    eventosViewModel: EventosViewModel
+    eventosViewModel: EventosViewModel,
+    selectedDate: LocalDate,
+    eventoExistente: Eventos? = null,
+    eventoUsuarioExistente: EventosUsuario? = null
 ) {
+    val isEditMode = eventoUsuarioExistente != null
+
     var selectedEventName by remember { mutableStateOf<String?>(null) }
     var expandedEventType by remember { mutableStateOf(false) }
     var expandedEvent by remember { mutableStateOf(false) }
     var selectedHour by remember { mutableStateOf(8) }
     var selectedMinute by remember { mutableStateOf(0) }
     var notas by remember { mutableStateOf("") }
-
-    // Simulated event types and events - replace with your actual data
     var selectedEvent by remember { mutableStateOf<Eventos?>(null) }
     val eventTypes by eventosViewModel.tipoEventos.collectAsState()
     var selectedType by remember { mutableStateOf<String?>(null) }
     val allEvents by eventosViewModel.eventos.collectAsState()
+
+    LaunchedEffect(eventoUsuarioExistente) {
+        if (isEditMode && eventoUsuarioExistente != null) {
+            // Cargar el evento relacionado para obtener tipo y nombre
+            selectedEvent = eventoExistente
+            selectedType = eventoExistente!!.tipo
+            selectedEventName = eventoExistente!!.nombre
+
+            // Parsear la hora existente (HH:MM)
+            val horaParts = eventoUsuarioExistente.hora.split(":")
+            if (horaParts.size == 2) {
+                selectedHour = horaParts[0].toInt()
+                selectedMinute = horaParts[1].toInt()
+            }
+
+            // Establecer las notas
+            notas = eventoUsuarioExistente.notas ?: ""
+        }
+    }
+
     val filteredEvents = remember(allEvents, selectedType) {
         if (selectedType == null) allEvents else allEvents.filter { it.tipo == selectedType }
     }
 
-    Log.d("FalloEventosTipo", "${eventTypes}")
+
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(1.35f) // Aumentado para que ocupe más espacio
+                .fillMaxWidth(1.0f) // Aumentado para que ocupe más espacio
                 .padding(16.dp)
                 .shadow(
                     elevation = 8.dp,
@@ -1196,9 +1314,9 @@ fun DialogoEventos(
             ) {
                 // Header
                 Text(
-                    text = "Programar Evento",
+                    text = if (isEditMode) "Editar Evento" else "Programar Evento",
                     style = androidx.compose.ui.text.TextStyle(
-                        fontSize = 24.sp, // Aumentado
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         brush = Brush.linearGradient(
                             colors = listOf(
@@ -1224,7 +1342,7 @@ fun DialogoEventos(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF252525))
-                            .clickable { expandedEventType = true }
+                            .clickable(enabled = !isEditMode) { expandedEventType = true }
                             .padding(16.dp)
                     ) {
                         Row(
@@ -1245,7 +1363,7 @@ fun DialogoEventos(
                     }
 
                     DropdownMenu(
-                        expanded = expandedEventType,
+                        expanded = expandedEventType && !isEditMode,
                         onDismissRequest = { expandedEventType = false },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1294,7 +1412,7 @@ fun DialogoEventos(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFF252525))
-                                .clickable { expandedEvent = true }
+                                .clickable(enabled = !isEditMode) { expandedEvent = true }
                                 .padding(16.dp)
                         ) {
                             Row(
@@ -1315,7 +1433,7 @@ fun DialogoEventos(
                         }
 
                         DropdownMenu(
-                            expanded = expandedEvent,
+                            expanded = expandedEvent && !isEditMode,
                             onDismissRequest = { expandedEvent = false },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1507,51 +1625,157 @@ fun DialogoEventos(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color.Gray
-                        )
+                if (isEditMode) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Cancelar", fontSize = 16.sp)
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = {
-                            val formattedHour = String.format(
-                                "%02d:%02d",
-                                selectedHour,
-                                selectedMinute
-                            )
-                            onConfirm(selectedEventName ?: "", formattedHour, notas)
-                            Log.d("FalloGuardar", "Hora: ${formattedHour}, evento: ${selectedEvent!!._id}, usuario: ${eventosViewModel.usuario.value!!._id}, fecha: ${Date()}, notas: ${notas}")
-                            eventosUsuarioViewModel.new(
-                                EventosUsuario(
-                                    evento = selectedEvent!!._id,
-                                    usuario = eventosViewModel.usuario.value!!._id,
-                                    fecha = Date(),
-                                    hora = formattedHour,
-                                    notas = notas
+                        // Botón Eliminar
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            Color(0xFFFF5252),
+                                            Color(0xFF8B0000)
+                                        ),
+                                        start = Offset.Infinite,
+                                        end = Offset.Zero
+                                    )
                                 )
+                                .clickable {
+                                    onDelete?.invoke()
+                                    onDismiss()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Eliminar",
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp) // Este tamaño real del icono
                             )
-                        },
-                        enabled = selectedEventName != null,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFAB47BC),
-                            contentColor = Color.White,
-                            disabledContainerColor = Color(0xFF7B1FA2).copy(alpha = 0.5f),
-                            disabledContentColor = Color.White.copy(alpha = 0.5f)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.height(48.dp)
+                        }
+
+
+                        // Espaciador entre botones
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Botones de Cancelar y Editar
+                        Row {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                Color(0xFF3F51B5),
+                                                Color(0xFF9FA8DA)
+                                            ),
+                                            center = Offset(0.5f, 0.5f),
+                                            radius = 200f
+                                        )
+                                    )
+                                    .clickable {
+                                        onDismiss()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Cancelar",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp) // Este tamaño real del icono
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(
+                                                Color(0xFF4A148C),
+                                                Color(0xFFd260e6)
+                                            ),
+                                            start = Offset(200f, 0f),
+                                            end = Offset(0f, 200f)
+                                        )
+                                    )
+                                    .clickable {
+                                        val formattedHour = String.format(
+                                            "%02d:%02d",
+                                            selectedHour,
+                                            selectedMinute
+                                        )
+                                        eventoUsuarioExistente?._id?.let { id ->
+                                            onEdit?.invoke(selectedEventName ?: "", formattedHour, notas)
+                                        }
+                                        onDismiss()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Editar",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp) // Este tamaño real del icono
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text("Guardar", fontSize = 16.sp)
+                        TextButton(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.Gray
+                            )
+                        ) {
+                            Text("Cancelar", fontSize = 16.sp)
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Button(
+                            onClick = {
+                                val formattedHour = String.format(
+                                    "%02d:%02d",
+                                    selectedHour,
+                                    selectedMinute
+                                )
+                                onConfirm(selectedEventName ?: "", formattedHour, notas)
+                                eventosUsuarioViewModel.new(
+                                    EventosUsuario(
+                                        evento = selectedEvent!!._id,
+                                        usuario = eventosViewModel.usuario.value!!._id,
+                                        fecha = Date.from(selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant()),
+                                        hora = formattedHour,
+                                        notas = notas
+                                    )
+                                )
+                            },
+                            enabled = selectedEventName != null,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFAB47BC),
+                                contentColor = Color.White,
+                                disabledContainerColor = Color(0xFF7B1FA2).copy(alpha = 0.5f),
+                                disabledContentColor = Color.White.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Guardar", fontSize = 16.sp)
+                        }
                     }
                 }
             }

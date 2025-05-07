@@ -61,15 +61,53 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
                 val creado = repository.new(eventosUsuario)
                 if (creado != null) {
                     _eventosUsuario.value = creado
+                    val actual = _eventosUsuarioLista.value?.toMutableList() ?: mutableListOf()
+                    actual.add(creado)
+                    _eventosUsuarioLista.value = actual
+
                     _errorMessage.value = null
                 } else {
-                    _errorMessage.value = "Error al crear el usuario"
+                    _errorMessage.value = "Error al crear el evento"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             }
         }
     }
+
+    suspend fun delete(_id: String) {
+        viewModelScope.launch {
+            try {
+                val token = _usuario.value?.token ?: run {
+                    _errorMessage.value = "Usuario no autenticado"
+                    return@launch
+                }
+
+                val eliminado = repository.delete(token = token, _id = _id)
+
+                if (eliminado) {
+                    // Actualizar la lista local
+                    _eventosUsuarioLista.value = _eventosUsuarioLista.value
+                        ?.toMutableList()
+                        ?.apply { removeAll { it._id == _id } }
+
+                    // Limpiar selección si el evento eliminado estaba seleccionado
+                    _eventosUsuarioSeleccionado.value?.let { evento ->
+                        if (evento._id == _id) {
+                            _eventosUsuarioSeleccionado.value = null
+                        }
+                    }
+
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Error al eliminar el evento"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error: ${e.message ?: "Desconocido"}"
+            }
+        }
+    }
+
 
     private val _eventosUsuarioSeleccionado = MutableStateFlow<EventosUsuario?>(null)
     val eventosUsuarioSeleccionado: StateFlow<EventosUsuario?> get() = _eventosUsuarioSeleccionado
@@ -95,6 +133,21 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
                 }
             } catch (e: Exception) {
                 Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
+                _eventosUsuarioLista.value = emptyList()
+            }
+        }
+    }
+
+    suspend fun getFilter(filtros: Map<String, String>) {
+        viewModelScope.launch {
+            try {
+                val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
+                if (lista != null) {
+                    _eventosUsuarioLista.value = lista
+                } else {
+                    _eventosUsuarioLista.value = emptyList()
+                }
+            } catch (e: Exception) {
                 _eventosUsuarioLista.value = emptyList()
             }
         }
