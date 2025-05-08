@@ -41,19 +41,28 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
         _usuario.value = usuario
     }
 
-    suspend fun update(updatedData: Map<String, String>): Boolean {
+    suspend fun update(updatedData: Map<String, String>, _id: String): Boolean {
         return withContext(Dispatchers.IO) {
             _usuario.value?.let { currentUser ->
-                val _id = currentUser._id
                 val token = currentUser.token ?: return@withContext false
                 val success = repository.update(_id, updatedData, token)
-                if (!success) {
+                if (success) {
+                    _eventosUsuarioLista.value = _eventosUsuarioLista.value?.map { evento ->
+                        if (evento._id == _id) {
+                            evento.copy(
+                                hora = updatedData["hora"] ?: evento.hora,
+                                notas = updatedData["notas"] ?: evento.notas
+                            )
+                        } else evento
+                    }
+                } else {
                     _errorMessage.value = "Error al actualizar el usuario"
                 }
                 return@withContext success
             } ?: false
         }
     }
+
 
     fun new(eventosUsuario: EventosUsuario) {
         viewModelScope.launch {

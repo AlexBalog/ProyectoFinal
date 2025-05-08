@@ -10,6 +10,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Eventos
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
@@ -38,6 +40,10 @@ class EventosViewModel @Inject constructor(
 
     private val _tipoEventos = MutableStateFlow<List<String>>(emptyList())
     val tipoEventos: StateFlow<List<String>> get() = _tipoEventos
+
+    suspend fun getOneReturn(id: String): Eventos? {
+        return repository.getOne(id, _usuario.value?.token ?: "")
+    }
 
     fun setUsuario(usuario: Usuarios) {
         _usuario.value = usuario
@@ -73,7 +79,7 @@ class EventosViewModel @Inject constructor(
     private val _eventoSeleccionado = MutableStateFlow<Eventos?>(null)
     val eventoSeleccionado: StateFlow<Eventos?> get() = _eventoSeleccionado
 
-    suspend fun getOne(id: String) {
+    fun getOne(id: String) {
         viewModelScope.launch {
             try {
                 val token = _usuario.value?.token.orEmpty()
@@ -84,7 +90,7 @@ class EventosViewModel @Inject constructor(
         }
     }
 
-    suspend fun getFilter(filtros: Map<String, String>) {
+    fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
                 val token = _usuario.value?.token.orEmpty()

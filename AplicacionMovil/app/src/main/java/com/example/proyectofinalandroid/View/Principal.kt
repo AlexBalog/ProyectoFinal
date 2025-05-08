@@ -547,23 +547,24 @@ fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, event
     var isLoading by remember { mutableStateOf(true) }
     var showEditEventoDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var eventoRelacionado by remember { mutableStateOf<Eventos?>(null) }
 
     val scope = rememberCoroutineScope()
+
     LaunchedEffect(evento.evento) {
-        eventosViewModel.getOne(evento.evento)
+        eventoRelacionado = eventosViewModel.getOneReturn(evento.evento)
         isLoading = false
     }
-
-    val ev by eventosViewModel.eventoSeleccionado.collectAsState()
 
     when {
         isLoading -> {
             CircularProgressIndicator(modifier = Modifier.size(20.dp))
         }
-        ev == null -> {
+        eventoRelacionado == null -> {
             Text("Error cargando evento", color = Color.Red)
         }
         else -> {
+            val ev = eventoRelacionado!!
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -579,7 +580,7 @@ fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, event
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = when (ev!!.tipo) {
+                        imageVector = when (ev.tipo) {
                             "Entrenamiento" -> Icons.Default.FitnessCenter
                             "Nutrición" -> Icons.Default.Restaurant
                             "Progreso" -> Icons.Default.TrendingUp
@@ -595,14 +596,14 @@ fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, event
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = ev!!.nombre,
+                        text = ev.nombre,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
 
                     Text(
-                        text = ev!!.descripcion,
+                        text = ev.descripcion,
                         fontSize = 14.sp,
                         color = Color.Gray,
                         maxLines = 1,
@@ -625,8 +626,16 @@ fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, event
                 showEditEventoDialog = false
             },
             onDismiss = { showEditEventoDialog = false },
-            onEdit = { evento, hora, notas ->
-
+            onEdit = { eventoUsuario, hora, notas ->
+                scope.launch {
+                    eventosUsuarioViewModel.update(
+                        mapOf(
+                            "hora" to hora,
+                            "notas" to notas
+                        ),
+                        _id = eventoUsuario
+                    )
+                }
                 showEditEventoDialog = false
             },
             onDelete = {
@@ -635,7 +644,7 @@ fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, event
             eventosViewModel = eventosViewModel,
             eventosUsuarioViewModel = eventosUsuarioViewModel,
             selectedDate = evento.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-            eventoExistente = ev,
+            eventoExistente = eventoRelacionado,
             eventoUsuarioExistente = evento
         )
     }
@@ -1715,7 +1724,7 @@ fun DialogoEventos(
                                             selectedMinute
                                         )
                                         eventoUsuarioExistente?._id?.let { id ->
-                                            onEdit?.invoke(selectedEventName ?: "", formattedHour, notas)
+                                            onEdit?.invoke(id, formattedHour, notas)
                                         }
                                         onDismiss()
                                     },
