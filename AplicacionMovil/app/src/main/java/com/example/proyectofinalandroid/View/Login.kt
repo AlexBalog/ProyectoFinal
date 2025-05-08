@@ -55,6 +55,8 @@ import androidx.navigation.NavController
 import com.example.proyectofinalandroid.R
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import kotlinx.coroutines.delay
+import com.example.proyectofinalandroid.utils.UserPreferences
+import com.example.proyectofinalandroid.Model.Usuarios
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
@@ -82,6 +84,7 @@ fun LoginScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val userPrefs = remember { UserPreferences(context) }
 
     // Configurar animación de entrada
     LaunchedEffect(Unit) {
@@ -98,6 +101,8 @@ fun LoginScreen(
     // Efectos para manejar navegación y errores
     LaunchedEffect(usuario) {
         if (usuario != null) {
+            val usu = usuario as Usuarios
+            userPrefs.saveUser(usu._id, usu.token.toString())
             Toast.makeText(context, "Bienvenido ${usuario?.nombre}", Toast.LENGTH_LONG).show()
             navController.currentBackStackEntry?.savedStateHandle?.set("usuario", usuario)
             if (usuario!!.formulario) {

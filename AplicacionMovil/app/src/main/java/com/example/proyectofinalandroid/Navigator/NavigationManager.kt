@@ -12,12 +12,22 @@ import com.example.proyectofinalandroid.View.HomeScreen
 import com.example.proyectofinalandroid.View.LoginScreen
 import com.example.proyectofinalandroid.View.RegisterScreen
 import com.example.proyectofinalandroid.View.DetalleEjercicioScreen
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.example.proyectofinalandroid.utils.UserPreferences
+import com.example.proyectofinalandroid.View.SplashScreen
+
+
 
 @Composable
 fun Navegador() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "auth", route = "root") {
-
+    NavHost(navController = navController, startDestination = "splash", route = "root") {
+        composable("splash") {
+            val context = LocalContext.current
+            val userPrefs = remember { UserPreferences(context) }
+            SplashScreen(navController, userPrefs)
+        }
         // Este es el grafo de autenticación (login/registro)
         navigation(startDestination = "login", route = "auth") {
             composable("login") { LoginScreen(navController) }

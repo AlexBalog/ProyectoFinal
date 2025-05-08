@@ -11,6 +11,11 @@ interface EventosUsuarioApi {
     @GET("eventosUsuario/getAll")
     suspend fun getAll(@Header("Authorization") auth: String): Response<List<EventosUsuario>>
 
+    @GET("eventosUsuario/getEventosProximos/{usuarioId}")
+    suspend fun getEventosProximos(
+        @Path("usuarioId") usuarioId: String
+    ): List<EventosUsuario>
+
     // Endpoint para actualizar eventos de usuario(requiere token)
     @PATCH("eventosUsuario/update")
     suspend fun update(

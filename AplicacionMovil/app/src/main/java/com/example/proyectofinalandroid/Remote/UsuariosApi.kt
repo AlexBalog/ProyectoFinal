@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.Remote
 
+import com.example.proyectofinalandroid.Model.EventosUsuario
 import com.example.proyectofinalandroid.Model.LoginResponse
 import com.example.proyectofinalandroid.Model.Usuarios
 import retrofit2.Response
@@ -21,6 +22,11 @@ interface UsuariosApi {
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
+
+    @GET("eventosUsuario/getOne/{id}")
+    suspend fun getOne(
+        @Path("id") id: String
+    ): Usuarios
 
     // Endpoint para eliminar usuario (requiere token)
     @HTTP(method = "DELETE", path = "user/delete", hasBody = true)

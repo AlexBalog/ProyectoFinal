@@ -18,6 +18,11 @@ interface EntrenamientoRealizadoApi {
         @Body request: Map<String, Any>
     ): Response<Map<String, Any>>
 
+    @GET("entrenamientoRealizado/getLastEntrenamiento/{usuarioId}")
+    suspend fun getLastEntrenamiento(
+        @Path("usuarioId") usuarioId: String
+    ): EntrenamientoRealizado
+
     @PATCH("entrenamientoRealizado/update/{id}")
     suspend fun updateEjerciciosRealizados(
         @Path("id") _id: String,

@@ -38,6 +38,11 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
         return if (response.isSuccessful) response.body() else null
     }
 
+    suspend fun getOne(_id: String): Usuarios? {
+        val response = api.getOne(_id)
+        return if (response != null) response else null
+    }
+
     // Método para registrar usuario sin token
     suspend fun registerWithoutToken(usuario: Usuarios): Usuarios? {
         val response = api.registerWithoutToken(usuario)

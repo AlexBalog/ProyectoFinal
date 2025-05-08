@@ -5,6 +5,8 @@ import com.example.proyectofinalandroid.Model.EventosUsuario
 import com.example.proyectofinalandroid.Remote.EventosUsuarioApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 class EventosUsuarioRepository @Inject constructor(private val api: EventosUsuarioApi) {
@@ -12,6 +14,15 @@ class EventosUsuarioRepository @Inject constructor(private val api: EventosUsuar
     suspend fun getAll(token: String): List<EventosUsuario>? {
         val response = api.getAll("Bearer $token")
         return if (response.isSuccessful) response.body() else null
+    }
+
+    suspend fun getEventosProximos(usuarioId: String): List<EventosUsuario> {
+        val todos = api.getEventosProximos(usuarioId)
+        val hoy = LocalDate.now()
+        return todos.filter {
+            val fechaEvento = it.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+            !fechaEvento.isBefore(hoy) // Hoy o en el futuro
+        }
     }
 
     suspend fun update(_id: String, updatedData: Map<String, String>, token: String): Boolean {

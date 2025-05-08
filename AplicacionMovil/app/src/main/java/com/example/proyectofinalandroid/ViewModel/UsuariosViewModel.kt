@@ -81,4 +81,23 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
             }
         }
     }
+
+
+    fun getOne(id: String): Usuarios? {
+        viewModelScope.launch {
+            try {
+                return@launch repository.getOne(id)
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al cargar evento: ${e.message}"
+            }
+        return@launch null
+        }
+    }
+
+    /*fun logout() {
+        val userPrefs = UserPreferences(context)
+        viewModelScope.launch {
+            userPrefs.clearUser()
+        }
+    }*/
 }

@@ -5,6 +5,7 @@ import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Remote.EntrenamientoRealizadoApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 import javax.inject.Inject
 
 class EntrenamientoRealizadoRepository @Inject constructor(private val api: EntrenamientoRealizadoApi) {
@@ -24,6 +25,10 @@ class EntrenamientoRealizadoRepository @Inject constructor(private val api: Entr
     suspend fun updateEjerciciosRealizados(_id: String, updatedData: EjerciciosRealizadosRequest, token: String): Boolean {
         val response = api.updateEjerciciosRealizados(_id = _id, auth = "Bearer $token", request = updatedData)
         return response.isSuccessful
+    }
+
+    suspend fun getUltimoEntrenamiento(usuarioId: String): EntrenamientoRealizado {
+        return api.getLastEntrenamiento(usuarioId) // O filtrado manual desde todos
     }
 
     suspend fun delete(_id: String, token: String): Boolean {
