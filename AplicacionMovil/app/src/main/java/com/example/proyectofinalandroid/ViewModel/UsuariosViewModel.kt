@@ -10,10 +10,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.State
+import com.example.proyectofinalandroid.utils.UserState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
 
 @HiltViewModel
 class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepository) : ViewModel() {
@@ -26,6 +28,9 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> get() = _isLoading
+
+    private val _userState = MutableStateFlow<UserState>(UserState.Loading)
+    val userState: StateFlow<UserState> = _userState
 
     fun login(email: String, contrasena: String) {
         viewModelScope.launch {
@@ -83,14 +88,32 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
     }
 
 
-    fun getOne(id: String): Usuarios? {
-        viewModelScope.launch {
+    suspend fun getOne(id: String): Usuarios? {
+        return withContext(Dispatchers.IO) {
             try {
-                return@launch repository.getOne(id)
+                repository.getOne(id)
             } catch (e: Exception) {
                 _errorMessage.value = "Error al cargar evento: ${e.message}"
+                null
             }
-        return@launch null
+        }
+    }
+
+    fun loadUser(userId: String, userToken: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.Loading
+            try {
+                val user = repository.getOne(userId)
+                _userState.value = if (user != null) {
+                    UserState.Success(user)
+                } else {
+                    UserState.Error("Usuario no encontrado")
+                }
+                user?.token = userToken
+                _usuario.value = user
+            } catch (e: Exception) {
+                _userState.value = UserState.Error(e.message ?: "Error desconocido")
+            }
         }
     }
 

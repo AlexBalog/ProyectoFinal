@@ -35,7 +35,7 @@ fun Navegador() {
         }
 
         // Este es el grafo principal después de login
-        navigation(startDestination = "formulario", route = "main") {
+        navigation(startDestination = "principal", route = "main") {
             composable("formulario") { FormularioScreen(navController) }
             composable("principal") { HomeScreen(navController) }
             composable("detalleEntrenamiento/{id}") { backStackEntry ->

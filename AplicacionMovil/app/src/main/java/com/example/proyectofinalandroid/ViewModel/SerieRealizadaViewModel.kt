@@ -104,7 +104,6 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
             val creado = repository.new(serieRealizada)
             if (creado != null) {
                 _serieRealizadaSeleccionado.value = creado
-                Log.d("FalloSRVM1", "$creado")
                 _errorMessage.value = null
             } else {
                 _errorMessage.value = "Error al crear el usuario"

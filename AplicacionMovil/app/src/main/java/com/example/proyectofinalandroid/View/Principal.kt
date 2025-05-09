@@ -72,6 +72,12 @@ import java.time.LocalDate
 import java.time.ZoneId
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.launch
+import android.content.Context
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
+import com.example.proyectofinalandroid.worker.EntrenamientoReminderWorker
+
 
 
 @SuppressLint("UnrememberedGetBackStackEntry", "RememberReturnType")
@@ -130,7 +136,7 @@ fun HomeScreen(navController: NavController) {
     val lastDayOfMonth = currentMonth.atEndOfMonth()
 
     val scrollState = rememberScrollState()
-
+    val context = LocalContext.current
     // Datos simulados
     val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState()
     val programasDestacados by remember { mutableStateOf(entrenamientosViewModel.obtenerProgramasDestacados()) }
@@ -1134,14 +1140,6 @@ fun RowScope.FooterNavItem(
     )
 }
 
-// Clases de modelo para simulación de datos
-data class EventoProgramado(
-    val id: String,
-    val titulo: String,
-    val descripcion: String,
-    val hora: String,
-    val tipo: TipoEvento
-)
 
 enum class TipoEvento {
     ENTRENAMIENTO, MEDICION, NUTRICION
@@ -1158,40 +1156,6 @@ data class ProgramaDestacado(
     val imagenResId: Int
 )
 
-// Extensiones del ViewModel para simulación de datos
-fun EntrenamientosViewModel.obtenerEventosFecha(fecha: LocalDate): List<EventoProgramado> {
-    // Simula eventos desde la base de datos
-    return if (fecha == LocalDate.now()) {
-        listOf(
-            EventoProgramado(
-                id = "1",
-                titulo = "Entrenamiento de Fuerza",
-                descripcion = "Enfocado en piernas y glúteos",
-                hora = "10:30",
-                tipo = TipoEvento.ENTRENAMIENTO
-            ),
-            EventoProgramado(
-                id = "2",
-                titulo = "Medición Mensual",
-                descripcion = "Control de peso y composición corporal",
-                hora = "17:00",
-                tipo = TipoEvento.MEDICION
-            )
-        )
-    } else if (fecha == LocalDate.now().plusDays(1)) {
-        listOf(
-            EventoProgramado(
-                id = "3",
-                titulo = "Planificación Nutricional",
-                descripcion = "Revisión de dieta semanal",
-                hora = "11:00",
-                tipo = TipoEvento.NUTRICION
-            )
-        )
-    } else {
-        emptyList() // Sin eventos para esta fecha
-    }
-}
 
 fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado> {
     // Simula programas destacados desde la base de datos

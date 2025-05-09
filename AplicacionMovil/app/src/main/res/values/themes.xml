@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.ProyectoFinalAndroid" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- values/themes.xml -->
+    <style name="Theme.ProyectoFinalAndroid" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Quitar bordes del sistema -->
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+    </style>
 </resources>

@@ -23,7 +23,7 @@ interface UsuariosApi {
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
 
-    @GET("eventosUsuario/getOne/{id}")
+    @GET("usuarios/getOne/{id}")
     suspend fun getOne(
         @Path("id") id: String
     ): Usuarios
