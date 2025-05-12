@@ -34,11 +34,13 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
     val ejercicios: StateFlow<List<Ejercicios>?> get() = _ejercicios
 
     fun setUsuario(usuario: Usuarios) {
-        _usuario.value = usuario
-        getAll()
+        viewModelScope.launch {
+            _usuario.value = usuario
+            getAll()
+        }
     }
 
-    fun getAll() {
+    suspend fun getAll() {
         viewModelScope.launch {
             try {
                 val lista = repository.getAll(token = _usuario.value?.token.toString())
@@ -77,7 +79,7 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
         }
     }
 
-    fun getFilter(filtros: Map<String, String>) {
+    suspend fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
                 val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)

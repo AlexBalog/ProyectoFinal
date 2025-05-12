@@ -14,8 +14,12 @@ import com.example.proyectofinalandroid.View.RegisterScreen
 import com.example.proyectofinalandroid.View.DetalleEjercicioScreen
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.example.proyectofinalandroid.View.BuscadorScreen
 import com.example.proyectofinalandroid.utils.UserPreferences
 import com.example.proyectofinalandroid.View.SplashScreen
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 
 
@@ -50,6 +54,26 @@ fun Navegador() {
                 val id = backStackEntry.arguments?.getString("id")
                 DetalleEjercicioScreen(navController, id.toString())
             }
+            composable(
+                "buscador?tipoBusqueda={tipoBusqueda}&categoria={categoria}&musculo={musculo}",
+                arguments = listOf(
+                    navArgument("tipoBusqueda") { nullable = true; defaultValue = null },
+                    navArgument("categoria") { nullable = true; defaultValue = null },
+                    navArgument("musculo") { nullable = true; defaultValue = null }
+                )
+            ) { backStackEntry ->
+                val tipoBusqueda = backStackEntry.arguments?.getString("tipoBusqueda")
+                val categoria = backStackEntry.arguments?.getString("categoria")
+                val musculo = backStackEntry.arguments?.getString("musculo")
+
+                BuscadorScreen(
+                    navController = navController,
+                    tipoBusqueda = tipoBusqueda,
+                    categoria = categoria,
+                    musculo = musculo
+                )
+            }
+
         }
     }
 }

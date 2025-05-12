@@ -1,5 +1,5 @@
 package com.example.proyectofinalandroid.View
-/*
+
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,13 @@ import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.ViewModel.EjerciciosViewModel
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
+import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.graphics.ImageBitmap
+import com.example.proyectofinalandroid.Model.Usuarios
+import com.example.proyectofinalandroid.utils.base64ToImageBitmap
+
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +57,7 @@ fun BuscadorScreen(
     categoria: String? = null,
     musculo: String? = null
 ) {
-
+    // Obtener ViewModels
     val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
@@ -58,12 +66,23 @@ fun BuscadorScreen(
     val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
 
+    // Obtener usuario actual
+    val usuario by usuariosViewModel.usuario.collectAsState()
+
+    // Inicializar los ViewModels con el usuario actual si aún no están inicializados
+    LaunchedEffect(usuario) {
+        usuario?.let {
+            entrenamientosViewModel.setUsuario(it)
+            ejerciciosViewModel.setUsuario(it)
+        }
+    }
+
     // Estados para los filtros
     var searchQuery by remember { mutableStateOf("") }
     var searchType by remember { mutableStateOf(tipoBusqueda ?: "entrenamientos") }
     var selectedCategory by remember { mutableStateOf(categoria) }
     var selectedMuscle by remember { mutableStateOf(musculo) }
-    var durationRange by remember { mutableStateOf(0f..60f) }
+    var durationRange by remember { mutableStateOf(0f..180f) }
     var sortBy by remember { mutableStateOf("nombre") }
     var sortDirection by remember { mutableStateOf("asc") }
 
@@ -71,38 +90,69 @@ fun BuscadorScreen(
     var showFilters by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Estados observables del ViewModel
+    // Estados observables de los ViewModels
     val entrenamientos by entrenamientosViewModel.entrenamientos.collectAsState()
     val ejercicios by ejerciciosViewModel.ejercicios.collectAsState()
 
+    // Lista de categorías y músculos (esto debería venir de algún lugar en tu app)
+    val categorias = listOf("Cardio", "Fuerza", "Resistencia", "Flexibilidad", "HIIT", "Fullbody")
+    val musculos = listOf("Pecho", "Espalda", "Hombros", "Biceps", "Triceps", "Piernas", "Abdominales", "Glúteos", "Core")
+
+    // Función para aplicar filtros
+    fun applyFilters() {
+        val filters = mutableMapOf<String, String>()
+
+        if (searchQuery.isNotEmpty()) {
+            filters["nombre"] = searchQuery
+        }
+
+        selectedCategory?.let {
+            filters["categoria"] = it
+        }
+
+        selectedMuscle?.let {
+            filters["musculo"] = it
+        }
+
+        if (searchType == "entrenamientos" && (durationRange.start > 0f || durationRange.endInclusive < 180f)) {
+            filters["duracionMin"] = durationRange.start.toInt().toString()
+            filters["duracionMax"] = durationRange.endInclusive.toInt().toString()
+        }
+
+        filters["sortBy"] = sortBy
+        filters["sortDirection"] = sortDirection
+
+        if (searchType == "entrenamientos") {
+            scope.launch {
+                Log.d("FalloEntFilter", "${filters}")
+                entrenamientosViewModel.getFilter(filters)
+            }
+        } else {
+            scope.launch {
+                ejerciciosViewModel.getFilter(filters)
+            }
+        }
+    }
 
     // Aplicar filtros iniciales si existen
     LaunchedEffect(tipoBusqueda, categoria, musculo) {
         delay(300) // Dar tiempo a que el ViewModel cargue los datos
-        tipoBusqueda?.let { searchType = it }
-        categoria?.let { selectedCategory = it }
-        musculo?.let { selectedMuscle = it }
-
+        if (tipoBusqueda != null || categoria != null || musculo != null) {
+            tipoBusqueda?.let { searchType = it }
+            categoria?.let { selectedCategory = it }
+            musculo?.let { selectedMuscle = it }
+            applyFilters()
+        }
         // Aplicar filtros iniciales
-        /*searchViewModel.applyFilters(
-            searchType = searchType,
-            query = searchQuery,
-            category = selectedCategory,
-            muscle = selectedMuscle,
-            durationRange = durationRange,
-            sortBy = sortBy,
-            sortDirection = sortDirection
-        )*/
-
         isLoading = false
     }
-    
+
     // UI Principal
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
-            .systemBarsPadding()
+            .background(Color.Black)
+            .padding(top = 20.dp)
     ) {
         Column(
             modifier = Modifier
@@ -141,27 +191,18 @@ fun BuscadorScreen(
                         onValueChange = {
                             searchQuery = it
                             scope.launch {
-                                /*searchViewModel.applyFilters(
-                                    searchType = searchType,
-                                    query = searchQuery,
-                                    category = selectedCategory,
-                                    muscle = selectedMuscle,
-                                    durationRange = durationRange,
-                                    sortBy = sortBy,
-                                    sortDirection = sortDirection
-                                )*/
+                                applyFilters()
                             }
                         },
                         placeholder = { Text("Buscar ${if (searchType == "entrenamientos") "entrenamientos" else "ejercicios"}") },
                         colors = TextFieldDefaults.textFieldColors(
                             containerColor = Color.Transparent,
-                            //textColor = Color.White,
                             cursorColor = Color(0xFFAB47BC),
-                            //placeholderColor = Color.Gray,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         singleLine = true,
+                        textStyle = TextStyle(color = Color.White),
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp)
@@ -196,15 +237,7 @@ fun BuscadorScreen(
                     onClick = {
                         searchType = "entrenamientos"
                         scope.launch {
-                            /*searchViewModel.applyFilters(
-                                searchType = searchType,
-                                query = searchQuery,
-                                category = selectedCategory,
-                                muscle = selectedMuscle,
-                                durationRange = durationRange,
-                                sortBy = sortBy,
-                                sortDirection = sortDirection
-                            )*/
+                            applyFilters()
                         }
                     }
                 )
@@ -215,15 +248,7 @@ fun BuscadorScreen(
                     onClick = {
                         searchType = "ejercicios"
                         scope.launch {
-                            /*searchViewModel.applyFilters(
-                                searchType = searchType,
-                                query = searchQuery,
-                                category = null,
-                                muscle = selectedMuscle,
-                                durationRange = null,
-                                sortBy = "nombre",
-                                sortDirection = "asc"
-                            )*/
+                            applyFilters()
                         }
                     }
                 )
@@ -237,8 +262,8 @@ fun BuscadorScreen(
             ) {
                 FilterPanel(
                     searchType = searchType,
-                    //categories = categorias,
-                    //muscles = musculos,
+                    categories = categorias,
+                    muscles = musculos,
                     selectedCategory = selectedCategory,
                     selectedMuscle = selectedMuscle,
                     durationRange = durationRange,
@@ -247,58 +272,26 @@ fun BuscadorScreen(
                     onCategorySelected = { category ->
                         selectedCategory = category
                         scope.launch {
-                            /*searchViewModel.applyFilters(
-                                searchType = searchType,
-                                query = searchQuery,
-                                category = selectedCategory,
-                                muscle = selectedMuscle,
-                                durationRange = durationRange,
-                                sortBy = sortBy,
-                                sortDirection = sortDirection
-                            )*/
+                            applyFilters()
                         }
                     },
                     onMuscleSelected = { muscle ->
                         selectedMuscle = muscle
                         scope.launch {
-                            /*searchViewModel.applyFilters(
-                                searchType = searchType,
-                                query = searchQuery,
-                                category = selectedCategory,
-                                muscle = selectedMuscle,
-                                durationRange = durationRange,
-                                sortBy = sortBy,
-                                sortDirection = sortDirection
-                            )*/
+                            applyFilters()
                         }
                     },
                     onDurationChanged = { range ->
                         durationRange = range
                         scope.launch {
-                            /*searchViewModel.applyFilters(
-                                searchType = searchType,
-                                query = searchQuery,
-                                category = selectedCategory,
-                                muscle = selectedMuscle,
-                                durationRange = durationRange,
-                                sortBy = sortBy,
-                                sortDirection = sortDirection
-                            )*/
+                            applyFilters()
                         }
                     },
                     onSortChanged = { sort, direction ->
                         sortBy = sort
                         sortDirection = direction
                         scope.launch {
-                            /*searchViewModel.applyFilters(
-                                searchType = searchType,
-                                query = searchQuery,
-                                category = selectedCategory,
-                                muscle = selectedMuscle,
-                                durationRange = durationRange,
-                                sortBy = sortBy,
-                                sortDirection = sortDirection
-                            )*/
+                            applyFilters()
                         }
                     }
                 )
@@ -313,43 +306,19 @@ fun BuscadorScreen(
                 onRemoveCategory = {
                     selectedCategory = null
                     scope.launch {
-                        /*searchViewModel.applyFilters(
-                            searchType = searchType,
-                            query = searchQuery,
-                            category = null,
-                            muscle = selectedMuscle,
-                            durationRange = durationRange,
-                            sortBy = sortBy,
-                            sortDirection = sortDirection
-                        )*/
+                        applyFilters()
                     }
                 },
                 onRemoveMuscle = {
                     selectedMuscle = null
                     scope.launch {
-                        /*searchViewModel.applyFilters(
-                            searchType = searchType,
-                            query = searchQuery,
-                            category = selectedCategory,
-                            muscle = null,
-                            durationRange = durationRange,
-                            sortBy = sortBy,
-                            sortDirection = sortDirection
-                        )*/
+                        applyFilters()
                     }
                 },
                 onRemoveDuration = {
-                    durationRange = 0f..60f
+                    durationRange = 0f..180f
                     scope.launch {
-                        /*searchViewModel.applyFilters(
-                            searchType = searchType,
-                            query = searchQuery,
-                            category = selectedCategory,
-                            muscle = selectedMuscle,
-                            durationRange = durationRange,
-                            sortBy = sortBy,
-                            sortDirection = sortDirection
-                        )*/
+                        applyFilters()
                     }
                 }
             )
@@ -362,8 +331,8 @@ fun BuscadorScreen(
                 ) {
                     CircularProgressIndicator(color = Color(0xFFAB47BC))
                 }
-            } else if ((searchType == "entrenamientos" && entrenamientos.isEmpty()) ||
-                (searchType == "ejercicios" && ejercicios.isEmpty())) {
+            } else if ((searchType == "entrenamientos" && entrenamientos.isNullOrEmpty()) ||
+                (searchType == "ejercicios" && ejercicios.isNullOrEmpty())) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -399,14 +368,16 @@ fun BuscadorScreen(
                         contentPadding = PaddingValues(vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        /*items(entrenamientos) { entrenamiento ->
-                            EntrenamientoCard(
-                                entrenamiento = entrenamiento,
-                                onClick = {
-                                    navController.navigate("entrenamiento_detalle/${entrenamiento.id}")
-                                }
-                            )
-                        }*/
+                        entrenamientos?.let { listaEntrenamientos ->
+                            items(listaEntrenamientos) { entrenamiento ->
+                                EntrenamientoCard(
+                                    entrenamiento = entrenamiento,
+                                    onClick = {
+                                        navController.navigate("detalleEntrenamiento/${entrenamiento._id}")
+                                    }
+                                )
+                            }
+                        }
                     }
                 } else {
                     LazyColumn(
@@ -414,17 +385,30 @@ fun BuscadorScreen(
                         contentPadding = PaddingValues(vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        /*items(ejercicios) { ejercicio ->
-                            EjercicioCard(
-                                ejercicio = ejercicio,
-                                onClick = {
-                                    navController.navigate("ejercicio_detalle/${ejercicio.id}")
-                                }
-                            )
-                        }*/
+                        ejercicios?.let { listaEjercicios ->
+                            items(listaEjercicios) { ejercicio ->
+                                EjercicioCard(
+                                    ejercicio = ejercicio,
+                                    onClick = {
+                                        navController.navigate("detalleEjercicio/${ejercicio._id}")
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            FooterNavigation(
+                navController = navController,
+                currentRoute = "search",
+                usuario = usuario
+            )
         }
     }
 }
@@ -443,7 +427,7 @@ fun SearchTypeButton(
         ),
         shape = RoundedCornerShape(20.dp),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-        /*modifier = Modifier.weight(1f)*/
+       // modifier = Modifier.weight(1f)
     ) {
         Text(
             text = text,
@@ -471,7 +455,6 @@ fun FilterPanel(
     val categoryExpanded = remember { mutableStateOf(false) }
     val muscleExpanded = remember { mutableStateOf(false) }
     val sortByExpanded = remember { mutableStateOf(false) }
-    /*val muscleNames = muscles.map { it.nombre }*/
 
     Card(
         modifier = Modifier
@@ -507,12 +490,11 @@ fun FilterPanel(
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded.value)
                         },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                            /*textColor = Color.White,
-                            containerColor = Color(0xFF2A2A2A),*/
                             focusedBorderColor = Color(0xFFAB47BC),
                             unfocusedBorderColor = Color.Gray
                         ),
-                        label = { Text("Categoría", color = Color.Gray) },
+                        textStyle = TextStyle(color = Color.White),
+                        label = { Text("Categoría") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -557,12 +539,11 @@ fun FilterPanel(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = muscleExpanded.value)
                     },
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                        /*textColor = Color.White,
-                        containerColor = Color(0xFF2A2A2A),*/
                         focusedBorderColor = Color(0xFFAB47BC),
                         unfocusedBorderColor = Color.Gray
                     ),
-                    label = { Text("Músculo", color = Color.Gray) },
+                    label = { Text("Músculo") },
+                    textStyle = TextStyle(color = Color.White),
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
@@ -581,7 +562,7 @@ fun FilterPanel(
                         }
                     )
 
-                    muscleNames.forEach { muscle ->
+                    muscles.forEach { muscle ->
                         DropdownMenuItem(
                             text = { Text(muscle, color = Color.White) },
                             onClick = {
@@ -606,8 +587,8 @@ fun FilterPanel(
                     RangeSlider(
                         value = durationRange,
                         onValueChange = { onDurationChanged(it) },
-                        valueRange = 0f..60f,
-                        steps = 11,
+                        valueRange = 0f..180f,
+                        steps = 35,
                         colors = SliderDefaults.colors(
                             thumbColor = Color(0xFFAB47BC),
                             activeTrackColor = Color(0xFFAB47BC),
@@ -617,81 +598,78 @@ fun FilterPanel(
                 }
             }
 
-            // Ordenar por (para entrenamientos)
-            if (searchType == "entrenamientos") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+            // Ordenar por (para ambos tipos de búsqueda)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Ordenar por:",
+                    color = Color.White,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+
+                ExposedDropdownMenuBox(
+                    expanded = sortByExpanded.value,
+                    onExpandedChange = { sortByExpanded.value = it }
                 ) {
-                    Text(
-                        text = "Ordenar por:",
-                        color = Color.White,
-                        modifier = Modifier.padding(end = 8.dp)
+                    OutlinedTextField(
+                        value = when (sortBy) {
+                            "nombre" -> "Nombre"
+                            "likes" -> "Likes"
+                            else -> "Nombre"
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortByExpanded.value)
+                        },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Color(0xFFAB47BC),
+                            unfocusedBorderColor = Color.Gray
+                        ),
+                        textStyle = TextStyle(color = Color.White),
+                        modifier = Modifier
+                            .weight(1f)
+                            .menuAnchor()
                     )
 
-                    ExposedDropdownMenuBox(
+                    ExposedDropdownMenu(
                         expanded = sortByExpanded.value,
-                        onExpandedChange = { sortByExpanded.value = it }
+                        onDismissRequest = { sortByExpanded.value = false },
+                        modifier = Modifier.background(Color(0xFF2A2A2A))
                     ) {
-                        OutlinedTextField(
-                            value = when (sortBy) {
-                                "nombre" -> "Nombre"
-                                "likes" -> "Likes"
-                                else -> "Nombre"
-                            },
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortByExpanded.value)
-                            },
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                                /*textColor = Color.White,
-                                containerColor = Color(0xFF2A2A2A),*/
-                                focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .menuAnchor()
+                        DropdownMenuItem(
+                            text = { Text("Nombre", color = Color.White) },
+                            onClick = {
+                                onSortChanged("nombre", sortDirection)
+                                sortByExpanded.value = false
+                            }
                         )
 
-                        ExposedDropdownMenu(
-                            expanded = sortByExpanded.value,
-                            onDismissRequest = { sortByExpanded.value = false },
-                            modifier = Modifier.background(Color(0xFF2A2A2A))
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Nombre", color = Color.White) },
-                                onClick = {
-                                    onSortChanged("nombre", sortDirection)
-                                    sortByExpanded.value = false
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                text = { Text("Likes", color = Color.White) },
-                                onClick = {
-                                    onSortChanged("likes", sortDirection)
-                                    sortByExpanded.value = false
-                                }
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    IconButton(
-                        onClick = {
-                            val newDirection = if (sortDirection == "asc") "desc" else "asc"
-                            onSortChanged(sortBy, newDirection)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = if (sortDirection == "asc") Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                            contentDescription = "Dirección de ordenamiento",
-                            tint = Color(0xFFAB47BC)
+                        DropdownMenuItem(
+                            text = { Text("Likes", color = Color.White) },
+                            onClick = {
+                                onSortChanged("likes", sortDirection)
+                                sortByExpanded.value = false
+                            }
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = {
+                        val newDirection = if (sortDirection == "asc") "desc" else "asc"
+                        onSortChanged(sortBy, newDirection)
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (sortDirection == "asc") Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                        contentDescription = "Dirección de ordenamiento",
+                        tint = Color(0xFFAB47BC)
+                    )
                 }
             }
         }
@@ -710,7 +688,7 @@ fun ActiveFilters(
 ) {
     val hasActiveFilters = selectedCategory != null || selectedMuscle != null ||
             (searchType == "entrenamientos" &&
-                    (durationRange.start > 0f || durationRange.endInclusive < 60f))
+                    (durationRange.start > 0f || durationRange.endInclusive < 180f))
 
     if (hasActiveFilters) {
         Row(
@@ -739,7 +717,7 @@ fun ActiveFilters(
 
             // Filtro activo de duración
             if (searchType == "entrenamientos" &&
-                (durationRange.start > 0f || durationRange.endInclusive < 60f)) {
+                (durationRange.start > 0f || durationRange.endInclusive < 180f)) {
                 FilterChip(
                     label = "${durationRange.start.toInt()}-${durationRange.endInclusive.toInt()} min",
                     icon = Icons.Default.Timer,
@@ -815,25 +793,23 @@ fun EntrenamientoCard(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Box {
+        Box(
+            modifier = Modifier.height(160.dp).fillMaxWidth()
+        ) {
             // Imagen de fondo
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(entrenamiento.foto)
-                    .crossfade(true)
-                    .build(),
+            Image(
+                bitmap = base64ToImageBitmap(entrenamiento.foto as String)!!,
                 contentDescription = "Imagen de entrenamiento",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
             )
 
             // Gradiente oscuro encima de la imagen
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
+                    .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -850,7 +826,7 @@ fun EntrenamientoCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(16.dp, 0.dp, 16.dp, 0.dp)
             ) {
                 Spacer(modifier = Modifier.height(80.dp))
 
@@ -920,26 +896,46 @@ fun EntrenamientoCard(
                         )
                     }
 
-                    // Nivel
+                    // Músculos (muestra solo el primer músculo si hay varios)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Speed,
+                            imageVector = Icons.Default.FitnessCenter,
                             contentDescription = null,
                             tint = Color(0xFFAB47BC),
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = entrenamiento.categoria,
+                            text = entrenamiento.musculo.firstOrNull() ?: "Varios",
                             fontSize = 12.sp,
-                            color = Color.White
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
         }
+
+        // Badge de nivel en la esquina superior derecha
+        /*Box(
+            modifier = Modifier
+                //.align(Alignment.TopEnd)
+                .padding(8.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xCC7B1FA2))
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = entrenamiento.nivel ?: "Todos",
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }*/
     }
 }
+
 
 @Composable
 fun EjercicioCard(
@@ -962,78 +958,342 @@ fun EjercicioCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .height(160.dp)
         ) {
-            // Imagen del ejercicio (circular)
+            // Imagen del ejercicio
             Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF333333))
+                modifier = Modifier.height(160.dp).fillMaxWidth()
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(ejercicio.foto)
-                        .crossfade(true)
-                        .build(),
+                // Imagen de fondo
+                Image(
+                    bitmap = base64ToImageBitmap(ejercicio.foto as String)!!,
                     contentDescription = "Imagen de ejercicio",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                // Nombre del ejercicio
-                Text(
-                    text = ejercicio.nombre,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                // Gradiente oscuro encima de la imagen
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color(0xE6000000)
+                                ),
+                                startY = 0f,
+                                endY = 300f
+                            )
+                        )
+                )
 
-                // Músculo principal
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.FitnessCenter,
-                        contentDescription = null,
-                        tint = Color(0xFFAB47BC),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                // Indicador de dificultad
+                /*Box(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when (ejercicio.dificultad?.lowercase() ?: "") {
+                                "fácil" -> Color(0xFF4CAF50)
+                                "medio" -> Color(0xFFFFC107)
+                                "difícil" -> Color(0xFFF44336)
+                                else -> Color(0xFF7B1FA2)
+                            }
+                        )
+                        .align(Alignment.TopStart),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = ejercicio.musculos,
-                        fontSize = 12.sp,
-                        color = Color.Gray
+                        text = when (ejercicio.dificultad?.lowercase() ?: "") {
+                            "fácil" -> "F"
+                            "medio" -> "M"
+                            "difícil" -> "D"
+                            else -> "?"
+                        },
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
                 }
+            }*/
 
-                Spacer(modifier = Modifier.height(8.dp))
+            // Información del ejercicio
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Bottom
+            ) {
+                Row {
+                    Text(
+                        text = ejercicio.nombre,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
-                // Descripción breve
-                Text(
-                    text = ejercicio.descripcion,
-                    fontSize = 12.sp,
-                    color = Color.LightGray,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = null,
+                            tint = Color(0xFFAB47BC),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = ejercicio.musculo,//.joinToString(", "),
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                // Nombre del ejercicio
 
-            // Botón de detalles
-            IconButton(onClick = onClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = "Ver detalles",
-                    tint = Color(0xFFAB47BC)
-                )
+
+
+
+                // Fila inferior con likes y botón de detalles
+                /*Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Likes
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = Color(0xFFAB47BC),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${ejercicio.likes}",
+                            fontSize = 12.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    // Botón ver detalles
+                    FilledTonalButton(
+                        onClick = onClick,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = Color(0xFF7B1FA2).copy(alpha = 0.3f),
+                            contentColor = Color(0xFFAB47BC)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.height(28.dp)
+                    ) {
+                        Text(
+                            text = "Ver detalles",
+                            fontSize = 10.sp
+                        )
+                    }
+                }*/
             }
         }
     }
+}
+
+// Componente para mostrar recomendaciones cuando no hay filtros aplicados
+@Composable
+fun RecommendedSection(
+    title: String,
+    items: List<Any>,
+    showTitle: Boolean = true,
+    onItemClick: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        if (showTitle) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        LazyColumn(
+            contentPadding = PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            when {
+                items.firstOrNull() is Entrenamientos -> {
+                    items(items as List<Entrenamientos>) { entrenamiento ->
+                        EntrenamientoCard(
+                            entrenamiento = entrenamiento,
+                            onClick = { onItemClick(entrenamiento._id) }
+                        )
+                    }
+                }
+                items.firstOrNull() is Ejercicios -> {
+                    items(items as List<Ejercicios>) { ejercicio ->
+                        EjercicioCard(
+                            ejercicio = ejercicio,
+                            onClick = { onItemClick(ejercicio._id) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Animación de entrada para tarjetas
+@Composable
+fun AnimatedCardEntry(
+    content: @Composable () -> Unit
+) {
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        isVisible = true
+    }
+
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn() + androidx.compose.animation.slideInVertically(
+            initialOffsetY = { it / 2 }
+        )
+    ) {
+        content()
+    }
+}
+
+// Componente para mostrar badge de nivel personalizado
+@Composable
+fun LevelBadge(level: String?) {
+    val levelColor = when (level?.lowercase() ?: "todos") {
+        "principiante" -> Color(0xFF4CAF50)
+        "intermedio" -> Color(0xFFFFC107)
+        "avanzado" -> Color(0xFFF44336)
+        else -> Color(0xFF7B1FA2)
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(levelColor.copy(alpha = 0.8f))
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = level ?: "Todos",
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+// Botón de filtro flotante para móviles pequeños
+@Composable
+fun FloatingFilterButton(
+    onClick: () -> Unit,
+    filtersActive: Boolean
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = if (filtersActive) Color(0xFFAB47BC) else Color(0xFF7B1FA2),
+        contentColor = Color.White
+    ) {
+        Icon(
+            imageVector = Icons.Default.FilterList,
+            contentDescription = "Filtros"
+        )
+    }
+}
+}
+
+/*@Composable
+fun FooterNavigation(
+    navController: NavController,
+    currentRoute: String,
+    usuario: Usuarios?
+) {
+    NavigationBar(
+        containerColor = Color.Black,
+        contentColor = Color.White,
+        modifier = Modifier.height(105.dp)
+    ) {
+        FooterNavItem(
+            icon = { Icon(Icons.Default.CalendarToday, contentDescription = "Calendario") },
+            label = "HOY",
+            isSelected = currentRoute == "home",
+            onClick = { navController.navigate("principal") }
+        )
+
+        FooterNavItem(
+            icon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+            label = "BUSCAR",
+            isSelected = currentRoute == "search",
+            onClick = { navController.navigate("buscador") }
+        )
+
+        FooterNavItem(
+            icon = { Icon(Icons.Default.Psychology, contentDescription = "FitMind") },
+            label = "FitMind",
+            isSelected = currentRoute == "fitmind",
+            onClick = { /* Navegar a FitMind */ }
+        )
+
+        FooterNavItem(
+            icon = {
+                if (!usuario?.foto.isNullOrEmpty()) {
+                    Image(
+                        bitmap = base64ToImageBitmap(usuario!!.foto) as ImageBitmap,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = "Perfil")
+                }
+            },
+            label = "PERFIL",
+            isSelected = currentRoute == "profile",
+            onClick = { /* Navegar a perfil */ }
+        )
+    }
+}
+
+@Composable
+fun RowScope.FooterNavItem(
+    icon: @Composable () -> Unit,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    NavigationBarItem(
+        icon = icon,
+        label = {
+            Text(
+                text = label,
+                fontSize = 10.sp
+            )
+        },
+        selected = isSelected,
+        onClick = onClick,
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = Color(0xFFAB47BC),
+            selectedTextColor = Color(0xFFAB47BC),
+            unselectedIconColor = Color.Gray,
+            unselectedTextColor = Color.Gray,
+            indicatorColor = Color.Black
+        )
+    )
 }*/

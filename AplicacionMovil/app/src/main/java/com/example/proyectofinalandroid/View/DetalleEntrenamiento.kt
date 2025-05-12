@@ -616,7 +616,7 @@ fun EntrenamientoDetalles(entrenamiento: Entrenamientos, contadorLikes: Int) {
 
                     // Lista normal de músculos con chips
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        entrenamiento.musculos.forEach { musculo ->
+                        entrenamiento.musculo.forEach { musculo ->
                             Card(
                                 modifier = Modifier
                                     .padding(vertical = 4.dp)

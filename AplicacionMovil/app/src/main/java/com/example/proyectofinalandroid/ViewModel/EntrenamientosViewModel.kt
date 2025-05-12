@@ -39,8 +39,10 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     val likesCount: StateFlow<Int> get() = _likesCount
 
     fun setUsuario(usuario: Usuarios) {
-        _usuario.value = usuario
-        getAll()
+        viewModelScope.launch {
+            _usuario.value = usuario
+            getAll()
+        }
     }
 
     fun updateLikesCount(newCount: Int) {
@@ -76,7 +78,7 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
-    fun getAll() {
+    suspend fun getAll() {
         viewModelScope.launch {
             try {
                 _usuario.value?.let { currentUser ->
@@ -117,7 +119,7 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
-    fun getFilter(filtros: Map<String, String>) {
+    suspend fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
                 val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)

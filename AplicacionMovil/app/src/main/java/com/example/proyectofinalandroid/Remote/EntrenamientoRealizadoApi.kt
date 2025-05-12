@@ -21,7 +21,7 @@ interface EntrenamientoRealizadoApi {
     @GET("entrenamientoRealizado/getLastEntrenamiento/{usuarioId}")
     suspend fun getLastEntrenamiento(
         @Path("usuarioId") usuarioId: String
-    ): EntrenamientoRealizado
+    ): EntrenamientoRealizado?
 
     @PATCH("entrenamientoRealizado/update/{id}")
     suspend fun updateEjerciciosRealizados(

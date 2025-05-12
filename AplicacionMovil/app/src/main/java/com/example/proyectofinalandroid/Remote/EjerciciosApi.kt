@@ -33,7 +33,7 @@ interface EjerciciosApi {
         @Body request: Map<String, String>
     ): Response<Ejercicios>
 
-    @GET("ejercicios/getFilter")
+    @POST("ejercicios/getFilter")
     suspend fun getFilter(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>

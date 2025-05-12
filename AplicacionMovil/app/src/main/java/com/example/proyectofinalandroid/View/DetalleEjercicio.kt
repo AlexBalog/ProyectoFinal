@@ -42,6 +42,8 @@ import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import com.example.proyectofinalandroid.utils.base64ToBitmap
 import kotlinx.coroutines.delay
 
+private val backgroundDark = Color(0xFF0D0D0D)
+
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +82,8 @@ fun DetalleEjercicioScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
+            .background(Color.Black)
+           // .padding(top = -20.dp)
     ) {
         AnimatedVisibility(
             visible = isAnimatedIn,
@@ -128,10 +131,9 @@ fun DetalleEjercicioScreen(
                                     .fillMaxSize()
                                     .background(
                                         Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color(0xFF0D0D0D).copy(alpha = 0.3f),
-                                                Color(0xFF0D0D0D).copy(alpha = 0.9f)
-                                            )
+                                            0f to backgroundDark.copy(alpha = 0.9f),
+                                            0.5f to backgroundDark.copy(alpha = 0.7f),
+                                            1f to backgroundDark.copy(alpha = 0.9f)
                                         )
                                     )
                             )

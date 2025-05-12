@@ -1075,14 +1075,14 @@ fun FooterNavigation(
             icon = { Icon(Icons.Default.CalendarToday, contentDescription = "Calendario") },
             label = "HOY",
             isSelected = currentRoute == "home",
-            onClick = { /* Navegar a home */ }
+            onClick = { navController.navigate("principal") }
         )
 
         FooterNavItem(
             icon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
             label = "BUSCAR",
             isSelected = currentRoute == "search",
-            onClick = { /* Navegar a búsqueda */ }
+            onClick = { navController.navigate("buscador") }
         )
 
         FooterNavItem(

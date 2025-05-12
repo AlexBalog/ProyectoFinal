@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 import javax.inject.Inject
+import android.util.Log
 
 class EntrenamientoRealizadoRepository @Inject constructor(private val api: EntrenamientoRealizadoApi) {
 
@@ -27,8 +28,8 @@ class EntrenamientoRealizadoRepository @Inject constructor(private val api: Entr
         return response.isSuccessful
     }
 
-    suspend fun getUltimoEntrenamiento(usuarioId: String): EntrenamientoRealizado {
-        return api.getLastEntrenamiento(usuarioId) // O filtrado manual desde todos
+    suspend fun getUltimoEntrenamiento(usuarioId: String): EntrenamientoRealizado? {
+        return api.getLastEntrenamiento(usuarioId)
     }
 
     suspend fun delete(_id: String, token: String): Boolean {

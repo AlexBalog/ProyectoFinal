@@ -15,8 +15,8 @@ data class Entrenamientos(
     val duracion: Number,
     @SerializedName("foto")
     val foto: String,
-    @SerializedName("musculos")
-    val musculos: List<String>,
+    @SerializedName("musculo")
+    val musculo: List<String>,
     @SerializedName("likes")
     val likes: Number,
     @SerializedName("ejercicios")

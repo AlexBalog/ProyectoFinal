@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -35,19 +36,16 @@ class EntrenamientoReminderWorker @AssistedInject constructor(
             try {
                 val prefs = UserPreferences(applicationContext)
                 val usuarioId = prefs.getUserId() ?: return@withContext Result.failure()
-
                 // Para pruebas, envía una notificación simple
-                enviarNotificacion(
+                /*enviarNotificacion(
                     "Recordatorio de entrenamiento",
                     "¡Es hora de entrenar! 💪"
-                )
+                )*/
 
                 val hoy = LocalDate.now()
-
                 try {
                     val ultimoEntrenamiento = entrenamientoRepo.getUltimoEntrenamiento(usuarioId)
                     val eventos = eventosRepo.getEventosProximos(usuarioId)
-
                     // 1 semana sin entrenar
                     if (ultimoEntrenamiento != null) {
                         val diasSinEntrenar = ChronoUnit.DAYS.between(
@@ -108,7 +106,7 @@ class EntrenamientoReminderWorker @AssistedInject constructor(
                 notification
             )
         } catch (e: Exception) {
-            // Manejar error de notificación
+            Log.e("ERROR", "Error al enviar notificación: ${e.message}")
         }
     }
 }
