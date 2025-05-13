@@ -95,7 +95,7 @@ fun BuscadorScreen(
     val ejercicios by ejerciciosViewModel.ejercicios.collectAsState()
 
     // Lista de categorías y músculos (esto debería venir de algún lugar en tu app)
-    val categorias = listOf("Cardio", "Fuerza", "Resistencia", "Flexibilidad", "HIIT", "Fullbody")
+    val categorias = listOf("Cardio", "Fuerza", "Resistencia", "Flexibilidad", "Hipertrofia", "Fullbody")
     val musculos = listOf("Pecho", "Espalda", "Hombros", "Biceps", "Triceps", "Piernas", "Abdominales", "Glúteos", "Core")
 
     // Función para aplicar filtros
@@ -378,7 +378,9 @@ fun BuscadorScreen(
                                 )
                             }
                         }
-                    }
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }                    }
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -394,6 +396,9 @@ fun BuscadorScreen(
                                     }
                                 )
                             }
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
                         }
                     }
                 }
@@ -599,77 +604,79 @@ fun FilterPanel(
             }
 
             // Ordenar por (para ambos tipos de búsqueda)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Ordenar por:",
-                    color = Color.White,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = sortByExpanded.value,
-                    onExpandedChange = { sortByExpanded.value = it }
+            if (searchType == "entrenamientos") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = when (sortBy) {
-                            "nombre" -> "Nombre"
-                            "likes" -> "Likes"
-                            else -> "Nombre"
-                        },
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortByExpanded.value)
-                        },
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = Color(0xFFAB47BC),
-                            unfocusedBorderColor = Color.Gray
-                        ),
-                        textStyle = TextStyle(color = Color.White),
-                        modifier = Modifier
-                            .weight(1f)
-                            .menuAnchor()
+                    Text(
+                        text = "Ordenar por:",
+                        color = Color.White,
+                        modifier = Modifier.padding(end = 8.dp)
                     )
 
-                    ExposedDropdownMenu(
+                    ExposedDropdownMenuBox(
                         expanded = sortByExpanded.value,
-                        onDismissRequest = { sortByExpanded.value = false },
-                        modifier = Modifier.background(Color(0xFF2A2A2A))
+                        onExpandedChange = { sortByExpanded.value = it }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("Nombre", color = Color.White) },
-                            onClick = {
-                                onSortChanged("nombre", sortDirection)
-                                sortByExpanded.value = false
-                            }
+                        OutlinedTextField(
+                            value = when (sortBy) {
+                                "nombre" -> "Nombre"
+                                "likes" -> "Likes"
+                                else -> "Nombre"
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = sortByExpanded.value)
+                            },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                                focusedBorderColor = Color(0xFFAB47BC),
+                                unfocusedBorderColor = Color.Gray
+                            ),
+                            textStyle = TextStyle(color = Color.White),
+                            modifier = Modifier
+                                .weight(1f)
+                                .menuAnchor()
                         )
 
-                        DropdownMenuItem(
-                            text = { Text("Likes", color = Color.White) },
-                            onClick = {
-                                onSortChanged("likes", sortDirection)
-                                sortByExpanded.value = false
-                            }
+                        ExposedDropdownMenu(
+                            expanded = sortByExpanded.value,
+                            onDismissRequest = { sortByExpanded.value = false },
+                            modifier = Modifier.background(Color(0xFF2A2A2A))
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Nombre", color = Color.White) },
+                                onClick = {
+                                    onSortChanged("nombre", sortDirection)
+                                    sortByExpanded.value = false
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Likes", color = Color.White) },
+                                onClick = {
+                                    onSortChanged("likes", sortDirection)
+                                    sortByExpanded.value = false
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = {
+                            val newDirection = if (sortDirection == "asc") "desc" else "asc"
+                            onSortChanged(sortBy, newDirection)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (sortDirection == "asc") Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                            contentDescription = "Dirección de ordenamiento",
+                            tint = Color(0xFFAB47BC)
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(
-                    onClick = {
-                        val newDirection = if (sortDirection == "asc") "desc" else "asc"
-                        onSortChanged(sortBy, newDirection)
-                    }
-                ) {
-                    Icon(
-                        imageVector = if (sortDirection == "asc") Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                        contentDescription = "Dirección de ordenamiento",
-                        tint = Color(0xFFAB47BC)
-                    )
                 }
             }
         }
@@ -916,23 +923,6 @@ fun EntrenamientoCard(
                 }
             }
         }
-
-        // Badge de nivel en la esquina superior derecha
-        /*Box(
-            modifier = Modifier
-                //.align(Alignment.TopEnd)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xCC7B1FA2))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text = entrenamiento.nivel ?: "Todos",
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }*/
     }
 }
 
@@ -990,36 +980,6 @@ fun EjercicioCard(
                         )
                 )
 
-                // Indicador de dificultad
-                /*Box(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when (ejercicio.dificultad?.lowercase() ?: "") {
-                                "fácil" -> Color(0xFF4CAF50)
-                                "medio" -> Color(0xFFFFC107)
-                                "difícil" -> Color(0xFFF44336)
-                                else -> Color(0xFF7B1FA2)
-                            }
-                        )
-                        .align(Alignment.TopStart),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = when (ejercicio.dificultad?.lowercase() ?: "") {
-                            "fácil" -> "F"
-                            "medio" -> "M"
-                            "difícil" -> "D"
-                            else -> "?"
-                        },
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-            }*/
 
             // Información del ejercicio
             Column(
@@ -1103,6 +1063,7 @@ fun EjercicioCard(
     }
 }
 
+
 // Componente para mostrar recomendaciones cuando no hay filtros aplicados
 @Composable
 fun RecommendedSection(
@@ -1174,30 +1135,6 @@ fun AnimatedCardEntry(
     }
 }
 
-// Componente para mostrar badge de nivel personalizado
-@Composable
-fun LevelBadge(level: String?) {
-    val levelColor = when (level?.lowercase() ?: "todos") {
-        "principiante" -> Color(0xFF4CAF50)
-        "intermedio" -> Color(0xFFFFC107)
-        "avanzado" -> Color(0xFFF44336)
-        else -> Color(0xFF7B1FA2)
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(levelColor.copy(alpha = 0.8f))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = level ?: "Todos",
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
 
 // Botón de filtro flotante para móviles pequeños
 @Composable
@@ -1217,83 +1154,3 @@ fun FloatingFilterButton(
     }
 }
 }
-
-/*@Composable
-fun FooterNavigation(
-    navController: NavController,
-    currentRoute: String,
-    usuario: Usuarios?
-) {
-    NavigationBar(
-        containerColor = Color.Black,
-        contentColor = Color.White,
-        modifier = Modifier.height(105.dp)
-    ) {
-        FooterNavItem(
-            icon = { Icon(Icons.Default.CalendarToday, contentDescription = "Calendario") },
-            label = "HOY",
-            isSelected = currentRoute == "home",
-            onClick = { navController.navigate("principal") }
-        )
-
-        FooterNavItem(
-            icon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
-            label = "BUSCAR",
-            isSelected = currentRoute == "search",
-            onClick = { navController.navigate("buscador") }
-        )
-
-        FooterNavItem(
-            icon = { Icon(Icons.Default.Psychology, contentDescription = "FitMind") },
-            label = "FitMind",
-            isSelected = currentRoute == "fitmind",
-            onClick = { /* Navegar a FitMind */ }
-        )
-
-        FooterNavItem(
-            icon = {
-                if (!usuario?.foto.isNullOrEmpty()) {
-                    Image(
-                        bitmap = base64ToImageBitmap(usuario!!.foto) as ImageBitmap,
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Icon(Icons.Default.Person, contentDescription = "Perfil")
-                }
-            },
-            label = "PERFIL",
-            isSelected = currentRoute == "profile",
-            onClick = { /* Navegar a perfil */ }
-        )
-    }
-}
-
-@Composable
-fun RowScope.FooterNavItem(
-    icon: @Composable () -> Unit,
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    NavigationBarItem(
-        icon = icon,
-        label = {
-            Text(
-                text = label,
-                fontSize = 10.sp
-            )
-        },
-        selected = isSelected,
-        onClick = onClick,
-        colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = Color(0xFFAB47BC),
-            selectedTextColor = Color(0xFFAB47BC),
-            unselectedIconColor = Color.Gray,
-            unselectedTextColor = Color.Gray,
-            indicatorColor = Color.Black
-        )
-    )
-}*/

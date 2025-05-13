@@ -12,12 +12,14 @@ import com.example.proyectofinalandroid.Repository.GuardadosRepository
 import com.example.proyectofinalandroid.Remote.LikesApi
 import com.example.proyectofinalandroid.Remote.SerieRealizadaApi
 import com.example.proyectofinalandroid.Remote.UsuariosApi
+import com.example.proyectofinalandroid.Remote.IAService
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
 import com.example.proyectofinalandroid.Repository.EntrenamientosRepository
 import com.example.proyectofinalandroid.Repository.EntrenamientoRealizadoRepository
 import com.example.proyectofinalandroid.Repository.EventosRepository
 import com.example.proyectofinalandroid.Repository.EventosUsuarioRepository
 import com.example.proyectofinalandroid.Repository.EjercicioRealizadoRepository
+import com.example.proyectofinalandroid.Repository.IARepository
 import com.example.proyectofinalandroid.Repository.LikesRepository
 import com.example.proyectofinalandroid.Repository.SerieRealizadaRepository
 import com.example.proyectofinalandroid.Repository.UsuariosRepository
@@ -167,6 +169,18 @@ object AppModule {
     @Singleton
     fun provideGuardadosRepository(api: GuardadosApi): GuardadosRepository {
         return GuardadosRepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIAService(retrofit: Retrofit): IAService {
+        return retrofit.create(IAService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIARepository(api: IAService): IARepository {
+        return IARepository(api)
     }
 
     @Provides

@@ -61,7 +61,7 @@ class WorkManagerScheduler @AssistedInject constructor(
          * Programa el EntrenamientoReminderWorker para que se ejecute periódicamente.
          */
         private fun scheduleReminder(context: Context) {
-            Log.d("Fallo$TAG", "Programando EntrenamientoReminderWorker...")
+            Log.d(TAG, "Programando EntrenamientoReminderWorker...")
 
             // Configuración para que se ejecute cada 15 minutos (para pruebas)
             // En producción, deberías usar un intervalo más apropiado como 12 horas
@@ -76,7 +76,7 @@ class WorkManagerScheduler @AssistedInject constructor(
                 )
                 .build()
 
-            Log.d("Fallo$TAG", "EntrenamientoReminderWorker programado")
+            Log.d(TAG, "EntrenamientoReminderWorker programado")
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME_REMINDER,
@@ -84,17 +84,17 @@ class WorkManagerScheduler @AssistedInject constructor(
                 reminderRequest
             )
 
-            Log.d("Fallo$TAG", "EntrenamientoReminderWorker iniciado")
+            Log.d(TAG, "EntrenamientoReminderWorker iniciado")
 
         }
     }
 
     override suspend fun doWork(): Result {
-        Log.d("Fallo$TAG", "WorkManagerScheduler ejecutándose...")
+        Log.d(TAG, "WorkManagerScheduler ejecutándose...")
         try {
             // Programar el worker de recordatorios
             scheduleReminder(applicationContext)
-            Log.d("Fallo$TAG", "WorkManagerScheduler ejecutado correctamente")
+            Log.d(TAG, "WorkManagerScheduler ejecutado correctamente")
             return Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Error al programar recordatorio: ${e.message}")

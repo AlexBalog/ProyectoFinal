@@ -1089,7 +1089,7 @@ fun FooterNavigation(
             icon = { Icon(Icons.Default.Psychology, contentDescription = "FitMind") },
             label = "FitMind",
             isSelected = currentRoute == "fitmind",
-            onClick = { /* Navegar a FitMind */ }
+            onClick = { navController.navigate("fitmind") }
         )
 
         FooterNavItem(

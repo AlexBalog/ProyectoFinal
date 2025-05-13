@@ -20,6 +20,8 @@ import com.example.proyectofinalandroid.View.SplashScreen
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.proyectofinalandroid.View.FitMindScreen
+import com.example.proyectofinalandroid.View.ChatScreen
 
 
 
@@ -73,7 +75,17 @@ fun Navegador() {
                     musculo = musculo
                 )
             }
+            composable("fitmind") {
+                FitMindScreen(navController = navController)
+            }
 
+            composable("chat/{conversacionId}") { backStackEntry ->
+                val conversacionId = backStackEntry.arguments?.getString("conversacionId") ?: ""
+                ChatScreen(
+                    navController = navController,
+                    conversacionId = conversacionId
+                )
+            }
         }
     }
 }
