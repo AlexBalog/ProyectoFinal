@@ -27,28 +27,42 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.get('/getFilter', async (req, res) => {
+router.post('/getFilter', async (req, res) => {
     try {
+        const {
+            nombre,
+            musculo,
+            sortBy = 'nombre',
+            sortDirection = 'asc'
+        } = req.body;
+
         const condiciones = {};
 
-        if (req.body.nombre !== null && req.body.nombre.trim() !== "") {
-            condiciones.nombre = req.body.nombre ;
+        if (nombre && nombre.trim() !== "") {
+            condiciones.nombre = { $regex: nombre.trim(), $options: 'i' }; // búsqueda parcial
         }
-        if (req.body.musculo !== null) {
-            condiciones.musculo = req.body.musculo;
+
+        if (musculo && musculo.trim() !== "") {
+            condiciones.musculo = musculo.trim();
         }
-        
-        const data = await modelEjercicios.find(condiciones);
-        
-        if (data.length === 0) {
-            return res.status(404).json({ message: 'No hay ejercicios con tales características' });
+
+        // Configuración de orden
+        const sortOptions = {};
+        sortOptions[sortBy] = sortDirection === 'desc' ? -1 : 1;
+
+        const ejercicios = await modelEjercicios.find(condiciones).sort(sortOptions);
+
+        if (ejercicios.length === 0) {
+            return res.status(404).json({ message: "No se encontraron ejercicios con esas características" });
         }
-        
-        res.status(200).json(data);
+
+        res.status(200).json(ejercicios);
     } catch (error) {
+        console.error("Error en /getFilter ejercicios:", error);
         res.status(500).json({ message: error.message });
     }
 });
+
 
 router.post('/new', async (req, res) => {
     const data = new modelEjercicios({

@@ -117,15 +117,13 @@ class IAViewModel @Inject constructor(private val repository: IARepository) : Vi
         }
     }
 
+
     fun enviarMensaje(contenido: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                Log.d("FalloEnviar-1", "entra")
                 _usuario.value?.token?.let { token ->
-                    Log.d("FalloEnviar0", "$token")
                     _conversacionActual.value?._id?.let { conversacionId ->
-                        Log.d("FalloEnviar1", "$conversacionId")
                         val request = mapOf("contenido" to contenido, "usuario" to usuario.value!!._id)
                         val respuesta = repository.enviarMensaje(token, conversacionId, request)
 
@@ -138,6 +136,51 @@ class IAViewModel @Inject constructor(private val repository: IARepository) : Vi
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun actualizarTituloConversacion(id: String, nuevoTitulo: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _usuario.value?.token?.let { token ->
+                    val exito = repository.actualizarTituloConversacion(token, id, nuevoTitulo.trim())
+                    if (exito) {
+                        // Actualizamos el estado local
+                        _conversacionActual.value = _conversacionActual.value?.copy(titulo = nuevoTitulo)
+                    } else {
+                        // Manejamos el error
+                        Log.e("IAViewModel", "Error al actualizar título de conversación")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("IAViewModel", "Error al actualizar título: ${e.message}")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun eliminarConversacion(id: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _usuario.value?.token?.let { token ->
+                    val exito = repository.eliminarConversacion(token, id)
+                    if (exito) {
+                        // Limpiamos el estado local
+                        _mensajes.value = emptyList()
+                        _conversacionActual.value = null
+                    } else {
+                        // Manejamos el error
+                        Log.e("IAViewModel", "Error al eliminar conversación")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("IAViewModel", "Error al eliminar conversación: ${e.message}")
             } finally {
                 _isLoading.value = false
             }

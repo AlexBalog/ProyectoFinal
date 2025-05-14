@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const usuariosSchema = require('../models/modelsUsuarios');
-const bcrypt = require('bcrypt'); // Importa bcrypt
+const bcrypt = require('bcryptjs'); // Importa bcrypt
 
 router.post('/login', async (req, res) => {
   const { email, contrasena } = req.body;
@@ -27,7 +27,7 @@ router.post('/login', async (req, res) => {
     };
 
     // Generar el token (con expiración de 1 hora)
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: error.message });

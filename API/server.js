@@ -34,6 +34,7 @@ const routerEventosUsuario = require('./routes/routerEventosUsuario');   // Ruta
 const routerSerieRealizada = require('./routes/routerSerieRealizada');   // Rutas de serie realizada
 const routerLikes = require('./routes/routerLikes');   // Rutas de likes
 const routerGuardados = require('./routes/routerGuardados');   // Rutas de entrenamiento guardado
+const routerIA = require('./routes/ia');   // Rutas de IA
 
 // Empleos
 app.use('/usuarios', routerUsuarios);
@@ -47,6 +48,7 @@ app.use('/eventosUsuario', routerEventosUsuario);
 app.use('/serieRealizada', routerSerieRealizada);
 app.use('/likes', routerLikes)
 app.use('/guardados', routerGuardados);
+app.use('/ia', routerIA);
 
 // Define el puerto y arranca el servidor
 const PORT = process.env.PORT || 3000;

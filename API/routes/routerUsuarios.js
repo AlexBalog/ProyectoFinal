@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const UsuariosSchema = require('../models/modelsUsuarios');
 const verifyToken = require('../middlewares/authMiddleware'); // Middleware para validar el JWT
 const router = express.Router();
@@ -274,5 +274,18 @@ router.post("/getFilter", verifyToken, async (req, res) => {
   }
 });
 
+
+router.get("/getOne/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = await UsuariosSchema.findById(id);
+    if (!data) {
+      return res.status(404).json({ message: "Documento no encontrado" });
+    }
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;

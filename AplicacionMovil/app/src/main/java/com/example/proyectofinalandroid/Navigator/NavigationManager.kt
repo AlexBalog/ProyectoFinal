@@ -22,7 +22,8 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.proyectofinalandroid.View.FitMindScreen
 import com.example.proyectofinalandroid.View.ChatScreen
-
+import com.example.proyectofinalandroid.View.ProfileScreen
+import com.example.proyectofinalandroid.View.SettingsScreen
 
 
 @Composable
@@ -85,6 +86,14 @@ fun Navegador() {
                     navController = navController,
                     conversacionId = conversacionId
                 )
+            }
+
+            composable("perfil") {
+                ProfileScreen(navController = navController)
+            }
+
+            composable("configuracion") {
+                SettingsScreen(navController = navController)
             }
         }
     }

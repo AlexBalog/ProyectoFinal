@@ -5,6 +5,10 @@ const EntrenamientosSchema = mongoose.Schema({
         required: true,
         type: String
     },
+    musculoPrincipal: {
+        required: true,
+        type: String
+    },
     nombre: {
         required: true,
         type: String
@@ -17,7 +21,7 @@ const EntrenamientosSchema = mongoose.Schema({
         required: true,
         type: String
     },
-    musculos: {
+    musculo: {
         required: true,
         type: [String],
         default: []

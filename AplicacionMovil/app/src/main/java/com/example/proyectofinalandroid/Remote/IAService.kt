@@ -31,4 +31,17 @@ interface IAService {
         @Path("id") conversacionId: String,
         @Body request: Map<String, String>
     ): Map<String, Mensaje>
+
+    @PATCH("ia/conversaciones/{conversacionId}")
+    suspend fun actualizarConversacion(
+        @Header("Authorization") token: String,
+        @Path("conversacionId") conversacionId: String,
+        @Body request: Map<String, String>
+    ): Conversacion?
+
+    @DELETE("ia/conversaciones/{conversacionId}")
+    suspend fun eliminarConversacion(
+        @Header("Authorization") token: String,
+        @Path("conversacionId") conversacionId: String
+    ): Map<String, String>?
 }

@@ -1107,8 +1107,8 @@ fun FooterNavigation(
                 }
             },
             label = "PERFIL",
-            isSelected = currentRoute == "profile",
-            onClick = { /* Navegar a perfil */ }
+            isSelected = currentRoute == "perfil",
+            onClick = { navController.navigate("perfil") }
         )
     }
 }

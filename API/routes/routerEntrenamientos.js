@@ -27,43 +27,77 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.get('/getFilter', async (req, res) => {
+router.post('/getFilter', async (req, res) => {
     try {
+        const {
+            nombre,
+            categoria,
+            musculoPrincipal,
+            duracionMin,
+            duracionMax,
+            creador,
+            aprobado,
+            pedido,
+            sortBy = 'nombre',
+            sortDirection = 'asc'
+        } = req.body;
+
         const condiciones = {};
 
-        if (req.body.nombre !== null && req.body.nombre.trim() !== "") {
-            condiciones.nombre = req.body.nombre;
+        if (nombre && nombre.trim() !== "") {
+            condiciones.nombre = { $regex: nombre.trim(), $options: 'i' }; // búsqueda parcial e insensible a mayúsculas
         }
 
-        if (req.body.categoria !== null && req.body.categoria.trim() !== "") {
-            condiciones.categoria = req.body.categoria;
+        if (categoria && categoria.trim() !== "") {
+            condiciones.categoria = categoria.trim();
         }
 
-        if (req.body.musculos !== null) {
-            condiciones.musculos = req.body.musculos;
+        if (musculoPrincipal && musculoPrincipal.trim() !== "") {
+            condiciones.musculoPrincipal = {$regex: musculoPrincipal.trim(), $options: 'i' }; 
         }
 
-        if (req.body.duracion !== null) {
-            condiciones.duracion = req.body.duracion;
+        if (duracionMin != null || duracionMax != null) {
+            condiciones.duracion = {};
+            if (duracionMin != null) condiciones.duracion.$gte = Number(duracionMin);
+            if (duracionMax != null) condiciones.duracion.$lte = Number(duracionMax);
         }
-        
-        const data = await modelEntrenamientos.find(condiciones);
-        
+
+        if (creador && creador.trim() !== "") {
+            condiciones.creador = creador.trim();
+        }
+
+        if (typeof aprobado === "boolean") {
+            condiciones.aprobado = aprobado;
+        }
+
+        if (typeof pedido === "boolean") {
+            condiciones.pedido = pedido;
+        }
+
+        // Ordenamiento
+        const sortOptions = {};
+        sortOptions[sortBy] = sortDirection === 'desc' ? -1 : 1;
+
+        const data = await modelEntrenamientos.find(condiciones).sort(sortOptions);
+
         if (data.length === 0) {
-            return res.status(404).json({ message: 'No hay entrenamientos con tales características' });
+            return res.status(404).json({ message: 'No se encontraron entrenamientos con esas características' });
         }
-        
+
         res.status(200).json(data);
     } catch (error) {
+        console.error("Error en /getFilter:", error);
         res.status(500).json({ message: error.message });
     }
 });
+
 
 router.post('/new', async (req, res) => {
     const data = new modelEntrenamientos({
         nombre: req.body.nombre,
         categoria: req.body.categoria,
-        musculos: req.body.musculos,
+        musculo: req.body.musculo,
+        musculoPrincipal: req.body.musculoPrincipal,
         duracion: req.body.duracion,
         foto: req.body.foto,
         likes: 0,
@@ -91,7 +125,8 @@ router.patch("/update", async (req, res) => {
     { _id: id }, { $set: {
         nombre: req.body.nombre,
         categoria: req.body.categoria,
-        musculos: req.body.musculos,
+        musculoPrincipal: req.body.musculoPrincipal,
+        musculo: req.body.musculo,
         duracion: req.body.duracion,
         foto: req.body.foto,
         likes: req.body.likes,

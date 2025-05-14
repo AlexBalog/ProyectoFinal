@@ -43,10 +43,17 @@ import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.border
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 
+@SuppressLint("UnrememberedGetBackStackEntry", "StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -68,6 +75,8 @@ fun ChatScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var showConfigDialog by remember { mutableStateOf(false) }
+
 
     // Estado para el campo de texto
     var messageText by remember { mutableStateOf("") }
@@ -122,22 +131,16 @@ fun ChatScreen(
                 ),
                 actions = {
                     // Icono basado en categoría
-                    Icon(
-                        imageVector = when (conversacionActual?.categoria) {
-                            "nutricion" -> Icons.Default.Restaurant
-                            "entrenamiento" -> Icons.Default.FitnessCenter
-                            "habitos" -> Icons.Default.Lightbulb
-                            else -> Icons.Default.Psychology
-                        },
-                        contentDescription = "Categoría",
-                        tint = when (conversacionActual?.categoria) {
-                            "nutricion" -> Color(0xFF4CAF50)
-                            "entrenamiento" -> Color(0xFF2196F3)
-                            "habitos" -> Color(0xFFFFC107)
-                            else -> Color(0xFFAB47BC)
-                        },
-                        modifier = Modifier.padding(end = 16.dp)
-                    )
+                    IconButton(
+                        onClick = { showConfigDialog = true },
+                        modifier = Modifier.padding(0.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Configuración de la conversación",
+                            tint = Color(0xFFAB47BC)
+                        )
+                    }
                 }
             )
 
@@ -175,7 +178,7 @@ fun ChatScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(mensajes.reversed()) { mensaje ->
-                        SimpleEnhancedMessageBubble(
+                        UltraMessageBubble(
                             mensaje = mensaje,
                             isUserMessage = mensaje.esDeUsuario
                         )
@@ -231,7 +234,8 @@ fun ChatScreen(
                     if (mensajes.isEmpty() && !isLoading) {
                         item {
                             WelcomeMessage(
-                                categoria = conversacionActual?.categoria ?: "general"
+                                categoria = conversacionActual?.categoria ?: "general",
+                                viewModel = viewModel
                             )
                         }
                     }
@@ -303,6 +307,333 @@ fun ChatScreen(
                 }
             }
         }
+        if (showConfigDialog) {
+            // Add state variables for the dialog
+            var editedTitle by remember { mutableStateOf(conversacionActual?.titulo ?: "") }
+            var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+            // Settings Dialog
+            Dialog(
+                onDismissRequest = { showConfigDialog = false },
+                properties = DialogProperties(
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Card(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF1E1E1E)
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 8.dp
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(
+                                elevation = 12.dp,
+                                shape = RoundedCornerShape(24.dp),
+                                ambientColor = Color(0xFF7B1FA2),
+                                spotColor = Color(0xFF7B1FA2)
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp)
+                        ) {
+                            // Header with purple accent
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Configuración",
+                                    tint = Color(0xFFAB47BC),
+                                    modifier = Modifier.size(28.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Text(
+                                    text = "Configuración",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 22.sp
+                                )
+
+                                Spacer(modifier = Modifier.weight(1f))
+
+                                IconButton(
+                                    onClick = { showConfigDialog = false },
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF333333))
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Cerrar",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Title section with label and subtitle
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Title,
+                                        contentDescription = "Título",
+                                        tint = Color(0xFFAB47BC),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "Título de la conversación",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp
+                                    )
+                                }
+
+                                Text(
+                                    text = "Edita el título para identificarla fácilmente",
+                                    color = Color(0xFFAAAAAA),
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+
+                                // Custom styled text field with purple underline
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFF2A2A2A))
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF444444),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        BasicTextField(
+                                            value = editedTitle,
+                                            onValueChange = { editedTitle = it },
+                                            textStyle = androidx.compose.ui.text.TextStyle(
+                                                color = Color.White,
+                                                fontSize = 16.sp
+                                            ),
+                                            singleLine = true,
+                                            cursorBrush = SolidColor(Color(0xFFAB47BC)),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(30.dp))
+
+                            // Danger zone
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF2A1216))
+                                    .padding(16.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = "Advertencia",
+                                        tint = Color(0xFFE57373),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "Zona de peligro",
+                                        color = Color(0xFFE57373),
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 16.sp
+                                    )
+                                }
+
+                                Text(
+                                    text = "Las siguientes acciones no se pueden deshacer",
+                                    color = Color(0xFFBBBBBB),
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+
+                                // Delete button with improved styling
+                                Button(
+                                    onClick = { showDeleteConfirmation = true },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF3D1A1A),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color(0xFF5D2D2D),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = Color(0xFFE57373),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Text(
+                                            text = "Eliminar conversación",
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 15.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(30.dp))
+
+                            // Action buttons with improved styling
+                            Row(
+                                horizontalArrangement = Arrangement.End,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Button(
+                                    onClick = { showConfigDialog = false },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.padding(top = 5.dp)
+                                ) {
+                                    Text("Cancelar")
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Button(
+                                    onClick = {
+                                        if (editedTitle.isNotEmpty() && editedTitle != conversacionActual?.titulo) {
+                                            conversacionActual?._id?.let { id ->
+                                                viewModel.actualizarTituloConversacion(id, editedTitle)
+                                            }
+                                        }
+                                        showConfigDialog = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF7B1FA2),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Guardar",
+                                            modifier = Modifier.size(18.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Text(
+                                            text = "Guardar cambios",
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Delete Confirmation Dialog
+            if (showDeleteConfirmation) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteConfirmation = false },
+                    title = {
+                        Text(
+                            text = "Confirmar eliminación",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "¿Estás seguro de que deseas eliminar esta conversación? Esta acción no se puede deshacer y se perderán todos los mensajes.",
+                            color = Color.White
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                // Delete conversation and navigate back
+                                conversacionActual?._id?.let { id ->
+                                    viewModel.eliminarConversacion(id)
+                                    navController.popBackStack()
+                                }
+                                showDeleteConfirmation = false
+                                showConfigDialog = false
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFB71C1C))
+                        ) {
+                            Text("Eliminar")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showDeleteConfirmation = false },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)
+                        ) {
+                            Text("Cancelar")
+                        }
+                    },
+                    containerColor = Color(0xFF252525),
+                    titleContentColor = Color.White,
+                    textContentColor = Color.White
+                )
+            }
+        }
     }
 }
 
@@ -356,7 +687,8 @@ fun MessageBubble(
 @Composable
 fun WelcomeMessage(
     categoria: String,
-    usuarios: Usuarios? = null
+    usuarios: Usuarios? = null,
+    viewModel: IAViewModel
 ) {
     Column(
         modifier = Modifier
@@ -458,7 +790,8 @@ fun WelcomeMessage(
                     "entrenamiento" -> Color(0xFF2196F3)
                     "habitos" -> Color(0xFFFFC107)
                     else -> Color(0xFFAB47BC)
-                }
+                },
+                viewModel = viewModel
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -469,7 +802,8 @@ fun WelcomeMessage(
 @Composable
 fun SuggestionBubble(
     text: String,
-    color: Color
+    color: Color,
+    viewModel: IAViewModel
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -478,7 +812,7 @@ fun SuggestionBubble(
         ),
         modifier = Modifier
             .fillMaxWidth(0.9f)
-            .clickable { /* Enviar sugerencia */ }
+            .clickable { viewModel.enviarMensaje(text) }
     ) {
         Row(
             modifier = Modifier
@@ -785,7 +1119,7 @@ fun ProfileDataRow(
 
 
 @Composable
-fun SimpleEnhancedMessageBubble(
+fun UltraMessageBubble(
     mensaje: Mensaje,
     isUserMessage: Boolean
 ) {
@@ -798,33 +1132,73 @@ fun SimpleEnhancedMessageBubble(
         Column(
             horizontalAlignment = if (isUserMessage) Alignment.End else Alignment.Start
         ) {
-            // Avatar para mensajes de IA
+            // Avatar o estado del mensaje
             if (!isUserMessage) {
+                // Avatar para mensajes de IA
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
                 ) {
+                    // Avatar con sombra y borde
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF9C27B0)),
+                            .size(28.dp)
+                            .shadow(4.dp, CircleShape)
+                            .clip(CircleShape)
+                            .background(Color(0xFF7B1FA2))
+                            .border(1.dp, Color(0xFFBB86FC), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Psychology,
+                            imageVector = when {
+                                mensaje.contenido.contains("dominadas") -> Icons.Default.FitnessCenter
+                                mensaje.contenido.contains("ejercicio") -> Icons.Default.FitnessCenter
+                                mensaje.contenido.contains("entrenamiento") -> Icons.Default.FitnessCenter
+                                mensaje.contenido.contains("dieta") -> Icons.Default.Restaurant
+                                mensaje.contenido.contains("nutrición") -> Icons.Default.Restaurant
+                                mensaje.contenido.contains("alimentación") -> Icons.Default.Restaurant
+                                mensaje.contenido.contains("hábitos") -> Icons.Default.Lightbulb
+                                mensaje.contenido.contains("rutina") -> Icons.Default.AccessTime
+                                else -> Icons.Default.Psychology
+                            },
                             contentDescription = "FitMind IA",
                             tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
                         text = "FitMind",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = Color(0xFFE1BEE7),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                // Para mensajes del usuario, mostrar estado de envío
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 8.dp, bottom = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Enviado",
+                        tint = Color(0xFFAA77FF),
+                        modifier = Modifier.size(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Text(
+                        text = "Enviado",
+                        fontSize = 10.sp,
+                        color = Color(0xFFAA77FF),
+                        fontStyle = FontStyle.Italic
                     )
                 }
             }
@@ -832,48 +1206,116 @@ fun SimpleEnhancedMessageBubble(
             // Burbuja de mensaje
             Card(
                 shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = if (isUserMessage) 16.dp else 4.dp,
-                    bottomEnd = if (isUserMessage) 4.dp else 16.dp
+                    topStart = if (isUserMessage) 16.dp else 4.dp,
+                    topEnd = if (isUserMessage) 4.dp else 16.dp,
+                    bottomStart = if (isUserMessage) 16.dp else 8.dp,
+                    bottomEnd = if (isUserMessage) 8.dp else 16.dp
                 ),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isUserMessage) Color(0xFF7B1FA2) else Color(0xFF252525)
+                    containerColor = if (isUserMessage) Color(0xFF8E24AA) else Color(0xFF252525)
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = if (isUserMessage) 3.dp else 3.dp
                 ),
                 modifier = Modifier
                     .padding(
                         start = if (isUserMessage) 64.dp else 0.dp,
                         end = if (isUserMessage) 0.dp else 64.dp
                     )
-                    .animateContentSize() // Animación suave al expandir el contenido
+                    .animateContentSize(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    )
             ) {
                 if (isUserMessage) {
-                    // Mensaje del usuario (texto simple)
-                    Text(
-                        text = mensaje.contenido,
-                        modifier = Modifier.padding(12.dp),
-                        color = Color.White
-                    )
+                    // Mensaje del usuario con diseño mejorado
+                    UserMessageContent(mensaje.contenido)
                 } else {
-                    // Mensaje de la IA (con formato mejorado sin AnnotatedString)
-                    FormattedAIMessage(mensaje.contenido)
+                    // Mensaje de la IA con formato avanzado
+                    AIMessageContent(mensaje.contenido)
                 }
             }
 
-            // Timestamp
-            Text(
-                text = SimpleDateFormat("HH:mm", Locale("es", "ES"))
-                    .format(mensaje.timestamp),
-                fontSize = 12.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-            )
+            // Timestamp con efecto de difuminado
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(
+                    start = if (isUserMessage) 0.dp else 8.dp,
+                    end = if (isUserMessage) 8.dp else 0.dp,
+                    top = 2.dp,
+                    bottom = 2.dp
+                )
+            ) {
+                if (!isUserMessage) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Leído",
+                        tint = Color(0xFF9575CD),
+                        modifier = Modifier.size(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+
+                Text(
+                    text = SimpleDateFormat("HH:mm", Locale("es", "ES"))
+                        .format(mensaje.timestamp),
+                    fontSize = 11.sp,
+                    color = if (isUserMessage) Color(0xFFE1BEE7) else Color(0xFF9E9E9E)
+                )
+
+                if (isUserMessage) {
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Icon(
+                        imageVector = Icons.Default.Done,
+                        contentDescription = "Enviado",
+                        tint = Color(0xFFCE93D8),
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+            }
         }
     }
 }
 
+/**
+ * Diseño mejorado para mensajes del usuario
+ */
 @Composable
-fun FormattedAIMessage(content: String) {
+fun UserMessageContent(content: String) {
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = content,
+                color = Color.White,
+                lineHeight = 22.sp,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        // Pequeño elemento decorativo en la esquina
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(16.dp)
+                .padding(2.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFEA80FC).copy(alpha = 0.2f))
+        )
+    }
+}
+
+/**
+ * Diseño avanzado para mensajes de la IA
+ */
+@Composable
+fun AIMessageContent(content: String) {
     Column(
         modifier = Modifier.padding(12.dp)
     ) {
@@ -885,103 +1327,275 @@ fun FormattedAIMessage(content: String) {
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Comprobar si es un título (empieza y termina con **)
+            // Comprobar si es un título (empieza con ** y contiene :**)
             if (paragraph.startsWith("**") && paragraph.contains(":**")) {
                 val titleText = paragraph
                     .substringAfter("**")
                     .substringBefore(":**")
 
-                Text(
-                    text = "$titleText:",
-                    color = Color(0xFFE1BEE7),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                // Título con línea decorativa y color de acento
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "$titleText:",
+                        color = Color(0xFFBB86FC),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    // Línea decorativa bajo el título
+                    Box(
+                        modifier = Modifier
+                            .height(2.dp)
+                            .width(40.dp)
+                            .background(Color(0xFFBB86FC).copy(alpha = 0.5f))
+                    )
+                }
             }
             // Si es una lista o un texto regular
             else {
                 val lines = paragraph.split("\n")
 
                 lines.forEach { line ->
+                    // Elemento principal de lista
                     if (line.trim().startsWith("* ")) {
-                        // Elemento de lista principal
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "• ",
-                                color = Color(0xFFE1BEE7),
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
+                        // Analizar si contiene un título con dos puntos
+                        val lineText = line.substringAfter("* ")
 
-                            Text(
-                                text = line.substringAfter("* "),
-                                color = Color.White,
-                                lineHeight = 20.sp
-                            )
-                        }
-                    }
-                    else if (line.trim().startsWith("*** ")) {
-                        // Subelemento de lista
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp, 2.dp, 0.dp, 2.dp)
-                        ) {
-                            Text(
-                                text = "◦ ",
-                                color = Color(0xFFBA68C8),
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(end = 4.dp)
-                            )
+                        if (lineText.contains(":") && !lineText.contains(": ")) {
+                            // Es un título con viñeta - formato especial
+                            val titlePart = lineText.substringBefore(":")
+                            val contentPart = lineText.substringAfter(":")
 
-                            Text(
-                                text = line.substringAfter("*** "),
-                                color = Color.White,
-                                lineHeight = 20.sp
-                            )
-                        }
-                    }
-                    else {
-                        // Texto normal - destacar partes en negrita
-                        val parts = line.split("**")
-                        if (parts.size > 1) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
                             ) {
-                                parts.forEachIndexed { i, part ->
-                                    if (i % 2 == 0) {
-                                        // Texto normal
-                                        Text(
-                                            text = part,
-                                            color = Color.White,
-                                            lineHeight = 20.sp
-                                        )
-                                    } else {
-                                        // Texto en negrita
-                                        Text(
-                                            text = part,
-                                            color = Color(0xFFE1BEE7),
-                                            fontWeight = FontWeight.Bold,
-                                            lineHeight = 20.sp
+                                // Título con viñeta
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(18.dp)
+                                            .padding(top = 2.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .background(Color(0xFFBB86FC), CircleShape)
                                         )
                                     }
+
+                                    Spacer(modifier = Modifier.width(4.dp))
+
+                                    // Título en color
+                                    Text(
+                                        text = "$titlePart:",
+                                        color = Color(0xFFBB86FC),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
                                 }
+
+                                // Contenido en la siguiente línea
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = contentPart.trim(),
+                                    color = Color.White,
+                                    lineHeight = 22.sp,
+                                    fontSize = 15.sp,
+                                    modifier = Modifier.padding(start = 22.dp)
+                                )
                             }
                         } else {
-                            // Texto simple sin formato
-                            Text(
-                                text = line,
-                                color = Color.White,
-                                lineHeight = 20.sp
-                            )
+                            // Lista normal
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .padding(top = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .background(Color(0xFFBB86FC), CircleShape)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                FormatText(lineText)
+                            }
                         }
+                    }
+                    // Sublista
+                    else if (line.trim().startsWith("*** ")) {
+                        // Analizar si contiene un título con dos puntos
+                        val lineText = line.substringAfter("*** ")
+
+                        if (lineText.contains(":") && !lineText.contains(": ")) {
+                            // Es un subtítulo con viñeta - formato especial
+                            val titlePart = lineText.substringBefore(":")
+                            val contentPart = lineText.substringAfter(":")
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 20.dp, top = 3.dp, bottom = 3.dp)
+                            ) {
+                                // Subtítulo con viñeta
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .padding(top = 2.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(4.dp)
+                                                .background(Color(0xFFCE93D8), CircleShape)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(4.dp))
+
+                                    // Subtítulo en color
+                                    Text(
+                                        text = "$titlePart:",
+                                        color = Color(0xFFCE93D8),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                }
+
+                                // Contenido en la siguiente línea
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = contentPart.trim(),
+                                    color = Color(0xFFE1BEE7),
+                                    lineHeight = 22.sp,
+                                    fontSize = 15.sp,
+                                    modifier = Modifier.padding(start = 20.dp)
+                                )
+                            }
+                        } else {
+                            // Sublista normal
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 20.dp, top = 3.dp, bottom = 3.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .padding(top = 5.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(4.dp)
+                                            .background(Color(0xFFCE93D8), CircleShape)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
+                                FormatText(
+                                    text = lineText,
+                                    textColor = Color(0xFFE1BEE7)
+                                )
+                            }
+                        }
+                    }
+                    // Texto normal
+                    else {
+                        FormatText(line)
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Componente para mostrar texto con formato.
+ * Procesa texto en negrita e ítems de lista.
+ */
+// Reemplaza la función FormatText actual con esta versión mejorada
+@Composable
+fun FormatText(
+    text: String,
+    textColor: Color = Color.White
+) {
+    // Si el texto empieza con **, procesarlo de manera especial para ocultar los asteriscos
+    if (text.trim().startsWith("**")) {
+        val cleanText = text.trim().removePrefix("**")
+        val parts = cleanText.split("**")
+
+        if (parts.size > 1) {
+            // Formato especial para texto que comenzaba con **
+            Column(modifier = Modifier.fillMaxWidth()) {
+                for (i in parts.indices) {
+                    Text(
+                        text = parts[i],
+                        color = if (i % 2 == 0) Color(0xFFBB86FC) else textColor,
+                        fontWeight = if (i % 2 == 0) FontWeight.Bold else FontWeight.Normal,
+                        lineHeight = 22.sp,
+                        fontSize = if (i % 2 == 0) 16.sp else 15.sp
+                    )
+
+                    if (i < parts.size - 1 && parts[i].isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+            }
+        } else {
+            // Solo un segmento, pero empezaba con **
+            Text(
+                text = cleanText,
+                color = Color(0xFFBB86FC),
+                fontWeight = FontWeight.Bold,
+                lineHeight = 22.sp,
+                fontSize = 16.sp
+            )
+        }
+    }
+    // Procesar texto normal con posibles segmentos en negrita
+    else {
+        val parts = text.split("**")
+
+        if (parts.size > 1) {
+            // Formato para texto con partes en negrita
+            Column(modifier = Modifier.fillMaxWidth()) {
+                for (i in parts.indices) {
+                    if (parts[i].isNotEmpty()) {
+                        Text(
+                            text = parts[i],
+                            color = if (i % 2 == 0) textColor else Color(0xFFBB86FC),
+                            fontWeight = if (i % 2 == 0) FontWeight.Normal else FontWeight.Bold,
+                            lineHeight = 22.sp,
+                            fontSize = 15.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        } else {
+            // Texto simple sin formato
+            Text(
+                text = text,
+                color = textColor,
+                lineHeight = 22.sp,
+                fontSize = 15.sp
+            )
         }
     }
 }
