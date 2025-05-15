@@ -41,6 +41,11 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.proyectofinalandroid.utils.calcularObjetivos
+import com.example.proyectofinalandroid.utils.getImageBitmapSafely
 
 
 @SuppressLint("UnrememberedGetBackStackEntry")
@@ -67,6 +72,7 @@ fun SettingsScreen(navController: NavController) {
     var showChangeFitnessDataDialog by remember { mutableStateOf(false) }
     var showChangeGoalsDialog by remember { mutableStateOf(false) }
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+    var showActivityLevelDialog by remember { mutableStateOf(false) }
 
     // Estados para los campos editables
     var newNombre by remember { mutableStateOf("") }
@@ -170,7 +176,6 @@ fun SettingsScreen(navController: NavController) {
                             }
                         }
                     )
-
                     // Cambiar nombre
                     SettingItem(
                         icon = Icons.Default.Edit,
@@ -224,7 +229,7 @@ fun SettingsScreen(navController: NavController) {
                         icon = Icons.Default.FitnessCenter,
                         title = "Nivel de actividad",
                         subtitle = usuario?.nivelActividad?.ifEmpty { "No definido" } ?: "No definido",
-                        onClick = { /* Implementar cambio de nivel de actividad */ }
+                        onClick = { showActivityLevelDialog = true }
                     )
 
                     // Objetivos
@@ -286,7 +291,7 @@ fun SettingsScreen(navController: NavController) {
                 onConfirm = { nombre, apellido ->
                     scope.launch {
                         // Implementar actualización de nombre en el ViewModel
-                        usuariosViewModel.updateUsuario(
+                        usuariosViewModel.update(
                             mapOf(
                                 "nombre" to nombre,
                                 "apellido" to apellido
@@ -302,7 +307,6 @@ fun SettingsScreen(navController: NavController) {
             LogoutConfirmDialog(
                 onDismiss = { showLogoutConfirmDialog = false },
                 onConfirm = {
-                    // Implementar cierre de sesión y navegación a pantalla de login
                     usuariosViewModel.logout()
                     navController.navigate("login") {
                         popUpTo("root") { inclusive = true }
@@ -311,6 +315,120 @@ fun SettingsScreen(navController: NavController) {
             )
         }
 
+        if (showChangePhotoDialog) {
+            ChangePhotoDialog(
+                currentPhoto = usuario?.foto,
+                onDismiss = { showChangePhotoDialog = false },
+                onTakePhoto = {
+                    // Implementar lógica para tomar foto con la cámara
+                    showChangePhotoDialog = false
+                },
+                onSelectFromGallery = {
+                    // Implementar lógica para seleccionar de la galería
+                    showChangePhotoDialog = false
+                }
+            )
+        }
+
+        if (showChangePersonalDataDialog) {
+            ChangePersonalDataDialog(
+                sexo = usuario?.sexo,
+                fechaNacimiento = usuario?.fechaNacimiento,
+                onDismiss = { showChangePersonalDataDialog = false },
+                onConfirm = { sexo, fechaNacimiento ->
+                    scope.launch {
+                        usuariosViewModel.update(
+                            mapOf(
+                                "sexo" to sexo.toString(),
+                                "fechaNacimiento" to fechaNacimiento.toString()
+                            )
+                        )
+
+                        delay(500)
+
+                        usuariosViewModel.usuario.value?.let { usuarioActualizado ->
+                            calcularObjetivos(
+                                usuario = usuarioActualizado,
+                                viewModel = usuariosViewModel,
+                                context = context
+                            )
+                        }
+                    }
+                    showChangePersonalDataDialog = false
+                }
+            )
+        }
+
+        if (showChangeFitnessDataDialog) {
+            ChangeFitnessDataDialog(
+                altura = usuario?.altura ?: 0f,
+                peso = usuario?.peso ?: 0f,
+                onDismiss = { showChangeFitnessDataDialog = false },
+                onConfirm = { altura, peso ->
+                    scope.launch {
+                        // Primero actualiza los valores
+                        usuariosViewModel.update(
+                            mapOf(
+                                "altura" to altura.toString(),
+                                "peso" to peso.toString(),
+                            )
+                        )
+
+                        // Espera a que el usuario se actualice desde la base de datos
+                        delay(500)
+
+                        // Ahora calcula los objetivos con el usuario actualizado
+                        usuariosViewModel.usuario.value?.let { usuarioActualizado ->
+                            calcularObjetivos(
+                                usuario = usuarioActualizado,
+                                viewModel = usuariosViewModel,
+                                context = context
+                            )
+                        }
+                    }
+                    showChangeFitnessDataDialog = false
+                }
+            )
+        }
+
+        if (showChangeGoalsDialog) {
+            ChangeGoalsDialog(
+                pesoActual = usuario?.peso ?: 0f,
+                objetivoPeso = usuario?.objetivoPeso ?: 0f,
+                objetivoTiempo = usuario?.objetivoTiempo ?: 0f,
+                objetivoCalorias = usuario?.objetivoCalorias ?: 0f,
+                onDismiss = { showChangeGoalsDialog = false },
+                onConfirm = { objetivoPeso, objetivoTiempo, objetivoCalorias ->
+                    scope.launch {
+                        usuariosViewModel.update(
+                            mapOf(
+                                "objetivoPeso" to objetivoPeso.toString(),
+                                "objetivoTiempo" to objetivoTiempo.toString(),
+                                "objetivoCalorias" to objetivoCalorias.toString()
+                            )
+                        )
+                    }
+                    showChangeGoalsDialog = false
+                }
+            )
+        }
+
+        if (showActivityLevelDialog) {
+            ActivityLevelDialog(
+                currentLevel = usuario?.nivelActividad,
+                onDismiss = { showActivityLevelDialog = false },
+                onConfirm = { nivelActividad ->
+                    scope.launch {
+                        usuariosViewModel.update(
+                            mapOf(
+                                "nivelActividad" to nivelActividad
+                            )
+                        )
+                    }
+                    showActivityLevelDialog = false
+                }
+            )
+        }
         // Aquí irían los demás diálogos para editar foto, datos personales, etc.
         // Los he omitido por brevedad, pero seguirían la misma estructura que ChangeNameDialog
     }
@@ -643,9 +761,9 @@ fun LogoutConfirmDialog(
 fun formatPersonalInfo(usuario: Usuarios?): String {
     if (usuario == null) return "No disponible"
 
-    val sexo = if (usuario.sexo.isNotEmpty()) usuario.sexo else "No definido"
+    val sexo = if (usuario.sexo.isNullOrEmpty()) "No definido" else usuario.sexo
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val fechaNacimiento = dateFormat.format(usuario.fechaNacimiento)
+    val fechaNacimiento = if(usuario.fechaNacimiento != null) dateFormat.format(usuario.fechaNacimiento) else "No definido"
 
     return "$sexo · $fechaNacimiento"
 }
@@ -670,16 +788,946 @@ fun formatGoals(usuario: Usuarios?): String {
     return "$objetivoPeso en $objetivoTiempo"
 }
 
-// Extension function para actualizar el usuario
-// Deben implementarse en el ViewModel
-fun UsuariosViewModel.updateUsuario(cambios: Map<String, Any>) {
-    // Implementar la actualización en la API
-    // Ejemplo: apiService.updateUsuario(usuario.value?._id ?: "", cambios)
+
+@Composable
+fun ChangePhotoDialog(
+    currentPhoto: String?,
+    onDismiss: () -> Unit,
+    onTakePhoto: () -> Unit,
+    onSelectFromGallery: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Título
+                Text(
+                    text = "Cambiar foto de perfil",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
+                    ),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Mostrar foto actual si existe
+                if (currentPhoto != null && currentPhoto.isNotEmpty()) {
+                    val bitmap = getImageBitmapSafely(currentPhoto)
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap as ImageBitmap,
+                            contentDescription = "Foto actual",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2A2A2A))
+                                .padding(4.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                } else {
+                    // Mostrar icono de usuario si no hay foto
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF2A2A2A)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Sin foto",
+                            tint = Color(0xFFAB47BC),
+                            modifier = Modifier.size(60.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+
+                // Opciones para cambiar foto
+                OutlinedButton(
+                    onClick = onTakePhoto,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    border = BorderStroke(2.dp, Color(0xFFAB47BC)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFAB47BC)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = "Tomar foto",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Tomar foto",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = onSelectFromGallery,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    border = BorderStroke(2.dp, Color(0xFFAB47BC)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFAB47BC)
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Photo,
+                        contentDescription = "Galería",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Seleccionar de la galería",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Botón de cancelar
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Gray
+                    )
+                ) {
+                    Text(
+                        text = "Cancelar",
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        }
+    }
 }
 
-fun UsuariosViewModel.logout() {
-    // Implementar la lógica de cierre de sesión
-    // Ejemplo:
-    // 1. Limpiar token en SharedPreferences
-    // 2. Limpiar estado del ViewModel
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChangePersonalDataDialog(
+    sexo: String?,
+    fechaNacimiento: Date?,
+    onDismiss: () -> Unit,
+    onConfirm: (sexo: String, fechaNacimiento: Date) -> Unit
+) {
+    var selectedSexo by remember { mutableStateOf(sexo ?: "") }
+    var selectedDate by remember { mutableStateOf(fechaNacimiento ?: Date()) }
+    var expandedSexoMenu by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val sexoOptions = listOf("Masculino", "Femenino")
+    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Título
+                Text(
+                    text = "Información personal",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
+                    ),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Selección de sexo
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Sexo",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = Color(0xFF252525),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { expandedSexoMenu = true }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (selectedSexo.isEmpty()) "Selecciona una opción" else selectedSexo,
+                                fontSize = 16.sp,
+                                color = if (selectedSexo.isEmpty()) Color.Gray else Color.White
+                            )
+
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Expandir",
+                                tint = Color(0xFFAB47BC)
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = expandedSexoMenu,
+                        onDismissRequest = { expandedSexoMenu = false },
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .background(Color(0xFF252525))
+                    ) {
+                        sexoOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(text = option, color = Color.White) },
+                                onClick = {
+                                    selectedSexo = option
+                                    expandedSexoMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Selección de fecha de nacimiento
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Fecha de nacimiento",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = Color(0xFF252525),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { showDatePicker = true }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = dateFormatter.format(selectedDate),
+                                fontSize = 16.sp,
+                                color = Color.White
+                            )
+
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Seleccionar fecha",
+                                tint = Color(0xFFAB47BC)
+                            )
+                        }
+                    }
+                }
+
+                // Nota: Aquí deberías implementar un DatePicker personalizado o usar una biblioteca.
+                // El DatePickerDialog estándar de Material3 no está completamente implementado en
+                // este ejemplo por brevedad, pero puedes usar bibliotecas como material-dialogs.
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Botones
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cancelar", fontSize = 16.sp)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { onConfirm(selectedSexo, selectedDate) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFAB47BC),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Guardar", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChangeFitnessDataDialog(
+    altura: Float,
+    peso: Float,
+    onDismiss: () -> Unit,
+    onConfirm: (altura: Float, peso: Float) -> Unit
+) {
+    var alturaText by remember { mutableStateOf(if (altura > 0f) altura.toString() else "") }
+    var pesoText by remember { mutableStateOf(if (peso > 0f) peso.toString() else "") }
+
+
+    val alturaError = remember(alturaText) {
+        when {
+            alturaText.isEmpty() -> "La altura es requerida"
+            alturaText.toFloatOrNull() == null -> "Debe ser un número válido"
+            alturaText.toFloat() < 50 || alturaText.toFloat() > 250 -> "Debe estar entre 50 y 250 cm"
+            else -> ""
+        }
+    }
+
+    val pesoError = remember(pesoText) {
+        when {
+            pesoText.isEmpty() -> "El peso es requerido"
+            pesoText.toFloatOrNull() == null -> "Debe ser un número válido"
+            pesoText.toFloat() < 20 || pesoText.toFloat() > 300 -> "Debe estar entre 20 y 300 kg"
+            else -> ""
+        }
+    }
+
+    val isFormValid = alturaError.isEmpty() && pesoError.isEmpty()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Título
+                Text(
+                    text = "Datos físicos",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
+                    ),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Altura
+                OutlinedTextField(
+                    value = alturaText,
+                    onValueChange = { alturaText = it },
+                    label = { Text("Altura (cm)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    isError = alturaError.isNotEmpty(),
+                    supportingText = {
+                        if (alturaError.isNotEmpty()) {
+                            Text(text = alturaError, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedLabelColor = Color(0xFFAB47BC),
+                        unfocusedLabelColor = Color.Gray,
+                        errorBorderColor = MaterialTheme.colorScheme.error
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
+                    trailingIcon = {
+                        Text(
+                            text = "cm",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Peso
+                OutlinedTextField(
+                    value = pesoText,
+                    onValueChange = { pesoText = it },
+                    label = { Text("Peso (kg)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    isError = pesoError.isNotEmpty(),
+                    supportingText = {
+                        if (pesoError.isNotEmpty()) {
+                            Text(text = pesoError, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedLabelColor = Color(0xFFAB47BC),
+                        unfocusedLabelColor = Color.Gray,
+                        errorBorderColor = MaterialTheme.colorScheme.error
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
+                    trailingIcon = {
+                        Text(
+                            text = "kg",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    }
+                )
+
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Botones
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cancelar", fontSize = 16.sp)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            onConfirm(
+                                alturaText.toFloatOrNull() ?: 0f,
+                                pesoText.toFloatOrNull() ?: 0f,
+                            )
+                        },
+                        enabled = isFormValid,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFAB47BC),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFFAB47BC).copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Guardar", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChangeGoalsDialog(
+    pesoActual: Float,
+    objetivoPeso: Float,
+    objetivoTiempo: Float,
+    objetivoCalorias: Float,
+    onDismiss: () -> Unit,
+    onConfirm: (objetivoPeso: Float, objetivoTiempo: Float, objetivoCalorias: Float) -> Unit
+) {
+    var objetivoPesoText by remember { mutableStateOf(if (objetivoPeso > 0f) objetivoPeso.toString() else "") }
+    var objetivoTiempoText by remember { mutableStateOf(if (objetivoTiempo > 0f) objetivoTiempo.toString() else "") }
+    var objetivoCaloriasText by remember { mutableStateOf(if (objetivoCalorias > 0f) objetivoCalorias.toString() else "") }
+
+    val objetivoPesoError = remember(objetivoPesoText, pesoActual) {
+        when {
+            objetivoPesoText.isEmpty() -> "El peso objetivo es requerido"
+            objetivoPesoText.toFloatOrNull() == null -> "Debe ser un número válido"
+            objetivoPesoText.toFloat() < 20 || objetivoPesoText.toFloat() > 300 -> "Debe estar entre 20 y 300 kg"
+            pesoActual > 0 && objetivoPesoText.toFloat() == pesoActual -> "Debe ser diferente al peso actual"
+            else -> ""
+        }
+    }
+
+    val objetivoTiempoError = remember(objetivoTiempoText) {
+        when {
+            objetivoTiempoText.isEmpty() -> "El tiempo objetivo es requerido"
+            objetivoTiempoText.toFloatOrNull() == null -> "Debe ser un número válido"
+            objetivoTiempoText.toFloat() < 1 || objetivoTiempoText.toFloat() > 104 -> "Debe estar entre 1 y 104 semanas"
+            else -> ""
+        }
+    }
+
+    val objetivoCaloriasError = remember(objetivoCaloriasText) {
+        when {
+            objetivoCaloriasText.isEmpty() -> "Las calorías objetivo son requeridas"
+            objetivoCaloriasText.toFloatOrNull() == null -> "Debe ser un número válido"
+            objetivoCaloriasText.toFloat() < 500 || objetivoCaloriasText.toFloat() > 5000 -> "Debe estar entre 500 y 5000 kcal"
+            else -> ""
+        }
+    }
+
+    val isFormValid = objetivoPesoError.isEmpty() && objetivoTiempoError.isEmpty() && objetivoCaloriasError.isEmpty()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Título
+                Text(
+                    text = "Mis objetivos",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
+                    ),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Peso actual (informativo)
+                if (pesoActual > 0) {
+                    Text(
+                        text = "Tu peso actual: $pesoActual kg",
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                }
+
+                // Objetivo de peso
+                OutlinedTextField(
+                    value = objetivoPesoText,
+                    onValueChange = { objetivoPesoText = it },
+                    label = { Text("Peso objetivo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    isError = objetivoPesoError.isNotEmpty(),
+                    supportingText = {
+                        if (objetivoPesoError.isNotEmpty()) {
+                            Text(text = objetivoPesoError, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedLabelColor = Color(0xFFAB47BC),
+                        unfocusedLabelColor = Color.Gray,
+                        errorBorderColor = MaterialTheme.colorScheme.error
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
+                    trailingIcon = {
+                        Text(
+                            text = "kg",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Objetivo de tiempo
+                OutlinedTextField(
+                    value = objetivoTiempoText,
+                    onValueChange = { objetivoTiempoText = it },
+                    label = { Text("Tiempo objetivo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    isError = objetivoTiempoError.isNotEmpty(),
+                    supportingText = {
+                        if (objetivoTiempoError.isNotEmpty()) {
+                            Text(text = objetivoTiempoError, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedLabelColor = Color(0xFFAB47BC),
+                        unfocusedLabelColor = Color.Gray,
+                        errorBorderColor = MaterialTheme.colorScheme.error
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
+                    trailingIcon = {
+                        Text(
+                            text = "semanas",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Objetivo de calorías
+                OutlinedTextField(
+                    value = objetivoCaloriasText,
+                    onValueChange = { objetivoCaloriasText = it },
+                    label = { Text("Calorías diarias objetivo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    isError = objetivoCaloriasError.isNotEmpty(),
+                    supportingText = {
+                        if (objetivoCaloriasError.isNotEmpty()) {
+                            Text(text = objetivoCaloriasError, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        cursorColor = Color(0xFFAB47BC),
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color(0xFF3A3A3A),
+                        focusedLabelColor = Color(0xFFAB47BC),
+                        unfocusedLabelColor = Color.Gray,
+                        errorBorderColor = MaterialTheme.colorScheme.error
+                    ),
+                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
+                    trailingIcon = {
+                        Text(
+                            text = "kcal",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Botones
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cancelar", fontSize = 16.sp)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            onConfirm(
+                                objetivoPesoText.toFloatOrNull() ?: 0f,
+                                objetivoTiempoText.toFloatOrNull() ?: 0f,
+                                objetivoCaloriasText.toFloatOrNull() ?: 0f
+                            )
+                        },
+                        enabled = isFormValid,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFAB47BC),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFFAB47BC).copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Guardar", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ActivityLevelDialog(
+    currentLevel: String?,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var selectedLevel by remember { mutableStateOf(currentLevel ?: "") }
+
+    // Niveles de actividad con descripciones para ayudar al usuario
+    val activityLevels = listOf(
+        Pair("Sedentario", "Poco o ningún ejercicio, trabajo de oficina"),
+        Pair("Ligero", "Ejercicio ligero 1-3 días por semana"),
+        Pair("Moderado", "Ejercicio moderado 3-5 días por semana"),
+        Pair("Activo", "Ejercicio intenso 6-7 días por semana"),
+        Pair("Muy activo", "Ejercicio muy intenso o trabajo físico diario")
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Título
+                Text(
+                    text = "Nivel de actividad",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Texto explicativo
+                Text(
+                    text = "Selecciona el nivel que mejor describe tu actividad física regular:",
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Opciones de nivel de actividad
+                activityLevels.forEach { (level, description) ->
+                    ActivityLevelOption(
+                        level = level,
+                        description = description,
+                        isSelected = selectedLevel == level,
+                        onSelect = { selectedLevel = level }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Botones
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Gray
+                        )
+                    ) {
+                        Text("Cancelar", fontSize = 16.sp)
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { onConfirm(selectedLevel) },
+                        enabled = selectedLevel.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFAB47BC),
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFFAB47BC).copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Guardar", fontSize = 16.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityLevelOption(
+    level: String,
+    description: String,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFF3F2C50) else Color(0xFF252525)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = isSelected,
+                onClick = onSelect,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = Color(0xFFAB47BC),
+                    unselectedColor = Color.Gray
+                ),
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = level,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+
+                Text(
+                    text = description,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+            }
+
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Seleccionado",
+                    tint = Color(0xFFAB47BC),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
 }

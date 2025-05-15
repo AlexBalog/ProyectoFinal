@@ -3,6 +3,7 @@ package com.example.proyectofinalandroid.ViewModel
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.example.proyectofinalandroid.Model.Usuarios
 import com.example.proyectofinalandroid.Repository.UsuariosRepository
@@ -15,10 +16,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import com.example.proyectofinalandroid.utils.UserPreferences
+import androidx.compose.ui.platform.LocalContext
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
+import androidx.work.WorkManager
+import androidx.work.WorkInfo
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 
 
 @HiltViewModel
-class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepository) : ViewModel() {
+class UsuariosViewModel @Inject constructor(
+    private val repository: UsuariosRepository,
+    @ApplicationContext private val context: Context
+    ) : ViewModel() {
+
+
     // Estados con StateFlow
     private val _usuario = MutableStateFlow<Usuarios?>(null)
     val usuario: StateFlow<Usuarios?> get() = _usuario
@@ -59,15 +77,55 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
 
     suspend fun update(updatedData: Map<String, String>): Boolean {
         return withContext(Dispatchers.IO) {
-            _usuario.value?.let { currentUser ->
-                val _id = currentUser._id
-                val token = currentUser.token ?: return@withContext false
-                val success = repository.update(_id, updatedData, token)
-                if (!success) {
-                    _errorMessage.value = "Error al actualizar el usuario"
-                }
-                return@withContext success
-            } ?: false
+            val currentUser = _usuario.value ?: return@withContext false
+
+            val _id = currentUser._id
+            val token = currentUser.token ?: return@withContext false
+
+            val success = repository.update(_id, updatedData, token)
+
+            if (!success) {
+                _errorMessage.value = "Error al actualizar el usuario"
+                return@withContext false
+            }
+
+            // Crear un formato de fecha para parsear el String a Date
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+            // Crear una copia con conversiones de tipo adecuadas
+            val updatedUser = currentUser.copy(
+                nombre = updatedData["nombre"] ?: currentUser.nombre,
+                apellido = updatedData["apellido"] ?: currentUser.apellido,
+                foto = updatedData["foto"] ?: currentUser.foto,
+                sexo = updatedData["sexo"] ?: currentUser.sexo,
+
+                // Convertir string a Date para fechaNacimiento
+                fechaNacimiento = if (updatedData.containsKey("fechaNacimiento")) {
+                    try {
+                        dateFormat.parse(updatedData["fechaNacimiento"]!!)
+                    } catch (e: Exception) {
+                        currentUser.fechaNacimiento // En caso de error, mantener el valor actual
+                    }
+                } else {
+                    currentUser.fechaNacimiento
+                },
+
+                // Convertir strings a Float para los valores numéricos usando toFloatOrNull()
+                altura = updatedData["altura"]?.toFloatOrNull() ?: currentUser.altura,
+                peso = updatedData["peso"]?.toFloatOrNull() ?: currentUser.peso,
+                objetivoPeso = updatedData["objetivoPeso"]?.toFloatOrNull() ?: currentUser.objetivoPeso,
+                objetivoTiempo = updatedData["objetivoTiempo"]?.toFloatOrNull() ?: currentUser.objetivoTiempo,
+                IMC = updatedData["IMC"]?.toFloatOrNull() ?: currentUser.IMC,
+                nivelActividad = updatedData["nivelActividad"] ?: currentUser.nivelActividad,
+                objetivoCalorias = updatedData["objetivoCalorias"]?.toFloatOrNull() ?: currentUser.objetivoCalorias,
+                caloriasMantenimiento = updatedData["caloriasMantenimiento"]?.toFloatOrNull() ?: currentUser.caloriasMantenimiento,
+
+            )
+
+            // Actualizar el estado con el nuevo usuario
+            _usuario.value = updatedUser
+
+            return@withContext success
         }
     }
 
@@ -117,10 +175,74 @@ class UsuariosViewModel @Inject constructor(private val repository: UsuariosRepo
         }
     }
 
-    /*fun logout() {
-        val userPrefs = UserPreferences(context)
+    fun logout() {
         viewModelScope.launch {
-            userPrefs.clearUser()
+            try {
+                val userPrefs = UserPreferences(context)
+                userPrefs.clearUser()
+                cancelScheduledJobs()
+                _usuario.value = null
+                _userState.value = UserState.Loading
+            } catch (e: Exception) {
+                Log.e("FalloUsuariosViewModel", "Error en logout: ${e.message}")
+            }
         }
-    }*/
+    }
+
+    private fun cancelScheduledJobs() {
+        try {
+            val workManager = WorkManager.getInstance(context)
+            val usuarioId = _usuario.value?._id ?: return
+            workManager.cancelAllWorkByTag("entrenamiento_scheduler_worker")
+            workManager.cancelAllWorkByTag("entrenamiento_reminder_worker")
+
+            // 3. Verificar que los trabajos se hayan cancelado correctamente (opcional)
+            viewModelScope.launch {
+                try {
+                    val schedulerInfos = getWorkInfosByTag(workManager, "entrenamiento_scheduler_worker")
+                    val reminderInfos = getWorkInfosByTag(workManager, "entrenamiento_reminder_worker")
+                    for (workInfo in schedulerInfos) {
+                        if (workInfo.state != WorkInfo.State.CANCELLED) {
+                            Log.w("UsuariosViewModel", "El trabajo ${workInfo.id} no se canceló correctamente")
+                        }
+                    }
+                    for (workInfo in reminderInfos) {
+                        if (workInfo.state != WorkInfo.State.CANCELLED) {
+                            Log.w("UsuariosViewModel", "El trabajo ${workInfo.id} no se canceló correctamente")
+                        }
+                    }
+
+                    Log.d("UsuariosViewModel", "Todos los trabajos cancelados correctamente")
+                } catch (e: Exception) {
+                    Log.e("UsuariosViewModel", "Error al verificar estados de trabajos: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("UsuariosViewModel", "Error al cancelar trabajos programados: ${e.message}")
+        }
+    }
+
+    private suspend fun getWorkInfosByTag(workManager: WorkManager, tag: String): List<WorkInfo> {
+        return suspendCancellableCoroutine { continuation ->
+            val listenableFuture = workManager.getWorkInfosByTag(tag)
+
+            listenableFuture.addListener(
+                {
+                    try {
+                        val result = listenableFuture.get()
+                        continuation.resume(result)
+                    } catch (e: Exception) {
+                        continuation.resumeWithException(e)
+                    }
+                },
+                { command -> command.run() }  // Ejecutor
+            )
+
+            continuation.invokeOnCancellation {
+                if (!listenableFuture.isDone) {
+                    listenableFuture.cancel(true)
+                }
+            }
+        }
+    }
 }

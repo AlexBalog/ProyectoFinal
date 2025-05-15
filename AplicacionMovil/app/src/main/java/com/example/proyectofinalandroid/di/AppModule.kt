@@ -37,8 +37,8 @@ import javax.inject.Singleton
 object AppModule {
 //    private const val BASE_URL = "http://192.168.1.142:3000/"
 //    private const val BASE_URL = "http://10.0.2.2:3000/"
-//    private const val BASE_URL = "http://172.20.0.22:3000/" // La IP del trabajo
-    private const val BASE_URL = "https://api-production-3f8e.up.railway.app/" // IP global
+    private const val BASE_URL = "http://172.20.0.22:3000/" // La IP del trabajo
+//    private const val BASE_URL = "https://api-production-3f8e.up.railway.app/" // IP global
 
 
     @Provides

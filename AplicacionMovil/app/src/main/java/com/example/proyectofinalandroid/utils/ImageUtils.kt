@@ -11,6 +11,7 @@ import android.os.Build
 import android.graphics.ImageDecoder
 import android.content.Context
 import android.provider.MediaStore
+import android.util.Log
 
 fun base64ToBitmap(base64String: String): Bitmap? {
     return try {
@@ -46,4 +47,13 @@ fun uriToBase64(context: Context, imageUri: Uri): String {
     bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
     val byteArray = outputStream.toByteArray()
     return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+}
+
+fun getImageBitmapSafely(base64String: String): ImageBitmap? {
+    return try {
+        base64ToImageBitmap(base64String)
+    } catch (e: Exception) {
+        Log.e("ProfileScreen", "Error al convertir imagen: ${e.message}")
+        null
+    }
 }

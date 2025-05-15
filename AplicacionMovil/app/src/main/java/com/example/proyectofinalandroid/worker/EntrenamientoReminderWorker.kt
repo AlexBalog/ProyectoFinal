@@ -36,11 +36,6 @@ class EntrenamientoReminderWorker @AssistedInject constructor(
             try {
                 val prefs = UserPreferences(applicationContext)
                 val usuarioId = prefs.getUserId() ?: return@withContext Result.failure()
-                // Para pruebas, envía una notificación simple
-                /*enviarNotificacion(
-                    "Recordatorio de entrenamiento",
-                    "¡Es hora de entrenar! 💪"
-                )*/
 
                 val hoy = LocalDate.now()
                 try {

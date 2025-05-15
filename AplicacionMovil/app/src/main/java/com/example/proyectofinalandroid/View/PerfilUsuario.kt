@@ -56,6 +56,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.graphics.StrokeCap
 import kotlin.math.roundToInt
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.window.Dialog
+import com.example.proyectofinalandroid.utils.getImageBitmapSafely
+
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,11 +152,36 @@ fun ProfileScreen(navController: NavController) {
                     containerColor = Color.Black
                 ),
                 actions = {
-                    IconButton(onClick = { navController.navigate("configuracion") }) {
+                    var showDialog by remember { mutableStateOf(false) }
+
+                    IconButton(onClick = {
+                        if (usuario!!.formulario == true) {
+                            navController.navigate("configuracion")
+                        } else {
+                            showDialog = true
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Ajustes",
                             tint = Color(0xFFAB47BC)
+                        )
+                    }
+                    if (showDialog) {
+                        FormularioRequiredDialog(
+                            onDismiss = { showDialog = false },
+                            onGoToForm = {
+                                showDialog = false
+                                navController.navigate("formulario")
+                            },
+                            onLogout = {
+                                showDialog = false
+                                // Cerrar sesión
+                                usuariosViewModel.logout()
+                                navController.navigate("login") {
+                                    popUpTo("root") { inclusive = true }
+                                }
+                            }
                         )
                     }
                 }
@@ -242,16 +272,24 @@ fun UserProfileSection(usuario: Usuarios?) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Foto de perfil
-            if (usuario.foto.isNotEmpty()) {
-                Image(
-                    bitmap = base64ToImageBitmap(usuario.foto) as ImageBitmap,
-                    contentDescription = "Foto de perfil",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF2A2A2A))
-                )
+            val showDefaultImage = shouldShowDefaultImage(usuario.foto)
+
+            if (!showDefaultImage) {
+                // Añadir try-catch para manejar errores de conversión
+                val bitmap = getImageBitmapSafely(usuario.foto ?: "")
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap as ImageBitmap,
+                        contentDescription = "Foto de perfil",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF2A2A2A))
+                    )
+                } else {
+                    DefaultProfileImage()
+                }
             } else {
                 Box(
                     modifier = Modifier
@@ -301,7 +339,11 @@ fun UserProfileSection(usuario: Usuarios?) {
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = usuario.nivelActividad.ifEmpty { "Sin nivel definido" },
+                            text = if (usuario.nivelActividad.isNullOrEmpty()) {
+                                    "Sin nivel de actividad"
+                                } else {
+                                    usuario.nivelActividad
+                                },
                             fontSize = 12.sp,
                             color = Color(0xFFAB47BC)
                         )
@@ -973,4 +1015,180 @@ private fun EntrenamientosViewModel.getEntrenamientoById(id: String): Entrenamie
     // Implementar método en tu ViewModel para obtener entrenamiento por ID
     // return this.obtenerEntrenamientoPorId(id)
     return null
+}
+
+@Composable
+private fun DefaultProfileImage() {
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF2A2A2A)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "Perfil",
+            tint = Color(0xFFAB47BC),
+            modifier = Modifier.size(40.dp)
+        )
+    }
+}
+
+private fun shouldShowDefaultImage(foto: String?): Boolean {
+    return foto == null || foto.isEmpty()
+}
+
+
+@Composable
+fun FormularioRequiredDialog(
+    onDismiss: () -> Unit,
+    onGoToForm: () -> Unit,
+    onLogout: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = Color(0xFF7B1FA2),
+                    spotColor = Color(0xFF7B1FA2)
+                ),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Icono animado
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Información",
+                    tint = Color(0xFFAB47BC),
+                    modifier = Modifier
+                        .size(64.dp)
+                        .padding(bottom = 16.dp)
+                )
+
+                // Título con gradiente
+                Text(
+                    text = "Formulario Requerido",
+                    style = TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFFAB47BC),
+                                Color(0xFF7B1FA2)
+                            )
+                        )
+                    ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Mensaje
+                Text(
+                    text = "Para configurar tu perfil, primero debes completar el formulario de información personal.",
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Botón para ir al formulario
+                Button(
+                    onClick = onGoToForm,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFAB47BC),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Assignment,
+                        contentDescription = "Formulario",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Completar Formulario",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Separador con texto
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(
+                        modifier = Modifier.weight(1f),
+                        color = Color(0xFF3A3A3A)
+                    )
+                    Text(
+                        text = "o",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Divider(
+                        modifier = Modifier.weight(1f),
+                        color = Color(0xFF3A3A3A)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón de cerrar sesión
+                OutlinedButton(
+                    onClick = onLogout,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFE57373)
+                    ),
+                    border = BorderStroke(2.dp, Color(0xFFE57373)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Logout,
+                        contentDescription = "Cerrar sesión",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Cerrar Sesión",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Botón para cancelar
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Gray
+                    )
+                ) {
+                    Text("Cancelar", fontSize = 14.sp)
+                }
+            }
+        }
+    }
 }

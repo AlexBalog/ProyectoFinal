@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 
 function verifyToken(req, res, next) {
-  console.log("Entra en verifyToken: Verificando token...");
   // Se asume que el token se envía en la cabecera Authorization con el formato: Bearer <token>
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];

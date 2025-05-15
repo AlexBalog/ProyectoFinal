@@ -985,7 +985,7 @@ fun CollapsibleProfileCard(
                     // Datos detallados dependiendo de la categoría
                     when (conversacionActual?.categoria) {
                         "nutricion" -> {
-                            ProfileDataRow(Icons.Default.Whatshot, "Calorías de mantenimiento", usuario?.caloriasMantenimiento ?: "No calculadas")
+                            ProfileDataRow(Icons.Default.Whatshot, "Calorías de mantenimiento", usuario?.caloriasMantenimiento.toString() ?: "No calculadas")
                             ProfileDataRow(Icons.Default.Whatshot, "Calorías objetivo", usuario?.objetivoCalorias.toString() ?: "No calculadas")
                             if (usuario?.objetivoPeso != null && usuario.peso != null) {
                                 val diferencia = usuario.objetivoPeso - usuario.peso

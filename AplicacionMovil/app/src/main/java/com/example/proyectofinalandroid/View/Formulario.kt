@@ -111,7 +111,6 @@ fun FormularioScreen(navController: NavController) {
     var objetivoTiempo by remember { mutableStateOf("") }
     var expandedDropdown by remember { mutableStateOf(false) }
     var nivelActividad by remember { mutableStateOf("") }
-    var objetivoCalorias by remember { mutableStateOf("") }
 
     val activityOptions = listOf(
         ActivityLevel(

@@ -4,11 +4,6 @@ const UsuariosSchema = require('../models/modelsUsuarios');
 const verifyToken = require('../middlewares/authMiddleware'); // Middleware para validar el JWT
 const router = express.Router();
 
-const parseFecha = (fecha) => {
-  const [day, month, year] = fecha.split('/').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return date.toISOString();
-};
 
 // GET ALL: Obtiene todos los documentos de usuarios (ruta protegida) - La uso para cargar la lista de usuarios sin filtrar en WPF
 router.get('/getAll', /*verifyToken,*/ async (req, res) => {
@@ -48,6 +43,7 @@ router.post('/new', /*verifyToken,*/ async (req, res) => {
 // UPDATE: Actualiza un usuario basado en el dni proporcionado (ruta protegida) - La uso para modificar usuarios en WPF
 router.patch('/update', verifyToken, async (req, res) => {
   try {
+
     const id = req.body._id;
     if (!id) {
       return res.status(400).json({ message: "Falta el campo 'id'" });
@@ -55,6 +51,7 @@ router.patch('/update', verifyToken, async (req, res) => {
 
     // Se crea un objeto para almacenar solo los campos que se enviaron en el request
     const updateFields = {};
+
 
     if (req.body.email !== undefined) {
       updateFields.email = req.body.email;
@@ -71,7 +68,7 @@ router.patch('/update', verifyToken, async (req, res) => {
     }
 
     if (req.body.fechaNacimiento !== undefined) {
-      updateFields.fechaNacimiento = parseFecha(req.body.fechaNacimiento);
+      updateFields.fechaNacimiento = req.body.fechaNacimiento;
     }
 
     if (req.body.nombre !== undefined) {
@@ -137,6 +134,8 @@ router.patch('/update', verifyToken, async (req, res) => {
     if (req.body.entrenamientosRealizados !== undefined) {
       updateFields.entrenamientosRealizados = req.body.entrenamientosRealizados
     }
+
+    console.log(updateFields);
 
     // Si no se envía ningún campo para actualizar, se informa
     if (Object.keys(updateFields).length === 0) {

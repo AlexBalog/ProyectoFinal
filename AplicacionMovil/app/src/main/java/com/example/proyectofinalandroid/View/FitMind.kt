@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.View
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
@@ -37,6 +38,7 @@ import android.util.Log
 
 
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FitMindScreen(

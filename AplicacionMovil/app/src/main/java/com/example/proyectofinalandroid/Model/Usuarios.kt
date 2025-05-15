@@ -26,7 +26,7 @@ data class Usuarios(
     @SerializedName("nivelActividad")
     val nivelActividad: String = "",
     @SerializedName("caloriasMantenimiento")
-    val caloriasMantenimiento: String = "",
+    val caloriasMantenimiento: Float = 0f,
     @SerializedName("altura")
     val altura: Float = 0f,
     @SerializedName("peso")
