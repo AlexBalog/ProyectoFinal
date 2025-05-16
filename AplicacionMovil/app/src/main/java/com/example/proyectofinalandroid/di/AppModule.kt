@@ -31,6 +31,10 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
+import com.example.proyectofinalandroid.Model.Mediciones
+import com.example.proyectofinalandroid.Remote.MedicionesApi
+import com.example.proyectofinalandroid.Repository.MedicionesRepository
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -181,6 +185,18 @@ object AppModule {
     @Singleton
     fun provideIARepository(api: IAService): IARepository {
         return IARepository(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMedicionesApi(retrofit: Retrofit): MedicionesApi {
+        return retrofit.create(MedicionesApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMedicionesRepository(api: MedicionesApi): MedicionesRepository {
+        return MedicionesRepository(api)
     }
 
     @Provides

@@ -28,8 +28,12 @@ class MainActivity : ComponentActivity() {
             requestCode,
             permissions,
             grantResults,
-            onGranted = { /* Permiso concedido */ },
-            onDenied = { /* Permiso denegado */ }
+            onNotificationGranted = {},
+            onNotificationDenied = {},
+            onCameraGranted = {},
+            onCameraDenied = {},
+            onReadMediaImagesGranted = {},
+        onReadMediaImagesDenied = {}
         )
     }
 }

@@ -61,6 +61,31 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
+
+    suspend fun getEntrenamientoById(id: String): Entrenamientos? {
+        // Primero buscar en los entrenamientos cargados en memoria
+        val entrenamientosEnMemoria = _entrenamientos.value
+
+        // Si tenemos entrenamientos cargados, buscamos por ID
+        entrenamientosEnMemoria?.find { it._id == id }?.let {
+            return it
+        }
+
+        // Si estamos aquí, no encontramos el entrenamiento en memoria
+        // Verificamos si es el entrenamiento seleccionado actual
+        _entrenamientoSeleccionado.value?.let {
+            if (it._id == id) return it
+        }
+
+        // Si no lo encontramos en memoria, hacemos la petición al servidor
+        return try {
+            repository.getOne(id, _usuario.value?.token.orEmpty())
+        } catch (e: Exception) {
+            Log.e("EntrenamientosViewModel", "Error al obtener entrenamiento por ID: ${e.message}")
+            null
+        }
+    }
+
     // Modifica esto en EntrenamientosViewModel
     fun observarLikesDeEntrenamiento(
         entrenamiento: String,

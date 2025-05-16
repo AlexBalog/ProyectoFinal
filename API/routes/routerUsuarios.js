@@ -135,8 +135,6 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.entrenamientosRealizados = req.body.entrenamientosRealizados
     }
 
-    console.log(updateFields);
-
     // Si no se envía ningún campo para actualizar, se informa
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ message: "No se proporcionaron campos para actualizar" });

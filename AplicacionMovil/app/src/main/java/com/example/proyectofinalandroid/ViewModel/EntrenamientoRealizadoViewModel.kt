@@ -40,6 +40,36 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
         _usuario.value = usuario
     }
 
+
+    fun getEntrenamientosRealizadosByUsuario(usuario: Usuarios) {
+        viewModelScope.launch {
+            try {
+
+                _isLoading.value = true
+                if (_usuario.value == null || _usuario.value?._id != usuario._id) {
+                    _usuario.value = usuario
+                }
+
+                val filtros = mapOf("usuario" to usuario._id)
+
+                val lista = repository.getFilter(usuario.token ?: "", filtros)
+                if (lista != null) {
+                    _entrenamientoRealizado.value = lista
+                    Log.d("EntrenamientoRealizado", "Entrenamientos del usuario cargados: ${lista.size}")
+                } else {
+                    _entrenamientoRealizado.value = emptyList()
+                    Log.d("EntrenamientoRealizado", "No se encontraron entrenamientos para este usuario")
+                }
+            } catch (e: Exception) {
+                Log.e("EntrenamientoRealizado", "Error al obtener entrenamientos del usuario: ${e.message}")
+                _entrenamientoRealizado.value = emptyList()
+                _errorMessage.value = "Error al cargar los entrenamientos: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     private fun getAll() {
         viewModelScope.launch {
             try {

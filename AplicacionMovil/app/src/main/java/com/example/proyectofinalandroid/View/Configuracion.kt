@@ -46,6 +46,19 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.proyectofinalandroid.utils.calcularObjetivos
 import com.example.proyectofinalandroid.utils.getImageBitmapSafely
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.proyectofinalandroid.utils.uriToBitmap
+import com.example.proyectofinalandroid.utils.resizeBitmap
+import com.example.proyectofinalandroid.utils.bitmapToBase64
+import com.example.proyectofinalandroid.utils.createTempImageUri
+import android.widget.Toast
+import com.example.proyectofinalandroid.utils.PermissionHelper
+import android.Manifest
+
+
+
 
 
 @SuppressLint("UnrememberedGetBackStackEntry")
@@ -64,6 +77,75 @@ fun SettingsScreen(navController: NavController) {
     val usuario by usuariosViewModel.usuario.collectAsState()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    val tempPhotoUri = remember { mutableStateOf<Uri?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempPhotoUri.value != null) {
+            scope.launch {
+                try {
+                    val bitmap = uriToBitmap(context, tempPhotoUri.value!!)
+                    bitmap?.let {
+                        val resizedBitmap = resizeBitmap(it)
+                        val base64Image = bitmapToBase64(resizedBitmap)
+                        usuariosViewModel.update(mapOf("foto" to base64Image))
+                        Toast.makeText(context, "Foto actualizada correctamente", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error al procesar la imagen: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    // Añade esto junto a los otros launchers
+    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permiso concedido, abrir cámara
+            tempPhotoUri.value = createTempImageUri(context)
+            cameraLauncher.launch(tempPhotoUri.value)
+        } else {
+            // Permiso denegado
+            Toast.makeText(context, "Se necesita permiso de cámara para usar esta función", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Launcher para seleccionar imagen de la galería
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            scope.launch {
+                try {
+                    val bitmap = uriToBitmap(context, it)
+                    bitmap?.let { bmp ->
+                        val resizedBitmap = resizeBitmap(bmp)
+                        val base64Image = bitmapToBase64(resizedBitmap)
+                        usuariosViewModel.update(mapOf("foto" to base64Image))
+                        Toast.makeText(context, "Foto actualizada correctamente", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error al procesar la imagen: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val requestMediaPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permiso concedido, abrir galería
+            galleryLauncher.launch("image/*")
+        } else {
+            // Permiso denegado
+            Toast.makeText(context, "Se necesita permiso para acceder a las imágenes", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Diálogos
     var showChangePhotoDialog by remember { mutableStateOf(false) }
@@ -320,11 +402,22 @@ fun SettingsScreen(navController: NavController) {
                 currentPhoto = usuario?.foto,
                 onDismiss = { showChangePhotoDialog = false },
                 onTakePhoto = {
-                    // Implementar lógica para tomar foto con la cámara
+                    // Verificar y solicitar permiso de cámara
+                    if (PermissionHelper.hasCameraPermission(context)) {
+                        tempPhotoUri.value = createTempImageUri(context)
+                        cameraLauncher.launch(tempPhotoUri.value)
+                    } else {
+                        requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
                     showChangePhotoDialog = false
                 },
                 onSelectFromGallery = {
-                    // Implementar lógica para seleccionar de la galería
+                    // Verificar y solicitar permiso de acceso a imágenes
+                    if (PermissionHelper.hasReadMediaImagesPermission(context)) {
+                        galleryLauncher.launch("image/*")
+                    } else {
+                        requestMediaPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                    }
                     showChangePhotoDialog = false
                 }
             )
@@ -396,17 +489,25 @@ fun SettingsScreen(navController: NavController) {
                 pesoActual = usuario?.peso ?: 0f,
                 objetivoPeso = usuario?.objetivoPeso ?: 0f,
                 objetivoTiempo = usuario?.objetivoTiempo ?: 0f,
-                objetivoCalorias = usuario?.objetivoCalorias ?: 0f,
                 onDismiss = { showChangeGoalsDialog = false },
-                onConfirm = { objetivoPeso, objetivoTiempo, objetivoCalorias ->
+                onConfirm = { objetivoPeso, objetivoTiempo ->
                     scope.launch {
                         usuariosViewModel.update(
                             mapOf(
                                 "objetivoPeso" to objetivoPeso.toString(),
                                 "objetivoTiempo" to objetivoTiempo.toString(),
-                                "objetivoCalorias" to objetivoCalorias.toString()
                             )
                         )
+
+                        delay(500)
+
+                        usuariosViewModel.usuario.value?.let { usuarioActualizado ->
+                            calcularObjetivos(
+                                usuario = usuarioActualizado,
+                                viewModel = usuariosViewModel,
+                                context = context
+                            )
+                        }
                     }
                     showChangeGoalsDialog = false
                 }
@@ -424,6 +525,16 @@ fun SettingsScreen(navController: NavController) {
                                 "nivelActividad" to nivelActividad
                             )
                         )
+
+                        delay(500)
+
+                        usuariosViewModel.usuario.value?.let { usuarioActualizado ->
+                            calcularObjetivos(
+                                usuario = usuarioActualizado,
+                                viewModel = usuariosViewModel,
+                                context = context
+                            )
+                        }
                     }
                     showActivityLevelDialog = false
                 }
@@ -1325,13 +1436,11 @@ fun ChangeGoalsDialog(
     pesoActual: Float,
     objetivoPeso: Float,
     objetivoTiempo: Float,
-    objetivoCalorias: Float,
     onDismiss: () -> Unit,
-    onConfirm: (objetivoPeso: Float, objetivoTiempo: Float, objetivoCalorias: Float) -> Unit
+    onConfirm: (objetivoPeso: Float, objetivoTiempo: Float) -> Unit
 ) {
     var objetivoPesoText by remember { mutableStateOf(if (objetivoPeso > 0f) objetivoPeso.toString() else "") }
     var objetivoTiempoText by remember { mutableStateOf(if (objetivoTiempo > 0f) objetivoTiempo.toString() else "") }
-    var objetivoCaloriasText by remember { mutableStateOf(if (objetivoCalorias > 0f) objetivoCalorias.toString() else "") }
 
     val objetivoPesoError = remember(objetivoPesoText, pesoActual) {
         when {
@@ -1352,16 +1461,7 @@ fun ChangeGoalsDialog(
         }
     }
 
-    val objetivoCaloriasError = remember(objetivoCaloriasText) {
-        when {
-            objetivoCaloriasText.isEmpty() -> "Las calorías objetivo son requeridas"
-            objetivoCaloriasText.toFloatOrNull() == null -> "Debe ser un número válido"
-            objetivoCaloriasText.toFloat() < 500 || objetivoCaloriasText.toFloat() > 5000 -> "Debe estar entre 500 y 5000 kcal"
-            else -> ""
-        }
-    }
-
-    val isFormValid = objetivoPesoError.isEmpty() && objetivoTiempoError.isEmpty() && objetivoCaloriasError.isEmpty()
+    val isFormValid = objetivoPesoError.isEmpty() && objetivoTiempoError.isEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1484,41 +1584,6 @@ fun ChangeGoalsDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Objetivo de calorías
-                OutlinedTextField(
-                    value = objetivoCaloriasText,
-                    onValueChange = { objetivoCaloriasText = it },
-                    label = { Text("Calorías diarias objetivo") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    isError = objetivoCaloriasError.isNotEmpty(),
-                    supportingText = {
-                        if (objetivoCaloriasError.isNotEmpty()) {
-                            Text(text = objetivoCaloriasError, color = MaterialTheme.colorScheme.error)
-                        }
-                    },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        cursorColor = Color(0xFFAB47BC),
-                        focusedBorderColor = Color(0xFFAB47BC),
-                        unfocusedBorderColor = Color(0xFF3A3A3A),
-                        focusedLabelColor = Color(0xFFAB47BC),
-                        unfocusedLabelColor = Color.Gray,
-                        errorBorderColor = MaterialTheme.colorScheme.error
-                    ),
-                    textStyle = androidx.compose.ui.text.TextStyle(color = Color.White),
-                    trailingIcon = {
-                        Text(
-                            text = "kcal",
-                            fontSize = 14.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(end = 16.dp)
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
 
                 // Botones
                 Row(
@@ -1541,7 +1606,6 @@ fun ChangeGoalsDialog(
                             onConfirm(
                                 objetivoPesoText.toFloatOrNull() ?: 0f,
                                 objetivoTiempoText.toFloatOrNull() ?: 0f,
-                                objetivoCaloriasText.toFloatOrNull() ?: 0f
                             )
                         },
                         enabled = isFormValid,

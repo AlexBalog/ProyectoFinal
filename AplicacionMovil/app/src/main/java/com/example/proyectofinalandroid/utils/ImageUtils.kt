@@ -7,11 +7,17 @@ import android.util.Base64
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import java.io.ByteArrayOutputStream
+import androidx.core.content.FileProvider
 import android.os.Build
+import androidx.core.net.toUri
 import android.graphics.ImageDecoder
 import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+
 
 fun base64ToBitmap(base64String: String): Bitmap? {
     return try {
@@ -56,4 +62,62 @@ fun getImageBitmapSafely(base64String: String): ImageBitmap? {
         Log.e("ProfileScreen", "Error al convertir imagen: ${e.message}")
         null
     }
+}
+
+fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
+    return try {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+        BitmapFactory.decodeStream(inputStream)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+fun bitmapToBase64(bitmap: Bitmap): String {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.DEFAULT)
+}
+
+
+fun createTempImageFile(context: Context): File {
+    val fileName = "temp_photo_${System.currentTimeMillis()}"
+    val storageDir = context.cacheDir
+    return File.createTempFile(fileName, ".jpg", storageDir)
+}
+
+
+fun createTempImageUri(context: Context): Uri {
+    val tempFile = createTempImageFile(context)
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.fileprovider",
+        tempFile
+    )
+}
+
+fun resizeBitmap(bitmap: Bitmap, maxWidth: Int = 800, maxHeight: Int = 800): Bitmap {
+    val width = bitmap.width
+    val height = bitmap.height
+
+    if (width <= maxWidth && height <= maxHeight) {
+        return bitmap
+    }
+
+    val ratio = width.toFloat() / height.toFloat()
+
+    val newWidth: Int
+    val newHeight: Int
+
+    if (width > height) {
+        newWidth = maxWidth
+        newHeight = (newWidth / ratio).toInt()
+    } else {
+        newHeight = maxHeight
+        newWidth = (newHeight * ratio).toInt()
+    }
+
+    return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
 }

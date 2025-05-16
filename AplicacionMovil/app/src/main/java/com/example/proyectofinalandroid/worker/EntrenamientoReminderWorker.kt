@@ -58,12 +58,14 @@ class EntrenamientoReminderWorker @AssistedInject constructor(
 
                     // Entrenamiento mañana
                     eventos.forEach {
-                        val fechaEvento = it.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-                        if (fechaEvento == hoy.plusDays(1)) {
-                            enviarNotificacion(
-                                "¡Tienes un entrenamiento mañana!",
-                                "Prepara tu ropa y motivación 🏋️‍♂️"
-                            )
+                        if (it.evento == "EV00001") {
+                            val fechaEvento = it.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                            if (fechaEvento == hoy.plusDays(1)) {
+                                enviarNotificacion(
+                                    "¡Tienes un entrenamiento mañana!",
+                                    "Prepara tu ropa y motivación 🏋️‍♂️"
+                                )
+                            }
                         }
                     }
 

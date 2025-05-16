@@ -48,7 +48,7 @@ interface EntrenamientoRealizadoApi {
     @POST("entrenamientoRealizado/new")
     suspend fun new(@Body entrenar: EntrenamientoRealizado): Response<EntrenamientoRealizado>
 
-    @GET("entrenamientoRealizado/getFilter")
+    @POST("entrenamientoRealizado/getFilter")
     suspend fun getFilter(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>

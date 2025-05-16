@@ -23,11 +23,22 @@ router.post('/login', async (req, res) => {
     const payload = {
       id: usuarioDB._id,
       email: usuarioDB.email,
-      rol: usuarioDB.rol,
+      plan: usuarioDB.plan,
+      iat: Math.floor(Date.now() / 1000)
     };
 
     // Generar el token (con expiración de 1 hora)
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign(
+      payload, 
+      process.env.JWT_SECRET, 
+      { 
+        expiresIn: '24h',
+        algorithm: 'HS256'
+      });
+
+    const decoded = jwt.decode(token);
+    console.log('Token generado. Expira en:', new Date(decoded.exp * 1000).toISOString());
+
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: error.message });

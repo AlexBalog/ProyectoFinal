@@ -44,11 +44,11 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.get('/getFilter', async (req, res) => {
+router.post('/getFilter', async (req, res) => {
     try {
         const condiciones = {};
 
-        if (req.body.duracion !== null) {
+        if (req.body.duracion !== null && req.body.duracion !== undefined) {
             condiciones.duracion = req.body.duracion ;
         }
 
@@ -61,7 +61,7 @@ router.get('/getFilter', async (req, res) => {
         if (req.body.usuario !== null) {
             condiciones.usuario = req.body.usuario
         }
-        
+
         const data = await modelEntrenamientoRealizado.find(condiciones);
         
         if (data.length === 0) {
