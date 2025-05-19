@@ -1,6 +1,7 @@
 package com.example.proyectofinalandroid.Remote
 
 import com.example.proyectofinalandroid.Model.EjercicioRealizado
+import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Model.SeriesRealizadasRequest
 import retrofit2.Response
 import retrofit2.http.*
@@ -43,4 +44,9 @@ interface EjercicioRealizadoApi {
     @POST("ejercicioRealizado/new")
     suspend fun new(@Body ejercicioRealizado: EjercicioRealizado): Response<EjercicioRealizado>
 
+    @POST("ejercicioRealizado/getFilter")
+    suspend fun getFilter(
+        @Header("Authorization") auth: String,
+        @Body request: Map<String, String>
+    ): Response<List<EjercicioRealizado>>
 }

@@ -31,7 +31,7 @@ interface SerieRealizadaApi {
         @Body request: Map<String, String>
     ): Response<SerieRealizada>
 
-    @GET("serieRealizada/getFilter")
+    @POST("serieRealizada/getFilter")
     suspend fun getFilter(
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>

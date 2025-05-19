@@ -107,6 +107,47 @@ router.delete('/delete', async (req, res) => {
     catch (error) {
         res.status(400).json({ message: error.message })
     }
-    })
+});
+
+
+router.post('/getFilter', async (req, res) => {
+    try {
+        const {
+            entrenamientoRealizado,
+            entrenamiento,
+            ejercicio,
+            nombre
+        } = req.body;
+
+        const condiciones = {};
+
+        if (ejercicio && ejercicio.trim() !== "") {
+            condiciones.ejercicio = ejercicio.trim(); // búsqueda parcial e insensible a mayúsculas
+        }
+
+        if (entrenamientoRealizado && entrenamientoRealizado.trim() !== "") {
+            condiciones.entrenamientoRealizado = entrenamientoRealizado.trim();
+        }
+
+        if (entrenamiento && entrenamiento.trim() !== "") {
+            condiciones.entrenamiento = entrenamiento.trim();
+        }
+
+        if (nombre && nombre.trim() !== "") {
+            condiciones.nombre = nombre.trim();
+        }
+
+        const data = await modelEjercicioRealizado.find(condiciones);
+
+        if (data.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron series con esas características' });
+        }
+
+        res.status(200).json(data);
+    } catch (error) {
+        console.error("Error en /getFilter:", error);
+        res.status(500).json({ message: error.message });
+    }
+});
 
 module.exports = router;

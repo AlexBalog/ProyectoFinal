@@ -285,4 +285,10 @@ router.get("/getOne/:id", async (req, res) => {
   }
 });
 
+
+router.get('/verifyToken', verifyToken, (req, res) => {
+  // Si llegamos aquí, el token es válido (el middleware verifyToken ya lo verificó)
+  res.status(200).json({ valid: true, userId: req.user.userId });
+});
+
 module.exports = router;

@@ -188,4 +188,22 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
         }
     }
 
+    fun getFilter(filtros: Map<String, String>) {
+        viewModelScope.launch {
+            try {
+                val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
+                if (lista != null) {
+                    _ejerciciosRealizados.value = lista
+                    Log.d("Habitaciones", "Datos filtrados cargados: $lista")
+                } else {
+                    _ejerciciosRealizados.value = emptyList()
+                    Log.d("Habitaciones", "No se encontraron habitaciones con esos filtros.")
+                }
+            } catch (e: Exception) {
+                Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
+                _ejerciciosRealizados.value = emptyList()
+            }
+        }
+    }
+
 }

@@ -27,7 +27,7 @@ router.post('/login', async (req, res) => {
       iat: Math.floor(Date.now() / 1000)
     };
 
-    // Generar el token (con expiración de 1 hora)
+    // Generar el token (con expiración de 24 horas)
     const token = jwt.sign(
       payload, 
       process.env.JWT_SECRET, 

@@ -4,6 +4,7 @@ import com.example.proyectofinalandroid.Model.EjercicioRealizado
 import com.example.proyectofinalandroid.Remote.EjercicioRealizadoApi
 import javax.inject.Inject
 import android.util.Log
+import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Model.SeriesRealizadasRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,21 +43,25 @@ class EjercicioRealizadoRepository @Inject constructor(private val api: Ejercici
         return if (response.isSuccessful) response.body() else null
     }
 
+    suspend fun getFilter(token: String, filtros: Map<String, String>): List<EjercicioRealizado>? {
+        return withContext(Dispatchers.IO) {
+            val response = api.getFilter(token, filtros)
+            if (response.isSuccessful) {
+                response.body()
+            } else {
+                null
+            }
+        }
+    }
+
     suspend fun new(ejercicioRealizado: EjercicioRealizado): EjercicioRealizado? {
         return withContext(Dispatchers.IO) {
             try {
-                // Log detallado de lo que estamos enviando
-                Log.d("FalloRepository1", "Enviando: $ejercicioRealizado")
 
-                // Realizar la llamada a la API
                 val response = api.new(ejercicioRealizado)
-
-                // Log de la respuesta bruta para diagnóstico
-                Log.d("FalloRepository2", "Respuesta bruta: ${response.raw()}")
 
                 if (response.isSuccessful) {
                     val body = response.body()
-                    Log.d("FalloRepository3", "Respuesta código: ${response.code()} body: $body")
 
                     // IMPORTANTE: Validar explícitamente todos los campos requeridos
                     if (body != null && body._id.isNotEmpty()) {
@@ -67,26 +72,20 @@ class EjercicioRealizadoRepository @Inject constructor(private val api: Ejercici
                             entrenamiento = body.entrenamiento ?: ejercicioRealizado.entrenamiento,
                             entrenamientoRealizado = body.entrenamientoRealizado ?: ejercicioRealizado.entrenamientoRealizado
                         )
-                        Log.d("FalloRepository4", "Objeto final: $resultado")
                         return@withContext resultado
                     } else {
-                        Log.e("FalloRepository5", "Respuesta body vacío o sin ID")
                         return@withContext null
                     }
                 } else {
                     // Capturar el error para diagnóstico
                     val errorBody = response.errorBody()?.string()
-                    Log.e("FalloRepository6", "Error HTTP ${response.code()}: $errorBody")
                     return@withContext null
                 }
             } catch (e: HttpException) {
-                Log.e("FalloRepository7", "Error HTTP: ${e.code()}", e)
                 return@withContext null
             } catch (e: IOException) {
-                Log.e("FalloRepository8", "Error de red: ${e.message}", e)
                 return@withContext null
             } catch (e: Exception) {
-                Log.e("FalloRepository9", "Error desconocido: ${e.message}", e)
                 return@withContext null
             }
         }

@@ -75,6 +75,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.nativeCanvas
+import android.graphics.Paint
+import android.graphics.Typeface
 
 
 
@@ -224,7 +229,8 @@ fun ProfileScreen(navController: NavController) {
                     // Historial de entrenamientos
                     TrainingHistorySection(
                         entrenamientosRealizados = entrenamientosRealizados!!.sortedByDescending { it.fecha }.take(5),
-                        entrenamientosViewModel = entrenamientosViewModel
+                        entrenamientosViewModel = entrenamientosViewModel,
+                        navController = navController
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -470,7 +476,8 @@ fun ActionButton(
 @Composable
 fun TrainingHistorySection(
     entrenamientosRealizados: List<EntrenamientoRealizado>,
-    entrenamientosViewModel: EntrenamientosViewModel
+    entrenamientosViewModel: EntrenamientosViewModel,
+    navController: NavController
 ) {
     Card(
         modifier = Modifier
@@ -544,7 +551,8 @@ fun TrainingHistorySection(
                     entrenamientosRealizados.forEach { entrenamiento ->
                         EntrenamientoRealizadoItem(
                             entrenamientoRealizado = entrenamiento,
-                            entrenamientosViewModel = entrenamientosViewModel
+                            entrenamientosViewModel = entrenamientosViewModel,
+                            navController = navController
                         )
                     }
                 }
@@ -556,7 +564,8 @@ fun TrainingHistorySection(
 @Composable
 fun EntrenamientoRealizadoItem(
     entrenamientoRealizado: EntrenamientoRealizado,
-    entrenamientosViewModel: EntrenamientosViewModel
+    entrenamientosViewModel: EntrenamientosViewModel,
+    navController: NavController
 ) {
     var nombreEntrenamiento by remember { mutableStateOf("Cargando...") }
     var categoriaEntrenamiento by remember { mutableStateOf("") }
@@ -570,7 +579,6 @@ fun EntrenamientoRealizadoItem(
                 nombreEntrenamiento = it.nombre
                 categoriaEntrenamiento = it.categoria
                 fotoEntrenamiento = it.foto ?: ""
-                Log.d("Fallo","$it")
             }
         } catch (e: Exception) {
             Log.e("EntrenamientoRealizado", "Error al cargar entrenamiento: ${e.message}")
@@ -585,7 +593,7 @@ fun EntrenamientoRealizadoItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Ver detalles del entrenamiento realizado */ },
+            .clickable { navController.navigate("detalleEntrenamientoRealizado/${entrenamientoRealizado._id}") },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF252525)),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -819,8 +827,13 @@ fun GoalsSection(
     var showNuevaMedicionDialog by remember { mutableStateOf(false) }
 
     // Cargar datos al inicializar
-    LaunchedEffect(usuario) {
+    LaunchedEffect(Unit) {
         medicionesViewModel.cargarMedicionesPorUsuario(tipo = TipoMedicion.PESO)
+
+        delay(300)
+
+        medicionesViewModel.verificarYCrearMedicionInicial()
+
         medicionesViewModel.cargarEstadisticas(TipoMedicion.PESO)
     }
 
@@ -1042,9 +1055,8 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
     // Extraer datos para el gráfico
     val datos = medicionesOrdenadas.map { it.valor }
 
-    // Encontrar min y max para escalar
-    val minValue = (datos.minOrNull() ?: 0f).let { if (it > 5f) it - 5f else it }
-    val maxValue = (datos.maxOrNull() ?: 100f) + 5f
+    // Calcular rango del eje Y para mejor visualización
+    val (minValue, maxValue) = calcularRangoEjeY(datos)
 
     // Formatear fechas para etiquetas
     val formato = SimpleDateFormat("dd/MM", Locale.getDefault())
@@ -1052,11 +1064,13 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
 
     val density = LocalDensity.current
 
+    val divisionesY = 4
+
     // Gráfico
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
+            .height(210.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF252525))
             .padding(
@@ -1072,17 +1086,17 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
                 .fillMaxHeight()
                 .width(40.dp)
                 .align(Alignment.CenterStart)
-                .offset(x = (-45).dp),
+                .offset(x = (-40).dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Valores del eje Y (5 puntos)
-            val yValues = List(5) { i ->
-                maxValue - (i * (maxValue - minValue) / 4)
+            val yValues = List(divisionesY + 1) { i ->
+                maxValue - (i * (maxValue - minValue) / divisionesY)
             }
 
             yValues.forEach { value ->
                 Text(
-                    text = String.format("%.0f", value),
+                    text = String.format("%.1f", value),
                     fontSize = 10.sp,
                     color = Color.Gray,
                     textAlign = TextAlign.End,
@@ -1134,8 +1148,8 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
             val unitHeight = height / valueRange
 
             // Líneas de cuadrícula
-            for (i in 0..5) {
-                val y = height * i / 4
+            for (i in 0..divisionesY) {
+                val y = height * i / divisionesY
                 drawLine(
                     color = Color(0xFF3A3A3A),
                     start = Offset(0f, y),
@@ -1144,21 +1158,29 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
                 )
             }
 
-            // Línea de progreso
-            for (i in 0 until datos.size - 1) {
-                val startX = i * stepX
-                val startY = height - ((datos[i] - minValue) * unitHeight)
-                val endX = (i + 1) * stepX
-                val endY = height - ((datos[i + 1] - minValue) * unitHeight)
+            // Línea de progreso - usando Path para mejor apariencia
+            val linePath = Path()
+            datos.forEachIndexed { index, value ->
+                val x = index * stepX
+                val y = height - ((value - minValue) * unitHeight)
 
-                drawLine(
-                    color = Color(0xFFAB47BC),
-                    start = Offset(startX, startY),
-                    end = Offset(endX, endY),
-                    strokeWidth = with(density) { 3.dp.toPx() },
-                    cap = StrokeCap.Round
-                )
+                if (index == 0) {
+                    linePath.moveTo(x, y)
+                } else {
+                    linePath.lineTo(x, y)
+                }
             }
+
+            // Dibujar línea de progreso con suavizado
+            drawPath(
+                path = linePath,
+                color = Color(0xFFAB47BC),
+                style = Stroke(
+                    width = with(density) { 3.dp.toPx() },
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round
+                )
+            )
 
             // Puntos con etiquetas de valor
             datos.forEachIndexed { index, value ->
@@ -1197,9 +1219,9 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(30.dp)
                 .align(Alignment.BottomCenter)
-                .offset(y = 50.dp)
+                .offset(y = 30.dp)
         ) {
             // Líneas verticales de referencia para las etiquetas
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -1213,7 +1235,7 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
                     drawLine(
                         color = Color(0xFF3A3A3A),
                         start = Offset(x, 0f),
-                        end = Offset(x, with(density) { -10.dp.toPx() }),
+                        end = Offset(x, with(density) { -5.dp.toPx() }),
                         strokeWidth = with(density) { 1.dp.toPx() }
                     )
                 }
@@ -1258,6 +1280,34 @@ fun WeightHistoryChart(mediciones: List<Mediciones>) {
             }
         }
     }
+}
+
+/**
+ * Calcula el rango óptimo para el eje Y basado en los datos
+ */
+private fun calcularRangoEjeY(datos: List<Float>): Pair<Float, Float> {
+    if (datos.isEmpty()) return Pair(70f, 90f) // Valores por defecto si no hay datos
+
+    val min = datos.minOrNull() ?: 0f
+    val max = datos.maxOrNull() ?: 100f
+
+    // Si solo hay un valor o todos son iguales, crear un rango artificial
+    if (min == max) {
+        val valor = min
+        return Pair(
+            (valor - valor * 0.05f).coerceAtLeast(0f), // 5% menos
+            valor + valor * 0.05f // 5% más
+        )
+    }
+
+    // Calcular rango con margen para mejor visualización
+    val rango = max - min
+    val margen = rango * 0.2f // 20% de margen
+
+    return Pair(
+        (min - margen).coerceAtLeast(0f),
+        max + margen
+    )
 }
 
 

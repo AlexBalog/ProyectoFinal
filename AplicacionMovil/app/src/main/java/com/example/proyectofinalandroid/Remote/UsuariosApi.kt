@@ -45,4 +45,9 @@ interface UsuariosApi {
     // Endpoint para registrar usuario sin token
     @POST("usuarios/register")
     suspend fun registerWithoutToken(@Body usuario: Usuarios): Response<Usuarios>
+
+    @GET("usuarios/verifyToken")
+    suspend fun verifyToken(
+        @Header("Authorization") auth: String
+    ): Response<Map<String, Any>>
 }

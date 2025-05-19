@@ -31,6 +31,7 @@ import com.example.proyectofinalandroid.worker.EntrenamientoReminderWorker
 import java.util.concurrent.TimeUnit
 import androidx.work.WorkManager
 import androidx.work.ExistingPeriodicWorkPolicy
+import kotlinx.coroutines.withContext
 
 
 @SuppressLint("UnrememberedGetBackStackEntry")
@@ -63,11 +64,25 @@ fun SplashScreen(navController: NavHostController, userPrefs: UserPreferences) {
                 when {
                     user == null -> navController.navigate("login")
                     !(user.formulario) -> navController.navigate("formulario")
-                    else -> navController.navigate("principal")
+                    else -> {
+
+                        navController.navigate("principal")
+                    }
+
                 }
             }
             is UserState.Error -> {
-                Log.e("FalloSplashScreen", "Error: ${(userState as UserState.Error).message}")
+                Log.e("SplashScreen", "Error: ${(userState as UserState.Error).message}")
+
+                // Limpiar preferencias si el error está relacionado con el token
+                val errorMessage = (userState as UserState.Error).message
+                if (errorMessage.contains("Token expirado") ||
+                    errorMessage.contains("Token inválido")) {
+                    // Limpiar preferencias de usuario ya que el token no es válido
+                    userPrefs.clearUser()
+                }
+
+                // Navegar a login
                 navController.navigate("login")
             }
         }
@@ -78,7 +93,7 @@ fun SplashScreen(navController: NavHostController, userPrefs: UserPreferences) {
         val userToken = userPrefs.getToken()
 
         if (userId != null || userToken != null) {
-            usuariosViewModel.loadUser(userId.toString(), userToken.toString())
+            usuariosViewModel.verifyTokenAndLoadUser(userId.toString(), userToken.toString())
         } else {
             navController.navigate("login")
         }

@@ -81,19 +81,21 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         }
     }
 
+    // Añade esto al método getFilter en SerieRealizadaViewModel.kt
     fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
+                Log.d("SerieRealizadaViewModel", "Buscando series con filtros: $filtros")
                 val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
                 if (lista != null) {
                     _seriesRealizadas.value = lista
-                    Log.d("Habitaciones", "Datos filtrados cargados: $lista")
+                    Log.d("SerieRealizadaViewModel", "Series encontradas: ${lista.size} para filtro: $filtros")
                 } else {
                     _seriesRealizadas.value = emptyList()
-                    Log.d("Habitaciones", "No se encontraron habitaciones con esos filtros.")
+                    Log.d("SerieRealizadaViewModel", "No se encontraron series con filtro: $filtros")
                 }
             } catch (e: Exception) {
-                Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
+                Log.e("SerieRealizadaViewModel", "Error al obtener series: ${e.message}")
                 _seriesRealizadas.value = emptyList()
             }
         }

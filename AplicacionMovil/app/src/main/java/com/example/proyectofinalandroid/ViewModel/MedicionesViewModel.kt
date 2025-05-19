@@ -46,41 +46,43 @@ class MedicionesViewModel @Inject constructor(
         _usuario.value = usuario
     }
 
-    fun cargarMedicionesPorUsuario(
+    suspend fun cargarMedicionesPorUsuario(
         tipo: TipoMedicion? = null,
         fechaInicio: Date? = null,
         fechaFin: Date? = null
-    ) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _usuario.value?.let { usuario ->
-                    val token = usuario.token ?: return@let
+    ): List<Mediciones>? {
+        return try {
+            _isLoading.value = true
+            _usuario.value?.let { usuario ->
+                val token = usuario.token ?: return@let null
 
-                    val mediciones = repository.obtenerMedicionesPorUsuario(
-                        usuarioId = usuario._id,
-                        token = token,
-                        tipo = tipo,
-                        fechaInicio = fechaInicio,
-                        fechaFin = fechaFin
-                    )
+                val mediciones = repository.obtenerMedicionesPorUsuario(
+                    usuarioId = usuario._id,
+                    token = token,
+                    tipo = tipo,
+                    fechaInicio = fechaInicio,
+                    fechaFin = fechaFin
+                )
 
-                    if (mediciones != null) {
-                        _mediciones.value = mediciones
+                if (mediciones != null) {
+                    _mediciones.value = mediciones
 
-                        // Calcular progreso si es necesario
-                        if (tipo == TipoMedicion.PESO || tipo == null) {
-                            calcularProgresoPeso(mediciones.filter { it.tipo == TipoMedicion.PESO.name })
-                        }
-                    } else {
-                        _errorMessage.value = "No se pudieron obtener las mediciones"
+                    // Calcular progreso si es necesario
+                    if (tipo == TipoMedicion.PESO || tipo == null) {
+                        calcularProgresoPeso(mediciones.filter { it.tipo == TipoMedicion.PESO.name })
                     }
+
+                    mediciones
+                } else {
+                    _errorMessage.value = "No se pudieron obtener las mediciones"
+                    null
                 }
-            } catch (e: Exception) {
-                _errorMessage.value = "Error: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
+            } ?: null
+        } catch (e: Exception) {
+            _errorMessage.value = "Error: ${e.message}"
+            null
+        } finally {
+            _isLoading.value = false
         }
     }
 
@@ -263,5 +265,80 @@ class MedicionesViewModel @Inject constructor(
             notas = notas
         )
         crearMedicion(nuevaMedicion)
+    }
+
+
+    suspend fun verificarYCrearMedicionInicial() {
+        try {
+            _usuario.value?.let { usuario ->
+                // Si el usuario tiene peso inicial configurado
+                if (usuario.peso > 0f) {
+                    // Primero asegúrate de que las mediciones estén cargadas completamente
+                    // Espera a que se complete la carga antes de verificar
+                    val medicionesActuales = _mediciones.value
+
+                    // Verifica si existen mediciones de peso
+                    val hayMedicionesDePeso = medicionesActuales.any { it.tipo == TipoMedicion.PESO.name }
+
+                    Log.d("MedicionesViewModel", "Verificando mediciones: ${medicionesActuales.size} total, peso: $hayMedicionesDePeso")
+
+                    // Solo si no hay mediciones de peso, creamos la inicial
+                    if (!hayMedicionesDePeso) {
+                        Log.d("MedicionesViewModel", "Creando medición inicial con peso: ${usuario.peso}")
+
+                        // Crear la medición con la fecha actual pero restando unos días
+                        val fechaInicial = Calendar.getInstance()
+                        fechaInicial.add(Calendar.DAY_OF_MONTH, -7) // 7 días antes
+
+                        val medicionInicial = Mediciones(
+                            usuario = usuario._id,
+                            fecha = fechaInicial.time, // Fecha una semana antes
+                            tipo = TipoMedicion.PESO.name,
+                            unidad = "kg",
+                            valor = usuario.peso,
+                            notas = "Medición inicial automática"
+                        )
+
+                        // Registrar la medición inicial y esperar a que se complete
+                        registrarMedicionSilenciosa(medicionInicial)
+                    } else {
+                        Log.d("MedicionesViewModel", "Ya existen mediciones de peso, no se crea medición inicial")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MedicionesViewModel", "Error al verificar mediciones iniciales: ${e.message}")
+        }
+    }
+
+
+
+    private suspend fun registrarMedicionSilenciosa(medicion: Mediciones) {
+        try {
+            _usuario.value?.let { usuario ->
+                val token = usuario.token ?: return@let
+
+                val creada = repository.crearMedicion(medicion, token)
+                if (creada != null) {
+                    // Actualizar la lista de mediciones y recalcular
+                    val updatedMediciones = _mediciones.value + creada
+                    _mediciones.value = updatedMediciones
+
+                    // Recalcular progreso
+                    if (medicion.tipo == TipoMedicion.PESO.name) {
+                        calcularProgresoPeso(updatedMediciones.filter { it.tipo == TipoMedicion.PESO.name })
+                    }
+
+                    // Actualizar estadísticas
+                    cargarEstadisticas(TipoMedicion.valueOf(medicion.tipo))
+
+                    Log.d("MedicionesViewModel", "Medición inicial creada exitosamente")
+                } else {
+                    Log.e("MedicionesViewModel", "No se pudo crear la medición inicial")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("MedicionesViewModel", "Error al registrar medición silenciosa: ${e.message}")
+        }
     }
 }

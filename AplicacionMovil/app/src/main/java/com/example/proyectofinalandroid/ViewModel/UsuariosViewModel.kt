@@ -245,4 +245,50 @@ class UsuariosViewModel @Inject constructor(
             }
         }
     }
+
+
+    suspend fun isTokenValid(token: String?): Boolean {
+        if (token.isNullOrEmpty()) return false
+
+        return try {
+            repository.verifyToken(token)
+        } catch (e: Exception) {
+            Log.e("TokenValidation", "Error al verificar token: ${e.message}")
+            false
+        }
+    }
+
+
+    fun verifyTokenAndLoadUser(userId: String?, token: String?) {
+        viewModelScope.launch {
+            _userState.value = UserState.Loading
+
+            if (userId.isNullOrEmpty() || token.isNullOrEmpty()) {
+                _userState.value = UserState.Error("Credenciales no disponibles")
+                return@launch
+            }
+
+            // Verificar token con el servidor
+            val isValid = isTokenValid(token)
+
+            if (!isValid) {
+                _userState.value = UserState.Error("Token expirado o inválido")
+                return@launch
+            }
+
+            // El token es válido, cargar el usuario
+            try {
+                val user = repository.getOne(userId)
+                if (user != null) {
+                    user.token = token
+                    _usuario.value = user
+                    _userState.value = UserState.Success(user)
+                } else {
+                    _userState.value = UserState.Error("Usuario no encontrado")
+                }
+            } catch (e: Exception) {
+                _userState.value = UserState.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
 }

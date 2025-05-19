@@ -43,7 +43,7 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
         return if (response != null) response else null
     }
 
-    // Método para registrar usuario sin token
+
     suspend fun registerWithoutToken(usuario: Usuarios): Usuarios? {
         val response = api.registerWithoutToken(usuario)
         if (!response.isSuccessful) {
@@ -51,5 +51,16 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
             throw Exception(errorMsg)
         }
         return response.body()
+    }
+
+
+    suspend fun verifyToken(token: String): Boolean {
+        return try {
+            val response = api.verifyToken("Bearer $token")
+            response.isSuccessful
+        } catch (e: Exception) {
+            Log.e("UsuariosRepository", "Error al verificar token: ${e.message}")
+            false
+        }
     }
 }

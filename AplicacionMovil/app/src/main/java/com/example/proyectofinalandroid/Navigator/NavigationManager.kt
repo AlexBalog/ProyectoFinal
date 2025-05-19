@@ -22,6 +22,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.proyectofinalandroid.View.FitMindScreen
 import com.example.proyectofinalandroid.View.ChatScreen
+import com.example.proyectofinalandroid.View.DetallesRealizarEntrenamientoScreen
 import com.example.proyectofinalandroid.View.ProfileScreen
 import com.example.proyectofinalandroid.View.SettingsScreen
 
@@ -94,6 +95,10 @@ fun Navegador() {
 
             composable("configuracion") {
                 SettingsScreen(navController = navController)
+            }
+            composable("detalleEntrenamientoRealizado/{id}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id") ?: ""
+                DetallesRealizarEntrenamientoScreen(navController = navController, entrenamientoRealizadoId = id)
             }
         }
     }
