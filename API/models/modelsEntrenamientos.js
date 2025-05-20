@@ -40,12 +40,10 @@ const EntrenamientosSchema = mongoose.Schema({
         type: String
     },
     aprobado: {
-        required: true,
         type: Boolean,
         default: false
     },
     pedido: {
-        required: true,
         type: Boolean,
         default: false
     },

@@ -2,6 +2,7 @@ package com.example.proyectofinalandroid.Repository
 
 import android.util.Log
 import com.example.proyectofinalandroid.Model.Ejercicios
+import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Model.Entrenamientos
 import com.example.proyectofinalandroid.Model.Usuarios
 import com.example.proyectofinalandroid.Model.LoginResponse
@@ -39,6 +40,16 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
 
     suspend fun peticion(entrenamientos: Entrenamientos): Entrenamientos? {
         val response = api.peticion(entrenamientos)
+        if (!response.isSuccessful) {
+            val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+            throw Exception(errorMsg)
+        }
+        return response.body()
+    }
+
+    suspend fun new(entrenamiento: Entrenamientos, token: String): Entrenamientos? {
+        val token = "Bearer $token"
+        val response = api.new(entrenamientos = entrenamiento, auth = token)
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)

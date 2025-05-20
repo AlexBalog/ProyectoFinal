@@ -41,19 +41,6 @@ fun base64ToImageBitmap(base64: String): ImageBitmap? {
     }
 }
 
-fun uriToBase64(context: Context, imageUri: Uri): String {
-    val bitmap: Bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        val source = ImageDecoder.createSource(context.contentResolver, imageUri)
-        ImageDecoder.decodeBitmap(source)
-    } else {
-        MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
-    }
-
-    val outputStream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-    val byteArray = outputStream.toByteArray()
-    return Base64.encodeToString(byteArray, Base64.NO_WRAP)
-}
 
 fun getImageBitmapSafely(base64String: String): ImageBitmap? {
     return try {
@@ -120,4 +107,73 @@ fun resizeBitmap(bitmap: Bitmap, maxWidth: Int = 800, maxHeight: Int = 800): Bit
     }
 
     return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+}
+
+fun uriToBase64(context: Context, imageUri: Uri): String {
+    return try {
+        // Use BitmapFactory.Options to sample down the image during initial load
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true // Only decode image bounds without loading
+        }
+
+        // First pass to get dimensions without loading the full bitmap
+        var inputStream = context.contentResolver.openInputStream(imageUri)
+        BitmapFactory.decodeStream(inputStream, null, options)
+        inputStream?.close()
+
+        // Calculate sample size based on a target width/height (e.g., 1200px)
+        val maxDimension = 1200
+        val sampleSize = calculateSampleSize(options.outWidth, options.outHeight, maxDimension)
+
+        // Second pass with sampling to load a smaller bitmap
+        val loadOptions = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+        }
+
+        inputStream = context.contentResolver.openInputStream(imageUri)
+        val sampledBitmap = BitmapFactory.decodeStream(inputStream, null, loadOptions)
+        inputStream?.close()
+
+        // Further resize if necessary to ensure it's not too large
+        val bitmap = sampledBitmap?.let {
+            if (it.width > maxDimension || it.height > maxDimension) {
+                resizeBitmap(it, maxDimension, maxDimension)
+            } else {
+                it
+            }
+        } ?: throw IllegalStateException("Failed to decode image")
+
+        // Use JPEG with 85% quality for better compression
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+
+        if (bitmap != sampledBitmap) {
+            // Free memory if we created a new bitmap
+            sampledBitmap.recycle()
+        }
+
+        val byteArray = outputStream.toByteArray()
+        Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    } catch (e: Exception) {
+        Log.e("ImageUtils", "Error converting image: ${e.message}", e)
+        ""
+    }
+}
+
+// Helper function to calculate appropriate sample size
+private fun calculateSampleSize(width: Int, height: Int, targetSize: Int): Int {
+    var sampleSize = 1
+
+    if (width > targetSize || height > targetSize) {
+        val halfWidth = width / 2
+        val halfHeight = height / 2
+
+        // Calculate the largest inSampleSize value that is a power of 2
+        // and keeps both dimensions larger than the target size
+        while ((halfWidth / sampleSize) >= targetSize || (halfHeight / sampleSize) >= targetSize) {
+            sampleSize *= 2
+        }
+    }
+
+    return sampleSize
 }

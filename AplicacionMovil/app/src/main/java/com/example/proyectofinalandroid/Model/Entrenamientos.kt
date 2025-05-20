@@ -6,7 +6,7 @@ import java.util.Date
 
 data class Entrenamientos(
     @SerializedName("_id")
-    val _id: String,
+    val _id: String = "",
     @SerializedName("musculoPrincipal")
     val musculoPrincipal: String,
     @SerializedName("categoria")

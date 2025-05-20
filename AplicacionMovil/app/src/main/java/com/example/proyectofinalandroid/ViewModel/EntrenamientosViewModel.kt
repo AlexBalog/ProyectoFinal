@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.runtime.State
 import com.example.proyectofinalandroid.Model.Ejercicios
 import com.example.proyectofinalandroid.Model.Entrenamientos
+import com.example.proyectofinalandroid.Model.SerieRealizada
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
 import com.example.proyectofinalandroid.Repository.EntrenamientosRepository
 import kotlinx.coroutines.launch
@@ -178,7 +179,22 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
-    suspend fun fetchOne(id: String): Entrenamientos? {
-        return repository.getOne(id, _usuario.value?.token.orEmpty())
+    suspend fun new(entrenamiento: Entrenamientos) {
+        viewModelScope.launch {
+            try {
+                _usuario.value?.let { usuario ->
+                    val token = usuario.token ?: return@launch
+                    val creado = repository.new(entrenamiento, token)
+                    if (creado != null) {
+                        _entrenamiento.value = creado
+                        _errorMessage.value = null
+                    } else {
+                        _errorMessage.value = "Error al crear el usuario"
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message
+            }
+        }
     }
 }

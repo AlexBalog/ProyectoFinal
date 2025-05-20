@@ -913,7 +913,7 @@ fun EntrenamientoCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = entrenamiento.musculo.firstOrNull() ?: "Varios",
+                            text = entrenamiento.musculoPrincipal,
                             fontSize = 12.sp,
                             color = Color.White,
                             maxLines = 1,

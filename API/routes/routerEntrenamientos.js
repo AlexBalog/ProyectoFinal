@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const modelEntrenamientos = require('../models/modelsEntrenamientos'); 
+const verifyToken = require('../middlewares/authMiddleware'); //middleware para verificar el token
+
 //middleware para acceder 
 router.get('/getAll', async (req, res) => {
     try{
@@ -92,7 +94,7 @@ router.post('/getFilter', async (req, res) => {
 });
 
 
-router.post('/new', async (req, res) => {
+router.post('/new', verifyToken, async (req, res) => {
     const data = new modelEntrenamientos({
         nombre: req.body.nombre,
         categoria: req.body.categoria,
@@ -109,11 +111,11 @@ router.post('/new', async (req, res) => {
     })
 
     try {
-    const dataToSave = await data.save();
-    res.status(200).json(dataToSave);
+        const dataToSave = await data.save();
+        res.status(200).json(dataToSave);
     }
     catch (error) {
-    res.status(400).json({message: error.message});
+        res.status(400).json({message: error.message});
     }
     });
 

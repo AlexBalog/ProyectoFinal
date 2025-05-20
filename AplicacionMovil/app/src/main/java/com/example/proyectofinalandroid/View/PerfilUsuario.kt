@@ -377,9 +377,6 @@ fun UserProfileSection(usuario: Usuarios?) {
 
 @Composable
 fun ActionButtonsRow(navController: NavController, medicionesViewModel: MedicionesViewModel) {
-
-    var showNuevaMedicionDialog by remember { mutableStateOf(false) }
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -387,7 +384,7 @@ fun ActionButtonsRow(navController: NavController, medicionesViewModel: Medicion
         ActionButton(
             icon = Icons.Default.FitnessCenter,
             text = "Mis Rutinas",
-            onClick = { /* Navegar a mis entrenamientos */ },
+            onClick = { navController.navigate("misEntrenamientos") },
             modifier = Modifier.weight(1f)
         )
 
@@ -396,27 +393,17 @@ fun ActionButtonsRow(navController: NavController, medicionesViewModel: Medicion
         ActionButton(
             icon = Icons.Default.Add,
             text = "Crear",
-            onClick = { /* Navegar a crear entrenamiento */ },
+            onClick = { navController.navigate("crearEntrenamiento") },
             modifier = Modifier.weight(1f)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         ActionButton(
-            icon = Icons.Default.SupportAgent,
-            text = "Nueva medición",
-            onClick = { showNuevaMedicionDialog = true },
+            icon = Icons.Default.Straighten,
+            text = "Ver mediciones",
+            onClick = {  },
             modifier = Modifier.weight(1f)
-        )
-    }
-    if (showNuevaMedicionDialog) {
-        NuevaMedicionDialog(
-            onDismiss = { showNuevaMedicionDialog = false },
-            onConfirm = { valor, notas ->
-                // Registrar nueva medición
-                medicionesViewModel.registrarPeso(valor, notas)
-                showNuevaMedicionDialog = false
-            }
         )
     }
 }
@@ -512,7 +499,7 @@ fun TrainingHistorySection(
                 )
 
                 TextButton(
-                    onClick = { /* Ver todo el historial */ },
+                    onClick = { navController.navigate("historialEntrenamientosRealizados") },
                     colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
                 ) {
                     Text(

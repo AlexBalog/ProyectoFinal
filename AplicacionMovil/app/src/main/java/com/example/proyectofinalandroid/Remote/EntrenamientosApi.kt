@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.Remote
 
+import com.example.proyectofinalandroid.Model.EntrenamientoRealizado
 import com.example.proyectofinalandroid.Model.Entrenamientos
 import retrofit2.Response
 import retrofit2.http.*
@@ -23,6 +24,11 @@ interface EntrenamientosApi {
         @Header("Authorization") auth: String,
         @Body request: Map<String, String>
     ): Response<Map<String, String>>
+
+    @POST("entrenamientos/new") suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body entrenamientos: Entrenamientos
+    ): Response<Entrenamientos>
 
     // Endpoint para obtener un entrenamiento (requiere token)
     @POST("entrenamientos/getOne")
