@@ -38,6 +38,27 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
         return if (response.isSuccessful) response.body() else null
     }
 
+    // En EntrenamientosRepository.kt
+    suspend fun actualizarEntrenamiento(entrenamiento: Entrenamientos, token: String): Entrenamientos? {
+        return try {
+            val response = api.actualizarEntrenamiento(
+                "Bearer $token",
+                entrenamiento._id,
+                entrenamiento
+            )
+
+            if (response.isSuccessful) {
+                response.body()
+            } else {
+                Log.e("EntrenamientosRepo", "Error al actualizar: ${response.errorBody()?.string()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("EntrenamientosRepo", "Excepción al actualizar entrenamiento: ${e.message}")
+            null
+        }
+    }
+
     suspend fun peticion(entrenamientos: Entrenamientos): Entrenamientos? {
         val response = api.peticion(entrenamientos)
         if (!response.isSuccessful) {

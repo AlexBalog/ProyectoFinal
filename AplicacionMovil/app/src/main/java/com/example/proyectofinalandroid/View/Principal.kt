@@ -70,11 +70,13 @@ import android.app.Activity
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import java.time.LocalDate
 import java.time.ZoneId
+import com.example.proyectofinalandroid.Model.Ejercicios
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.launch
 import android.content.Context
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.proyectofinalandroid.ViewModel.EjerciciosViewModel
 import java.util.concurrent.TimeUnit
 import com.example.proyectofinalandroid.worker.EntrenamientoReminderWorker
 
@@ -116,6 +118,8 @@ fun HomeScreen(navController: NavController) {
     val eventosUsuariosViewModel: EventosUsuarioViewModel = hiltViewModel()
     val eventosViewModel: EventosViewModel = hiltViewModel()
 
+    val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel()
+
     val usuario by usuariosViewModel.usuario.collectAsState()
 
     LaunchedEffect(usuario) {
@@ -123,6 +127,7 @@ fun HomeScreen(navController: NavController) {
             entrenamientosViewModel.setUsuario(usuario!!)
             eventosViewModel.setUsuario(usuario!!)
             eventosUsuariosViewModel.setUsuario(usuario!!)
+            ejerciciosViewModel.setUsuario(usuario!!)
         }
     }
 
@@ -137,10 +142,19 @@ fun HomeScreen(navController: NavController) {
 
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-    // Datos simulados
-    val misEntrenamientos by entrenamientosViewModel.entrenamientos.collectAsState()
-    val programasDestacados by remember { mutableStateOf(entrenamientosViewModel.obtenerProgramasDestacados()) }
+
+    // Datos
+    val entrenamientos by entrenamientosViewModel.entrenamientos.collectAsState()
+    val ejercicios by ejerciciosViewModel.ejercicios.collectAsState()
     val eventosUsuario by eventosUsuariosViewModel.eventosUsuarioLista.collectAsState()
+
+    val entrenamientosDestacados = remember(entrenamientos) {
+        entrenamientos?.sortedByDescending { it.likes.toInt() }?.take(5) ?: emptyList()
+    }
+
+    val ejerciciosRecomendados = remember(ejercicios) {
+        ejercicios?.take(10) ?: emptyList()
+    }
 
     val fechasConEventos = remember(eventosUsuario) {
         eventosUsuario?.map { it.fecha.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() } ?: emptyList()
@@ -150,6 +164,7 @@ fun HomeScreen(navController: NavController) {
         delay(100)
         eventosViewModel.cargarEventosYTipos()
         eventosUsuariosViewModel.getFilter(mapOf("usuario" to usuario!!._id))
+        ejerciciosViewModel.getAll()
         isAnimatedIn = true
     }
 
@@ -223,21 +238,34 @@ fun HomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Mis Entrenamientos (solo se muestra si hay entrenamientos disponibles)
-                    if (misEntrenamientos?.isNotEmpty() == true) {
+                    if (entrenamientos?.isNotEmpty() == true) {
                         MisEntrenamientosSection(
-                            entrenamientos = misEntrenamientos!!,
+                            entrenamientos = entrenamientos!!,
+                            navController = navController,
+                            usuario = usuario as Usuarios
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    if (entrenamientosDestacados.isNotEmpty()) {
+                        EntrenamientosDestacadosSection(
+                            entrenamientos = entrenamientosDestacados,
                             navController = navController
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
                     }
 
-                    // Programas Destacados
-                    EntrenamientosDestacadosSection(
-                        programas = programasDestacados,
-                        navController = navController
-                    )
+                    // Ejercicios Recomendados
+                    if (ejerciciosRecomendados.isNotEmpty()) {
+                        EjerciciosRecomendadosSection(
+                            ejercicios = ejerciciosRecomendados,
+                            navController = navController
+                        )
 
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                     // Espacio adicional al final
                     Spacer(modifier = Modifier.height(120.dp))
                 }
@@ -695,7 +723,8 @@ fun EventoItem(evento: EventosUsuario, eventosViewModel: EventosViewModel, event
 @Composable
 fun MisEntrenamientosSection(
     entrenamientos: List<Entrenamientos>,
-    navController: NavController
+    navController: NavController,
+    usuario: Usuarios
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -705,24 +734,37 @@ fun MisEntrenamientosSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Mis Entrenamientos",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Assignment,
+                    contentDescription = "Mis Entrenamientos",
+                    tint = Color(0xFF3a2bc2),
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Mis Entrenamientos",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
 
             TextButton(
-                onClick = { /* Ver todos los entrenamientos */ },
+                onClick = { navController.navigate("misEntrenamientos") },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
             ) {
                 Text(
-                    text = "Ver todo",
-                    fontSize = 14.sp
+                    text = "Ver más",
+                    fontSize = 14.sp,
+                    color = Color(0xFF3a2bc2)
                 )
                 Icon(
                     imageVector = Icons.Outlined.ChevronRight,
-                    contentDescription = "Ver más"
+                    contentDescription = "Ver más",
+                    tint = Color(0xFF3a2bc2)
                 )
             }
         }
@@ -731,7 +773,7 @@ fun MisEntrenamientosSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(entrenamientos) { entrenamiento ->
+            items(entrenamientos.filter { it.creador == usuario._id }) { entrenamiento ->
                 EntrenamientoItem(
                     entrenamiento = entrenamiento,
                     onClick = { navController.navigate("detalleEntrenamiento/${entrenamiento._id}") }
@@ -788,7 +830,7 @@ fun EntrenamientoItem(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF7B1FA2).copy(alpha = 0.8f))
+                            .background(Color(0xFF3a2bc2).copy(alpha = 0.8f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Icon(
@@ -837,7 +879,7 @@ fun EntrenamientoItem(
                     Icon(
                         imageVector = Icons.Default.Favorite,
                         contentDescription = "Likes",
-                        tint = Color(0xFFAB47BC),
+                        tint = Color(0xFF3a2bc2),
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -852,213 +894,7 @@ fun EntrenamientoItem(
     }
 }
 
-@Composable
-fun EntrenamientosDestacadosSection(
-    programas: List<ProgramaDestacado>,
-    navController: NavController
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Programas Destacados",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
 
-            TextButton(
-                onClick = { /* Ver todos los programas destacados */ },
-                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
-            ) {
-                Text(
-                    text = "Ver todo",
-                    fontSize = 14.sp
-                )
-                Icon(
-                    imageVector = Icons.Outlined.ChevronRight,
-                    contentDescription = "Ver más"
-                )
-            }
-        }
-    }
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(vertical = 8.dp)
-    ) {
-        items(programas) { programa ->
-            ProgramaDestacadoItem(
-                programa = programa,
-                onClick = { /* Navegar a detalles del programa */ }
-            )
-        }
-    }
-}
-
-
-@Composable
-fun ProgramaDestacadoItem(
-    programa: ProgramaDestacado,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .width(240.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = programa.imagenResId),
-                    contentDescription = "Imagen de programa",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color(0xFF0D0D0D).copy(alpha = 0.8f)
-                                )
-                            )
-                        )
-                )
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF7B1FA2).copy(alpha = 0.8f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Puntuación",
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${programa.puntuacion}",
-                            fontSize = 10.sp,
-                            color = Color.White
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
-                ) {
-                    Text(
-                        text = programa.nivel,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.White,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                when (programa.nivel) {
-                                    "Principiante" -> Color(0xFF4CAF50).copy(alpha = 0.8f)
-                                    "Intermedio" -> Color(0xFFFFC107).copy(alpha = 0.8f)
-                                    else -> Color(0xFFFF5722).copy(alpha = 0.8f)
-                                }
-                            )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = programa.nombre,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = programa.descripcion,
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = "Ejercicios",
-                            tint = Color(0xFFAB47BC),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${programa.ejercicios} ejercicios",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Likes",
-                            tint = Color(0xFFAB47BC),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${programa.likes}",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun FooterNavigation(
@@ -1140,78 +976,376 @@ fun RowScope.FooterNavItem(
     )
 }
 
+@Composable
+fun EntrenamientosDestacadosSection(
+    entrenamientos: List<Entrenamientos>,
+    navController: NavController
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Whatshot,
+                    contentDescription = "Destacados",
+                    tint = Color(0xFFbf3b26),
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Entrenamientos Destacados",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
 
-enum class TipoEvento {
-    ENTRENAMIENTO, MEDICION, NUTRICION
+            TextButton(
+                onClick = { navController.navigate("buscador") },
+                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
+            ) {
+                Text(
+                    text = "Ver más",
+                    fontSize = 14.sp,
+                    color = Color(0xFFbf3b26)
+                )
+                Icon(
+                    imageVector = Icons.Outlined.ChevronRight,
+                    contentDescription = "Ver más",
+                    tint = Color(0xFFbf3b26)
+                )
+            }
+        }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(entrenamientos) { entrenamiento ->
+                EntrenamientoDestacadoItem(
+                    entrenamiento = entrenamiento,
+                    onClick = { navController.navigate("detalleEntrenamiento/${entrenamiento._id}") }
+                )
+            }
+        }
+    }
 }
 
-data class ProgramaDestacado(
-    val id: String,
-    val nombre: String,
-    val descripcion: String,
-    val nivel: String,
-    val ejercicios: Int,
-    val likes: Int,
-    val puntuacion: Double,
-    val imagenResId: Int
-)
+@Composable
+fun EntrenamientoDestacadoItem(
+    entrenamiento: Entrenamientos,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+            ) {
+                Image(
+                    painter = remember { BitmapPainter(base64ToBitmap(entrenamiento.foto)!!.asImageBitmap()) },
+                    contentDescription = "Imagen de entrenamiento",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
 
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color(0xFF0D0D0D).copy(alpha = 0.8f)
+                                )
+                            )
+                        )
+                )
 
-fun EntrenamientosViewModel.obtenerProgramasDestacados(): List<ProgramaDestacado> {
-    // Simula programas destacados desde la base de datos
-    return listOf(
-        ProgramaDestacado(
-            id = "1",
-            nombre = "Definición Total",
-            descripcion = "Programa de 4 semanas para definir todo el cuerpo",
-            nivel = "Intermedio",
-            ejercicios = 24,
-            likes = 487,
-            puntuacion = 4.8,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        ),
-        ProgramaDestacado(
-            id = "2",
-            nombre = "Quema Grasa Extrema",
-            descripcion = "Rutinas HIIT de alta intensidad para pérdida de peso",
-            nivel = "Avanzado",
-            ejercicios = 18,
-            likes = 362,
-            puntuacion = 4.7,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        ),
-        ProgramaDestacado(
-            id = "3",
-            nombre = "Iniciación Fitness",
-            descripcion = "Programa para principiantes con ejercicios básicos",
-            nivel = "Principiante",
-            ejercicios = 15,
-            likes = 298,
-            puntuacion = 4.9,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        ),
-        ProgramaDestacado(
-            id = "4",
-            nombre = "Fuerza y Volumen",
-            descripcion = "Programa para ganar masa muscular y fuerza",
-            nivel = "Intermedio",
-            ejercicios = 20,
-            likes = 421,
-            puntuacion = 4.6,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        ),
-        ProgramaDestacado(
-            id = "5",
-            nombre = "Core Power",
-            descripcion = "Especializado en fortalecer el núcleo y abdominales",
-            nivel = "Intermedio",
-            ejercicios = 16,
-            likes = 375,
-            puntuacion = 4.5,
-            imagenResId = R.drawable.logo // Usa un placeholder para el ejemplo
-        )
-    )
+                // Badge de TOP
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFbf3b26))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "TOP",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                // Duración
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF7B1FA2).copy(alpha = 0.8f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = "Duración",
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${entrenamiento.duracion} min",
+                            fontSize = 10.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = entrenamiento.nombre,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = entrenamiento.categoria,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Likes",
+                        tint = Color(0xFFbf3b26),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${entrenamiento.likes}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    /*Spacer(modifier = Modifier.width(8.dp))
+
+                    // Músculos trabajados
+                    if (entrenamiento.musculo.isNotEmpty()) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = "Músculos",
+                            tint = Color(0xFFAB47BC),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${entrenamiento.musculo.size}",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }*/
+                }
+            }
+        }
+    }
 }
+
+@Composable
+fun EjerciciosRecomendadosSection(
+    ejercicios: List<Ejercicios>,
+    navController: NavController
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Recommend,
+                    contentDescription = "Recomendados",
+                    tint = Color(0xFFAB47BC),
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Ejercicios Recomendados",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            TextButton(
+                onClick = { navController.navigate("buscador") }, // Ajustar la ruta si es necesario
+                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
+            ) {
+                Text(
+                    text = "Ver más",
+                    fontSize = 14.sp,
+                    color = Color(0xFFAB47BC)
+                )
+                Icon(
+                    imageVector = Icons.Outlined.ChevronRight,
+                    contentDescription = "Ver más",
+                    tint = Color(0xFFAB47BC)
+                )
+            }
+        }
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(ejercicios) { ejercicio ->
+                EjercicioRecomendadoItem(
+                    ejercicio = ejercicio,
+                    onClick = { navController.navigate("detalleEjercicio/${ejercicio._id}") }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EjercicioRecomendadoItem(
+    ejercicio: Ejercicios,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(150.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+            ) {
+                Image(
+                    painter = remember { BitmapPainter(base64ToBitmap(ejercicio.foto)!!.asImageBitmap()) },
+                    contentDescription = "Imagen de ejercicio",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color(0xFF0D0D0D).copy(alpha = 0.8f)
+                                )
+                            )
+                        )
+                )
+
+                // Etiqueta de músculo
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF7B1FA2).copy(alpha = 0.8f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = ejercicio.musculo,
+                            fontSize = 10.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = ejercicio.nombre,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (ejercicio.consejos.isNotEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lightbulb,
+                            contentDescription = "Consejos",
+                            tint = Color(0xFFAB47BC),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "${ejercicio.consejos.size} consejos",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @SuppressLint("DefaultLocale")
 @OptIn(ExperimentalMaterial3Api::class)

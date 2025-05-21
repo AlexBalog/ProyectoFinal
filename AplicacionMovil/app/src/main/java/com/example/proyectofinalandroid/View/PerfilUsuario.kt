@@ -402,7 +402,7 @@ fun ActionButtonsRow(navController: NavController, medicionesViewModel: Medicion
         ActionButton(
             icon = Icons.Default.Straighten,
             text = "Ver mediciones",
-            onClick = {  },
+            onClick = { navController.navigate("verMediciones") },
             modifier = Modifier.weight(1f)
         )
     }

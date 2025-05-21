@@ -803,15 +803,40 @@ fun EntrenamientoCard(
         Box(
             modifier = Modifier.height(160.dp).fillMaxWidth()
         ) {
-            // Imagen de fondo
-            Image(
-                bitmap = base64ToImageBitmap(entrenamiento.foto as String)!!,
-                contentDescription = "Imagen de entrenamiento",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-            )
+            val imageBitmap = remember(entrenamiento.foto) {
+                if (!entrenamiento.foto.isNullOrEmpty()) {
+                    base64ToImageBitmap(entrenamiento.foto)
+                } else {
+                    null
+                }
+            }
+
+            if (imageBitmap != null) {
+                Image(
+                    bitmap = imageBitmap,
+                    contentDescription = "Imagen de entrenamiento",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                )
+            } else {
+                // Fallback para cuando no hay imagen
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF2A2A2A))
+                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FitnessCenter,
+                        contentDescription = null,
+                        tint = Color(0xFFAB47BC),
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
 
             // Gradiente oscuro encima de la imagen
             Box(
@@ -839,7 +864,7 @@ fun EntrenamientoCard(
 
                 // Título
                 Text(
-                    text = entrenamiento.nombre,
+                    text = entrenamiento.nombre ?: "Sin nombre",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -858,7 +883,7 @@ fun EntrenamientoCard(
                     Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
-                        text = entrenamiento.categoria,
+                        text = entrenamiento.categoria ?: "Sin categoría",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -913,7 +938,7 @@ fun EntrenamientoCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = entrenamiento.musculoPrincipal,
+                            text = entrenamiento.musculoPrincipal ?: "Sin especificar",
                             fontSize = 12.sp,
                             color = Color.White,
                             maxLines = 1,
@@ -954,15 +979,40 @@ fun EjercicioCard(
             Box(
                 modifier = Modifier.height(160.dp).fillMaxWidth()
             ) {
-                // Imagen de fondo
-                Image(
-                    bitmap = base64ToImageBitmap(ejercicio.foto as String)!!,
-                    contentDescription = "Imagen de ejercicio",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                )
+                val imageBitmap = remember(ejercicio.foto) {
+                    if (!ejercicio.foto.isNullOrEmpty()) {
+                        base64ToImageBitmap(ejercicio.foto)
+                    } else {
+                        null
+                    }
+                }
+
+                if (imageBitmap != null) {
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = "Imagen de ejercicio",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                    )
+                } else {
+                    // Fallback para cuando no hay imagen
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF2A2A2A))
+                            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = null,
+                            tint = Color(0xFFAB47BC),
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                }
 
                 // Gradiente oscuro encima de la imagen
                 Box(

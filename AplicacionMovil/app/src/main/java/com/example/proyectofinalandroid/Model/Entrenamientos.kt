@@ -8,27 +8,27 @@ data class Entrenamientos(
     @SerializedName("_id")
     val _id: String = "",
     @SerializedName("musculoPrincipal")
-    val musculoPrincipal: String,
+    var musculoPrincipal: String,
     @SerializedName("categoria")
-    val categoria: String,
+    var categoria: String,
     @SerializedName("nombre")
-    val nombre: String,
+    var nombre: String,
     @SerializedName("duracion")
-    val duracion: Number,
+    var duracion: Number,
     @SerializedName("foto")
-    val foto: String,
+    var foto: String,
     @SerializedName("musculo")
-    val musculo: List<String>,
+    var musculo: List<String>,
     @SerializedName("likes")
-    val likes: Number,
+    var likes: Number,
     @SerializedName("ejercicios")
-    val ejercicios: List<String>,
+    var ejercicios: List<String>,
     @SerializedName("creador")
     val creador: String,
     @SerializedName("aprobado")
-    val aprobado: Boolean,
+    var aprobado: Boolean,
     @SerializedName("pedido")
-    val pedido: Boolean,
+    var pedido: Boolean,
     @SerializedName("motivoRechazo")
-    val motivoRechazo: String
+    var motivoRechazo: String
 ) : Serializable

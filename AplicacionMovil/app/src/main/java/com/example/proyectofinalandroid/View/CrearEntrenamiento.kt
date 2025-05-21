@@ -84,7 +84,12 @@ fun CreateTrainingScreen(
     }
     val duracionState = remember { mutableStateOf(duracionTemp ?: "") }
     val fotoBase64State = remember { mutableStateOf<String?>(entrenamiento?.foto ?: null) }
-    val selectedImageUriState = remember { mutableStateOf<Uri?>(null) }
+    val selectedImageUriState = remember { mutableStateOf<Uri?>(
+        if (entrenamiento?.foto != null && entrenamiento?.foto!!.isNotEmpty())
+            Uri.parse("content://placeholder/image")
+        else
+            null
+    ) }
     val musculosSeleccionadosState = remember { mutableStateOf<List<String>>(entrenamiento?.musculo ?: emptyList()) }
     val ejerciciosSeleccionadosState = remember { mutableStateOf<List<String>>(entrenamiento?.ejercicios ?: emptyList()) }
 
@@ -118,7 +123,7 @@ fun CreateTrainingScreen(
     val ejercicios by ejerciciosViewModel.ejercicios.collectAsState()
 
     // Listas predefinidas
-    val categorias = remember { listOf("Fuerza", "Hipertrofia", "Resistencia", "Cardio", "HIIT", "Full Body", "Principiante", "Intermedio", "Avanzado") }
+    val categorias = remember { listOf("Fuerza", "Hipertrofia", "Resistencia", "Cardio", "HIIT", "Full Body") }
     val musculos = remember { listOf("Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Cuádriceps", "Isquiotibiales", "Glúteos", "Abdominales", "Antebrazos", "Gemelos", "Trapecio", "Lumbar") }
 
     // Validar formulario con derivedStateOf para evitar recomposiciones innecesarias
@@ -492,24 +497,17 @@ fun CreateTrainingScreen(
                                 isLoading = true
                                 scope.launch {
                                     try {
-                                        Toast.makeText(context, "Creando entrenamiento...", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "Editando entrenamiento...", Toast.LENGTH_LONG).show()
 
-                                        val nuevoEntrenamiento = Entrenamientos(
-                                            musculoPrincipal = musculoPrincipalSeleccionado,
-                                            categoria = categoriaSelecionada,
-                                            nombre = nombre.trim(),
-                                            duracion = duracion.toInt(),
-                                            foto = fotoBase64.toString() ?: "",
-                                            musculo = musculosSeleccionados,
-                                            likes = 0,
-                                            ejercicios = ejerciciosSeleccionados,
-                                            creador = usuario?._id?.toString() ?: "",
-                                            aprobado = false,
-                                            pedido = false,
-                                            motivoRechazo = ""
-                                        )
+                                        entrenamiento!!.musculoPrincipal = musculoPrincipalSeleccionado
+                                        entrenamiento!!.categoria = categoriaSelecionada
+                                        entrenamiento!!.nombre = nombre.trim()
+                                        entrenamiento!!.duracion = duracion.toInt()
+                                        entrenamiento!!.foto = fotoBase64.toString() ?: ""
+                                        entrenamiento!!.musculo = musculosSeleccionados
+                                        entrenamiento!!.ejercicios = ejerciciosSeleccionados
 
-                                        entrenamientosViewModel.new(nuevoEntrenamiento)
+                                        entrenamientosViewModel.actualizarEntrenamiento(entrenamiento)
                                         // Navegar solo si todo fue exitoso
                                         withContext(Dispatchers.Main) {
                                             isLoading = false
@@ -546,7 +544,7 @@ fun CreateTrainingScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Crear",
+                                    text = "Guardar",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -721,9 +719,14 @@ fun CreateTrainingScreen(
                 confirmButtonText = "Publicar",
                 dismissButtonText = "Cancelar",
                 onConfirm = {
-                    showPublishDialog = false
-                    entrenamientosViewModel.update(_id = entrenamiento!!._id, updatedData = mapOf("pedido" to "true"))
-                    Toast.makeText(context, "¡Se ha procesado la petición!", Toast.LENGTH_SHORT).show()
+                    scope.launch {
+                        entrenamiento!!.pedido = true
+                        entrenamientosViewModel.actualizarEntrenamiento(entrenamiento)
+                        Toast.makeText(context, "¡Se ha procesado la petición!", Toast.LENGTH_SHORT).show()
+                        showPublishDialog = false
+                        navController.popBackStack()
+                    }
+
                 },
                 onDismiss = { showPublishDialog = false }
             )

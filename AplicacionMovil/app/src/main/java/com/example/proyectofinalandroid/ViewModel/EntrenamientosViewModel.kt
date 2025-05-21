@@ -135,6 +135,51 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     }
 
 
+    suspend fun actualizarEntrenamiento(entrenamiento: Entrenamientos): Entrenamientos? {
+        return try {
+            _usuario.value?.let { usuario ->
+                val token = usuario.token ?: return@let null
+
+                // Verificar que el entrenamiento tenga un ID válido
+                if (entrenamiento._id.isBlank()) {
+                    _errorMessage.value = "El entrenamiento no tiene un ID válido"
+                    return null
+                }
+
+                // Llamar al repositorio para actualizar el entrenamiento
+                val entrenamientoActualizado = repository.actualizarEntrenamiento(entrenamiento, token)
+
+                if (entrenamientoActualizado != null) {
+                    // Actualizar el estado local
+                    _entrenamiento.value = entrenamientoActualizado
+
+                    // Si el entrenamiento está en la lista de entrenamientos, actualizarlo también allí
+                    _entrenamientos.value = _entrenamientos.value?.map {
+                        if (it._id == entrenamiento._id) entrenamientoActualizado else it
+                    }
+
+                    // Si es el entrenamiento seleccionado actualmente, actualizarlo
+                    if (_entrenamientoSeleccionado.value?._id == entrenamiento._id) {
+                        _entrenamientoSeleccionado.value = entrenamientoActualizado
+                    }
+
+                    _errorMessage.value = null
+                    entrenamientoActualizado
+                } else {
+                    _errorMessage.value = "Error al actualizar el entrenamiento"
+                    null
+                }
+            } ?: run {
+                _errorMessage.value = "Usuario no autenticado"
+                null
+            }
+        } catch (e: Exception) {
+            _errorMessage.value = "Error: ${e.message}"
+            Log.e("EntrenamientosViewModel", "Error al actualizar entrenamiento: ${e.message}")
+            null
+        }
+    }
+
     private val _entrenamientoSeleccionado = MutableStateFlow<Entrenamientos?>(null)
     val entrenamientoSeleccionado: StateFlow<Entrenamientos?> get() = _entrenamientoSeleccionado
 

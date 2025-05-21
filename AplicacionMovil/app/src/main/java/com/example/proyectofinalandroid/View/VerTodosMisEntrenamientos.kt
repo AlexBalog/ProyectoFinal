@@ -44,9 +44,19 @@ fun MisEntrenamientosScreen(
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(mainEntry)
 
+    val usuario by usuariosViewModel.usuario.collectAsState()
     // 2. Estabiliza el scope con remember
     val scope = rememberCoroutineScope()
 
+    LaunchedEffect(Unit) {
+        // Esto garantiza que siempre se carguen los datos al entrar a la pantalla
+        scope.launch {
+            usuario?.let { currentUser ->
+                val filtros = mapOf("creador" to (currentUser._id ?: ""))
+                entrenamientosViewModel.getFilter(filtros)
+            }
+        }
+    }
     // 3. Define un estado derivado para la UI
     val screenState = produceState(
         initialValue = MisEntrenamientosScreenState(isLoading = true, entrenamientos = emptyList())
@@ -76,8 +86,8 @@ fun MisEntrenamientosScreen(
     MisEntrenamientosContent(
         state = screenState.value,
         onBackClick = remember { { navController.popBackStack() } },
-        onCreateTrainingClick = remember { { navController.navigate("createTraining") } },
-        onEntrenamientoClick = remember { { id -> navController.navigate("detalleEntrenamiento/$id") } }
+        onCreateTrainingClick = remember { { navController.navigate("crearEntrenamiento") } },
+        onEntrenamientoClick = remember { { id -> navController.navigate("crearEntrenamiento?id=$id&publicar=true") } }
     )
 }
 

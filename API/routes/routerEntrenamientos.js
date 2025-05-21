@@ -150,6 +150,37 @@ router.patch("/update", async (req, res) => {
     }
 });
 
+router.patch("/:id", verifyToken, async (req, res) => {
+    try {
+    const id = req.params.id;
+
+    const resultado = await modelEntrenamientos.updateOne(
+    { _id: id }, { $set: {
+        nombre: req.body.nombre,
+        categoria: req.body.categoria,
+        musculoPrincipal: req.body.musculoPrincipal,
+        musculo: req.body.musculo,
+        duracion: req.body.duracion,
+        foto: req.body.foto,
+        likes: req.body.likes,
+        ejercicios: req.body.ejercicios,
+        creador: req.body.creador,
+        pedido: req.body.pedido,
+        aprobado: req.body.aprobado,
+        motivoRechazo: req.body.motivoRechazo
+    }});
+    
+    if (resultado.modifiedCount === 0) {
+        return res.status(404).json({ message: "Documento no encontrado" });
+    }
+    
+    res.status(200).json({ message: "Documento actualizado exitosamente"
+    });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
 router.delete('/delete', async (req, res) => {
     try {
     const id = req.body._id;

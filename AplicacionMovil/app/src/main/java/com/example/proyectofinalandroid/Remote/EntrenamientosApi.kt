@@ -30,6 +30,13 @@ interface EntrenamientosApi {
         @Body entrenamientos: Entrenamientos
     ): Response<Entrenamientos>
 
+    @PATCH("entrenamientos/{id}")
+    suspend fun actualizarEntrenamiento(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Body entrenamiento: Entrenamientos
+    ): Response<Entrenamientos>
+
     // Endpoint para obtener un entrenamiento (requiere token)
     @POST("entrenamientos/getOne")
     suspend fun getOne(
