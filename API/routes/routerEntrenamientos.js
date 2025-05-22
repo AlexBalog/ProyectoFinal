@@ -55,7 +55,7 @@ router.post('/getFilter', async (req, res) => {
         }
 
         if (musculoPrincipal && musculoPrincipal.trim() !== "") {
-            condiciones.musculoPrincipal = {$regex: musculoPrincipal.trim(), $options: 'i' }; 
+            condiciones.musculoPrincipal = musculoPrincipal.trim(); 
         }
 
         if (duracionMin != null || duracionMax != null) {

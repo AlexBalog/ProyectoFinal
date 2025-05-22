@@ -1008,7 +1008,7 @@ fun EntrenamientosDestacadosSection(
             }
 
             TextButton(
-                onClick = { navController.navigate("buscador") },
+                onClick = { navController.navigate("buscador?orden=likes&tipoBusqueda=entrenamientos&ordenAscDesc=desc") },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
             ) {
                 Text(
@@ -1028,7 +1028,7 @@ fun EntrenamientosDestacadosSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(entrenamientos) { entrenamiento ->
+            items(entrenamientos.filter { it.aprobado == true }) { entrenamiento ->
                 EntrenamientoDestacadoItem(
                     entrenamiento = entrenamiento,
                     onClick = { navController.navigate("detalleEntrenamiento/${entrenamiento._id}") }
@@ -1162,24 +1162,6 @@ fun EntrenamientoDestacadoItem(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-
-                    /*Spacer(modifier = Modifier.width(8.dp))
-
-                    // Músculos trabajados
-                    if (entrenamiento.musculo.isNotEmpty()) {
-                        Icon(
-                            imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = "Músculos",
-                            tint = Color(0xFFAB47BC),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${entrenamiento.musculo.size}",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }*/
                 }
             }
         }
@@ -1218,7 +1200,7 @@ fun EjerciciosRecomendadosSection(
             }
 
             TextButton(
-                onClick = { navController.navigate("buscador") }, // Ajustar la ruta si es necesario
+                onClick = { navController.navigate("buscador?tipoBusqueda=ejercicios") }, // Ajustar la ruta si es necesario
                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
             ) {
                 Text(

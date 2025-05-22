@@ -15,5 +15,7 @@ data class Ejercicios(
     @SerializedName("consejos")
     val consejos: List<String>,
     @SerializedName("foto")
-    val foto: String
+    val foto: String,
+    @SerializedName("tutorial")
+    val tutorial: String
 ) : Serializable

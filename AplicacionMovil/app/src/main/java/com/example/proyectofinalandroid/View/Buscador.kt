@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.graphics.ImageBitmap
 import com.example.proyectofinalandroid.Model.Usuarios
 import com.example.proyectofinalandroid.utils.base64ToImageBitmap
+import androidx.compose.material.icons.filled.Sort
 
 
 @SuppressLint("UnrememberedGetBackStackEntry")
@@ -55,7 +56,9 @@ fun BuscadorScreen(
     navController: NavController,
     tipoBusqueda: String? = null,
     categoria: String? = null,
-    musculo: String? = null
+    musculo: String? = null,
+    orden: String? = null,
+    ordenAscDesc: String? = null
 ) {
     // Obtener ViewModels
     val userEntry = remember(navController) {
@@ -83,8 +86,8 @@ fun BuscadorScreen(
     var selectedCategory by remember { mutableStateOf(categoria) }
     var selectedMuscle by remember { mutableStateOf(musculo) }
     var durationRange by remember { mutableStateOf(0f..180f) }
-    var sortBy by remember { mutableStateOf("nombre") }
-    var sortDirection by remember { mutableStateOf("asc") }
+    var sortBy by remember { mutableStateOf(orden ?: "nombre") }
+    var sortDirection by remember { mutableStateOf(ordenAscDesc ?: "asc") }
 
     // Estados para UI
     var showFilters by remember { mutableStateOf(false) }
@@ -111,7 +114,7 @@ fun BuscadorScreen(
         }
 
         selectedMuscle?.let {
-            filters["musculo"] = it
+            filters["musculoPrincipal"] = it
         }
 
         if (searchType == "entrenamientos" && (durationRange.start > 0f || durationRange.endInclusive < 180f)) {
@@ -369,7 +372,7 @@ fun BuscadorScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         entrenamientos?.let { listaEntrenamientos ->
-                            items(listaEntrenamientos) { entrenamiento ->
+                            items(listaEntrenamientos.filter { it.aprobado == true }) { entrenamiento ->
                                 EntrenamientoCard(
                                     entrenamiento = entrenamiento,
                                     onClick = {
@@ -496,10 +499,12 @@ fun FilterPanel(
                         },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
                             focusedBorderColor = Color(0xFFAB47BC),
-                            unfocusedBorderColor = Color.Gray
+                            unfocusedBorderColor = Color.Gray,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         ),
                         textStyle = TextStyle(color = Color.White),
-                        label = { Text("Categoría") },
+                        label = { Text("Categoría", color = Color.Gray) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
@@ -545,9 +550,11 @@ fun FilterPanel(
                     },
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
                         focusedBorderColor = Color(0xFFAB47BC),
-                        unfocusedBorderColor = Color.Gray
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     ),
-                    label = { Text("Músculo") },
+                    label = { Text("Músculo", color = Color.Gray) },
                     textStyle = TextStyle(color = Color.White),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -584,7 +591,9 @@ fun FilterPanel(
                 Column {
                     Text(
                         text = "Duración: ${durationRange.start.toInt()} - ${durationRange.endInclusive.toInt()} min",
-                        color = Color.White
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -603,18 +612,20 @@ fun FilterPanel(
                 }
             }
 
-            // Ordenar por (para ambos tipos de búsqueda)
+            // NUEVA SECCIÓN DE ORDENAMIENTO MEJORADA
             if (searchType == "entrenamientos") {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Ordenar por:",
+                        text = "Ordenar resultados",
                         color = Color.White,
-                        modifier = Modifier.padding(end = 8.dp)
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
 
+                    // Selector de campo para ordenar
                     ExposedDropdownMenuBox(
                         expanded = sortByExpanded.value,
                         onExpandedChange = { sortByExpanded.value = it }
@@ -623,6 +634,7 @@ fun FilterPanel(
                             value = when (sortBy) {
                                 "nombre" -> "Nombre"
                                 "likes" -> "Likes"
+                                "duracion" -> "Duración"
                                 else -> "Nombre"
                             },
                             onValueChange = {},
@@ -632,11 +644,14 @@ fun FilterPanel(
                             },
                             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
                                 focusedBorderColor = Color(0xFFAB47BC),
-                                unfocusedBorderColor = Color.Gray
+                                unfocusedBorderColor = Color.Gray,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
                             ),
                             textStyle = TextStyle(color = Color.White),
+                            label = { Text("Ordenar por", color = Color.Gray) },
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
                                 .menuAnchor()
                         )
 
@@ -650,6 +665,14 @@ fun FilterPanel(
                                 onClick = {
                                     onSortChanged("nombre", sortDirection)
                                     sortByExpanded.value = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Sort,
+                                        contentDescription = null,
+                                        tint = Color(0xFFAB47BC),
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             )
 
@@ -658,27 +681,188 @@ fun FilterPanel(
                                 onClick = {
                                     onSortChanged("likes", sortDirection)
                                     sortByExpanded.value = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Favorite,
+                                        contentDescription = null,
+                                        tint = Color(0xFFAB47BC),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Duración", color = Color.White) },
+                                onClick = {
+                                    onSortChanged("duracion", sortDirection)
+                                    sortByExpanded.value = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Timer,
+                                        contentDescription = null,
+                                        tint = Color(0xFFAB47BC),
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    IconButton(
-                        onClick = {
-                            val newDirection = if (sortDirection == "asc") "desc" else "asc"
-                            onSortChanged(sortBy, newDirection)
-                        }
+                    // Selector de dirección del ordenamiento (Ascendente/Descendente)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = if (sortDirection == "asc") Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                            contentDescription = "Dirección de ordenamiento",
-                            tint = Color(0xFFAB47BC)
+                        // Botón Ascendente
+                        FilterModeButton(
+                            text = "Ascendente",
+                            subtitle = when (sortBy) {
+                                "nombre" -> "A → Z"
+                                "likes" -> "Menos likes"
+                                "duracion" -> "Más corto"
+                                else -> "Menor"
+                            },
+                            icon = Icons.Default.ArrowUpward,
+                            selected = sortDirection == "asc",
+                            onClick = { onSortChanged(sortBy, "asc") },
+                            modifier = Modifier.weight(1f)
                         )
+
+                        // Botón Descendente
+                        FilterModeButton(
+                            text = "Descendente",
+                            subtitle = when (sortBy) {
+                                "nombre" -> "Z → A"
+                                "likes" -> "Más likes"
+                                "duracion" -> "Más largo"
+                                else -> "Mayor"
+                            },
+                            icon = Icons.Default.ArrowDownward,
+                            selected = sortDirection == "desc",
+                            onClick = { onSortChanged(sortBy, "desc") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Indicador visual del ordenamiento actual
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF7B1FA2).copy(alpha = 0.2f)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = Color(0xFFAB47BC),
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Column {
+                                Text(
+                                    text = "Ordenamiento actual:",
+                                    color = Color.Gray,
+                                    fontSize = 12.sp
+                                )
+
+                                Text(
+                                    text = buildString {
+                                        append(when (sortBy) {
+                                            "nombre" -> "Por nombre"
+                                            "likes" -> "Por likes"
+                                            "duracion" -> "Por duración"
+                                            else -> "Por nombre"
+                                        })
+                                        append(" - ")
+                                        append(when (sortDirection) {
+                                            "asc" -> when (sortBy) {
+                                                "nombre" -> "A a Z"
+                                                "likes" -> "Menos a más"
+                                                "duracion" -> "Más corto a más largo"
+                                                else -> "Ascendente"
+                                            }
+                                            "desc" -> when (sortBy) {
+                                                "nombre" -> "Z a A"
+                                                "likes" -> "Más a menos"
+                                                "duracion" -> "Más largo a más corto"
+                                                else -> "Descendente"
+                                            }
+                                            else -> "Ascendente"
+                                        })
+                                    },
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+// Componente auxiliar para los botones de ordenamiento
+@Composable
+fun FilterModeButton(
+    text: String,
+    subtitle: String,
+    icon: ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clickable { onClick() }
+            .shadow(
+                elevation = if (selected) 4.dp else 2.dp,
+                shape = RoundedCornerShape(12.dp)
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) Color(0xFF7B1FA2) else Color(0xFF333333)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = text,
+                tint = if (selected) Color.White else Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = text,
+                color = if (selected) Color.White else Color.Gray,
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            )
+
+            Text(
+                text = subtitle,
+                color = if (selected) Color.White.copy(alpha = 0.8f) else Color.Gray.copy(alpha = 0.7f),
+                fontSize = 10.sp
+            )
         }
     }
 }

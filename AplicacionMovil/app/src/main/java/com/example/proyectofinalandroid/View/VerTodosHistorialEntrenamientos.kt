@@ -596,28 +596,28 @@ fun FiltrosPanel(
     filtros: Filtros,
     actualizarFiltros: (Filtros) -> Unit
 ) {
-    // Callbacks estables
-    val onFiltroTextoChange = remember { { texto: String ->
+    // CORRECCIÓN: Agregar filtros como dependencia en remember o usar callbacks más simples
+    val onFiltroTextoChange = remember(filtros) { { texto: String ->
         actualizarFiltros(filtros.copy(texto = texto))
     } }
 
-    val onFiltroCategoriaChange = remember { { categoria: String? ->
+    val onFiltroCategoriaChange = remember(filtros) { { categoria: String? ->
         actualizarFiltros(filtros.copy(categoriaSeleccionada = categoria))
     } }
 
-    val onFiltroMusculoChange = remember { { musculo: String? ->
+    val onFiltroMusculoChange = remember(filtros) { { musculo: String? ->
         actualizarFiltros(filtros.copy(musculoSeleccionado = musculo))
     } }
 
-    val onFiltroPeriodoChange = remember { { periodo: String ->
+    val onFiltroPeriodoChange = remember(filtros) { { periodo: String ->
         actualizarFiltros(filtros.copy(periodo = periodo))
     } }
 
-    val onFiltroSeleccionadoChange = remember { { seleccionado: String ->
+    val onFiltroSeleccionadoChange = remember(filtros) { { seleccionado: String ->
         actualizarFiltros(filtros.copy(seleccionado = seleccionado))
     } }
 
-    val onLimpiarFiltros = remember { {
+    val onLimpiarFiltros = remember(filtros) { {
         actualizarFiltros(filtros.copy(
             texto = "",
             categoriaSeleccionada = null,

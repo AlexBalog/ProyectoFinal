@@ -1,6 +1,9 @@
 package com.example.proyectofinalandroid.View
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -64,7 +67,7 @@ fun DetalleEjercicioScreen(
 
     LaunchedEffect(usuario) {
         usuario?.let {
-            ejerciciosViewModel.setUsuario(usuario!!)
+            ejerciciosViewModel.setUsuario(it)
         }
     }
 
@@ -83,7 +86,6 @@ fun DetalleEjercicioScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-           // .padding(top = -20.dp)
     ) {
         AnimatedVisibility(
             visible = isAnimatedIn,
@@ -111,7 +113,6 @@ fun DetalleEjercicioScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(300.dp)
-                                .padding(0.dp, 20.dp, 0.dp, 0.dp)
                         ) {
                             Image(
                                 painter = rememberAsyncImagePainter(
@@ -157,10 +158,9 @@ fun DetalleEjercicioScreen(
                                     )
                                 ),
                                 modifier = Modifier
-                                    .padding(top = 16.dp)
+                                    .padding(top = 35.dp)
                                     .align(Alignment.TopCenter)
                             )
-
                         }
 
                         // Contenido desplazable
@@ -180,7 +180,7 @@ fun DetalleEjercicioScreen(
                         IconButton(
                             onClick = { navController.popBackStack() },
                             modifier = Modifier
-                                .padding(16.dp, 25.dp, 16.dp, 16.dp)
+                                .padding(16.dp, 30.dp, 16.dp, 16.dp)
                                 .size(48.dp)
                                 .shadow(
                                     elevation = 4.dp,
@@ -206,6 +206,9 @@ fun DetalleEjercicioScreen(
 
 @Composable
 fun EjercicioInfoCard(ejercicio: Ejercicios) {
+    val context = LocalContext.current
+    var showYouTubeDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -263,13 +266,19 @@ fun EjercicioInfoCard(ejercicio: Ejercicios) {
             )
 
             // Consejos adicionales
-            TipsSection()
+            TipsSection(ejercicio.consejos)
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Botón para ver ejecución
             Button(
-                onClick = { /* Ver vídeo o animación */ },
+                onClick = {
+                    if (ejercicio.tutorial.isNotBlank()) {
+                        showYouTubeDialog = true
+                    } else {
+                        openYouTubeSearchFallback(context, ejercicio.nombre)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -293,6 +302,20 @@ fun EjercicioInfoCard(ejercicio: Ejercicios) {
                 )
             }
         }
+    }
+
+    // DIÁLOGO DE YOUTUBE
+    if (showYouTubeDialog) {
+        YouTubeConfirmationDialog(
+            ejercicioNombre = ejercicio.nombre,
+            onConfirm = {
+                showYouTubeDialog = false
+                openSpecificYouTubeVideo(context, ejercicio.tutorial)
+            },
+            onDismiss = {
+                showYouTubeDialog = false
+            }
+        )
     }
 }
 
@@ -359,7 +382,7 @@ fun MuscleCard(musculo: String) {
 }
 
 @Composable
-fun TipsSection() {
+fun TipsSection(consejos: List<String>) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -400,20 +423,12 @@ fun TipsSection() {
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            TipItem(
-                icon = Icons.Default.Check,
-                text = "Mantén la espalda recta durante todo el ejercicio."
-            )
-
-            TipItem(
-                icon = Icons.Default.Check,
-                text = "Respira adecuadamente: inhala en la fase excéntrica y exhala en la concéntrica."
-            )
-
-            TipItem(
-                icon = Icons.Default.Check,
-                text = "Controla el movimiento y evita usar impulso."
-            )
+            for (consejo in consejos) {
+                TipItem(
+                    icon = Icons.Default.Check,
+                    text = consejo
+                )
+            }
         }
     }
 }
@@ -443,5 +458,191 @@ fun TipItem(icon: ImageVector, text: String) {
                 lineHeight = 20.sp
             )
         )
+    }
+}
+
+@Composable
+fun YouTubeConfirmationDialog(
+    ejercicioNombre: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1A1A1A),
+        titleContentColor = Color.White,
+        textContentColor = Color.LightGray,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color(0xFFAB47BC),
+                    modifier = Modifier.size(28.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Ver en YouTube",
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                )
+            }
+        },
+        text = {
+            Column {
+                Text(
+                    text = "¿Seguro que quieres salir de la aplicación?",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Se abrirá YouTube para ver el vídeo de: $ejercicioNombre",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = Color.LightGray
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF7B1FA2)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.OpenInNew,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Ver vídeo",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.LightGray
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color.Gray, Color.Gray)
+                    )
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Cancelar",
+                    color = Color.LightGray
+                )
+            }
+        },
+        shape = RoundedCornerShape(16.dp)
+    )
+}
+
+fun openSpecificYouTubeVideo(context: Context, videoUrl: String) {
+    try {
+        if (videoUrl.isBlank()) {
+            return
+        }
+
+        // Extraer el ID del video de diferentes formatos de URL de YouTube
+        val videoId = extractYouTubeVideoId(videoUrl)
+
+        if (videoId != null) {
+            // Intentar abrir en la app de YouTube primero
+            val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoId"))
+            appIntent.setPackage("com.google.android.youtube")
+
+            if (appIntent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(appIntent)
+            } else {
+                // Si no tiene la app, abrir en navegador con URL completa
+                val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+                context.startActivity(webIntent)
+            }
+        } else {
+            // Si no se puede extraer el ID, abrir URL directamente
+            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+            context.startActivity(webIntent)
+        }
+
+    } catch (e: Exception) {
+        // Fallback: abrir en navegador
+        try {
+            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl))
+            context.startActivity(webIntent)
+        } catch (e2: Exception) {
+            // Si todo falla, hacer búsqueda genérica
+            openYouTubeSearchFallback(context, "ejercicio")
+        }
+    }
+}
+
+fun extractYouTubeVideoId(url: String): String? {
+    return try {
+        when {
+            // Formato: https://www.youtube.com/watch?v=VIDEO_ID
+            url.contains("youtube.com/watch?v=") -> {
+                url.substringAfter("watch?v=").substringBefore("&")
+            }
+            // Formato: https://youtu.be/VIDEO_ID
+            url.contains("youtu.be/") -> {
+                url.substringAfter("youtu.be/").substringBefore("?")
+            }
+            // Formato: https://www.youtube.com/embed/VIDEO_ID
+            url.contains("youtube.com/embed/") -> {
+                url.substringAfter("embed/").substringBefore("?")
+            }
+            // Formato: https://m.youtube.com/watch?v=VIDEO_ID
+            url.contains("m.youtube.com/watch?v=") -> {
+                url.substringAfter("watch?v=").substringBefore("&")
+            }
+            // Si ya es solo el ID del video (11 caracteres)
+            url.length == 11 && url.matches(Regex("[a-zA-Z0-9_-]+")) -> {
+                url
+            }
+            else -> null
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+fun openYouTubeSearchFallback(context: Context, ejercicioNombre: String) {
+    try {
+        val searchQuery = "como hacer $ejercicioNombre ejercicio"
+        val searchUrl = "https://www.youtube.com/results?search_query=${searchQuery.replace(" ", "+")}"
+
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(searchUrl))
+        intent.setPackage("com.google.android.youtube")
+
+        if (intent.resolveActivity(context.packageManager) == null) {
+            intent.setPackage(null)
+        }
+
+        context.startActivity(intent)
+
+    } catch (e: Exception) {
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com"))
+        context.startActivity(webIntent)
     }
 }

@@ -65,78 +65,69 @@ fun DetalleEntrenamientoScreen(
     val parentEntry = remember(navController) {
         navController.getBackStackEntry("main")
     }
+
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel(parentEntry)
     val likesViewModel: LikesViewModel = hiltViewModel()
     val guardadosViewModel: GuardadosViewModel = hiltViewModel()
+
     val usuario by usuariosViewModel.usuario.collectAsState()
     val scrollState = rememberScrollState()
 
-    LaunchedEffect(usuario) {
-        usuario?.let {
-            entrenamientosViewModel.setUsuario(usuario!!)
-            ejerciciosViewModel.setUsuario(usuario!!)
-        }
-    }
+    // Estados consolidados
+    val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
+    val isLoading by entrenamientosViewModel.isLoading.collectAsState()
+    val ejerciciosCargados = remember { mutableStateMapOf<String, Ejercicios>() }
+    val isLiked by likesViewModel.isLiked.collectAsState()
+    val isSaved by guardadosViewModel.isSaved.collectAsState()
+    val contadorLikes by likesViewModel.likesCount.collectAsState() // Usar solo el contador del LikesViewModel
 
     var isAnimatedIn by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Mapa para almacenar los ejercicios cargados
-    val ejerciciosCargados = remember { mutableStateMapOf<String, Ejercicios>() }
-    val isLiked by likesViewModel.isLiked.collectAsState()
-    val isSaved by guardadosViewModel.isSaved.collectAsState()
-    val contadorLikes by entrenamientosViewModel.likesCount.collectAsState()
-    entrenamientosViewModel.observarLikes(likesViewModel, usuario!!)
-    // Observar el estado del entrenamiento seleccionado
-    val entrenamientoSeleccionado by entrenamientosViewModel.entrenamientoSeleccionado.collectAsState()
-    val isLoading by entrenamientosViewModel.isLoading.collectAsState()
-
-    // Cargar el entrenamiento por ID cuando se inicia la pantalla
-    LaunchedEffect(entrenamientoId) {
-        entrenamientosViewModel.getOne(entrenamientoId)
+    // INICIALIZACIÓN - Solo se ejecuta una vez al cargar la pantalla
+    LaunchedEffect(entrenamientoId, usuario) {
+        usuario?.let {
+            entrenamientosViewModel.setUsuario(it)
+            ejerciciosViewModel.setUsuario(it)
+            entrenamientosViewModel.getOne(entrenamientoId)
+        }
         delay(100)
         isAnimatedIn = true
     }
 
+    // CONFIGURACIÓN DE LIKES - Solo cuando cambia el entrenamiento o usuario
     LaunchedEffect(usuario, entrenamientoSeleccionado) {
-        if (usuario != null && entrenamientoSeleccionado != null) {
-            likesViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
-            guardadosViewModel.setUsuarioYEntrenamiento(usuario!!, entrenamientoSeleccionado!!)
-            likesViewModel.devolverLikesEntrenamiento(entrenamientoSeleccionado!!._id, usuario)
-            // Configura la observación específica para este entrenamiento
-            entrenamientosViewModel.observarLikesDeEntrenamiento(
-                entrenamientoSeleccionado!!._id,
-                likesViewModel,
-                usuario!!
-            )
+        // Capturar valores primero
+        val usuarioActual = usuario
+        val entrenamientoActual = entrenamientoSeleccionado
+
+        if (usuarioActual != null && entrenamientoActual != null) {
+            likesViewModel.setUsuarioYEntrenamiento(usuarioActual, entrenamientoActual)
+            likesViewModel.cargarContadorLikes(entrenamientoActual._id)
         }
     }
 
-    // Cargar los ejercicios cuando cambia el entrenamiento seleccionado
+    // CARGA DE EJERCICIOS
     LaunchedEffect(entrenamientoSeleccionado) {
-        entrenamientoSeleccionado?.ejercicios?.forEach { ejercicioId ->
-            coroutineScope.launch {
-                // Verificar si ya se ha cargado este ejercicio
-                if (!ejerciciosCargados.containsKey(ejercicioId)) {
-                    ejerciciosViewModel.getOne(ejercicioId)
+        entrenamientoSeleccionado?.let { entrenamiento ->
+            ejerciciosViewModel.getListaEjerciciosDesdeIds(entrenamiento.ejercicios)
 
-                    // Esperar a que se cargue el ejercicio y almacenarlo en el mapa
-                    ejerciciosViewModel.ejercicioSeleccionado.collect { ejercicio ->
-                        if (ejercicio != null && ejercicio._id == ejercicioId) {
-                            ejerciciosCargados[ejercicioId] = ejercicio
-                            return@collect
+            // Cargar ejercicios individuales si es necesario
+            entrenamiento.ejercicios.forEach { ejercicioId ->
+                if (!ejerciciosCargados.containsKey(ejercicioId)) {
+                    coroutineScope.launch {
+                        ejerciciosViewModel.getOne(ejercicioId)
+                        ejerciciosViewModel.ejercicioSeleccionado.collect { ejercicio ->
+                            if (ejercicio != null && ejercicio._id == ejercicioId) {
+                                ejerciciosCargados[ejercicioId] = ejercicio
+                                return@collect
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-
-    LaunchedEffect(entrenamientoSeleccionado) {
-        entrenamientoSeleccionado?.let { entrenamiento ->
-            ejerciciosViewModel.getListaEjerciciosDesdeIds(entrenamiento.ejercicios)
         }
     }
 
@@ -153,7 +144,6 @@ fun DetalleEntrenamientoScreen(
             )
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Contenido principal
                 if (isLoading) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -166,11 +156,8 @@ fun DetalleEntrenamientoScreen(
                     }
                 } else {
                     entrenamientoSeleccionado?.let { entrenamiento ->
-                        // Estructura principal
-                        Column(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            // Barra superior con degradado
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            // Barra superior
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -184,7 +171,6 @@ fun DetalleEntrenamientoScreen(
                                         )
                                     )
                             ) {
-                                // Título de la aplicación en la barra superior
                                 Text(
                                     text = "FitSphere",
                                     style = TextStyle(
@@ -208,18 +194,18 @@ fun DetalleEntrenamientoScreen(
                                 )
                             }
 
-                            // Contenido desplazable (incluyendo imagen y tarjeta)
+                            // Contenido principal
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .weight(1f)
                             ) {
-                                // Imagen de fondo (header) - Ahora comienza justo debajo de la barra superior
+                                // Imagen de fondo
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(280.dp)
-                                        .offset(y = (-30).dp) // Para que se una con la barra superior
+                                        .offset(y = (-30).dp)
                                 ) {
                                     Image(
                                         painter = rememberAsyncImagePainter(
@@ -233,39 +219,30 @@ fun DetalleEntrenamientoScreen(
                                         modifier = Modifier.fillMaxSize()
                                     )
 
-                                    // Gradiente para mejorar legibilidad
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                    ) {
-                                        // Fondo o contenido principal si lo necesitas
-                                        // Por ejemplo una imagen de fondo aquí
-
-                                        // Degradado de arriba hacia abajo
+                                    // Gradientes
+                                    Box(modifier = Modifier.fillMaxSize()) {
                                         Box(
                                             modifier = Modifier
                                                 .matchParentSize()
                                                 .background(
                                                     Brush.verticalGradient(
                                                         colorStops = arrayOf(
-                                                            0.0f to Color(0xFF0D0D0D),               // Sólido arriba
+                                                            0.0f to Color(0xFF0D0D0D),
                                                             0.1f to Color(0xFF0D0D0D).copy(alpha = 0.6f),
-                                                            0.2f to Color(0xFF0D0D0D).copy(alpha = 0.0f) // Transparente en el medio
+                                                            0.2f to Color(0xFF0D0D0D).copy(alpha = 0.0f)
                                                         )
                                                     )
                                                 )
                                         )
-
-                                        // Degradado de abajo hacia arriba
                                         Box(
                                             modifier = Modifier
                                                 .matchParentSize()
                                                 .background(
                                                     Brush.verticalGradient(
                                                         colorStops = arrayOf(
-                                                            0.0f to Color(0xFF0D0D0D).copy(alpha = 0.0f), // Transparente abajo
+                                                            0.0f to Color(0xFF0D0D0D).copy(alpha = 0.0f),
                                                             0.5f to Color(0xFF0D0D0D).copy(alpha = 0.6f),
-                                                            1.0f to Color(0xFF0D0D0D)                     // Sólido arriba
+                                                            1.0f to Color(0xFF0D0D0D)
                                                         )
                                                     )
                                                 )
@@ -279,49 +256,42 @@ fun DetalleEntrenamientoScreen(
                                         .fillMaxSize()
                                         .verticalScroll(scrollState)
                                 ) {
-                                    // Espacio para la imagen de fondo
                                     Spacer(modifier = Modifier.height(230.dp))
 
-                                    // Tarjeta con la información del entrenamiento
-                                    EntrenamientoInfoCard(entrenamiento, ejerciciosCargados, navController, isLiked, isSaved, {
-                                        if (isLiked) {
-                                            likesViewModel.delete(
-                                                mapOf(
-                                                    "usuario" to usuario?._id.orEmpty(),
-                                                    "entrenamiento" to entrenamiento._id
-                                                )
-                                            )
-                                            entrenamientosViewModel.updateLikesCount(contadorLikes - 1)
-                                            val contador = entrenamientosViewModel.likesCount.value
-                                            entrenamientosViewModel.update(entrenamiento._id, mapOf("likes" to (contador).toString()))
-                                        } else {
-                                            likesViewModel.new(
-                                                Likes(
-                                                    usuario = usuario?._id.orEmpty(),
-                                                    entrenamiento = entrenamiento._id
-                                                )
-                                            )
-                                            entrenamientosViewModel.updateLikesCount(contadorLikes + 1)
-                                            val contador = entrenamientosViewModel.likesCount.value
-                                            entrenamientosViewModel.update(entrenamiento._id, mapOf("likes" to (contador).toString()))
+                                    // Tarjeta con información
+                                    EntrenamientoInfoCard(
+                                        entrenamiento = entrenamiento,
+                                        ejerciciosCargados = ejerciciosCargados,
+                                        navController = navController,
+                                        isLiked = isLiked,
+                                        isSaved = isSaved,
+                                        contadorLikes = contadorLikes,
+                                        onLikeToggle = {
+                                            // Lógica simplificada de toggle
+                                            coroutineScope.launch {
+                                                likesViewModel.toggleLike(entrenamiento._id, entrenamientosViewModel)
+                                            }
+                                        },
+                                        onSaveToggle = {
+                                            coroutineScope.launch {
+                                                if (isSaved) {
+                                                    guardadosViewModel.delete(
+                                                        mapOf(
+                                                            "usuario" to (usuario?._id ?: ""),
+                                                            "entrenamiento" to entrenamiento._id
+                                                        )
+                                                    )
+                                                } else {
+                                                    guardadosViewModel.new(
+                                                        Guardados(
+                                                            usuario = usuario?._id ?: "",
+                                                            entrenamiento = entrenamiento._id
+                                                        )
+                                                    )
+                                                }
+                                            }
                                         }
-                                    }, {
-                                        if (isSaved) {
-                                            guardadosViewModel.delete(
-                                                mapOf(
-                                                    "usuario" to usuario?._id.orEmpty(),
-                                                    "entrenamiento" to entrenamiento._id
-                                                )
-                                            )
-                                        } else {
-                                            guardadosViewModel.new(
-                                                Guardados(
-                                                    usuario = usuario?._id.orEmpty(),
-                                                    entrenamiento = entrenamiento._id
-                                                )
-                                            )
-                                        }
-                                    }, contadorLikes)
+                                    )
                                 }
                             }
                         }
@@ -332,10 +302,7 @@ fun DetalleEntrenamientoScreen(
                             modifier = Modifier
                                 .padding(16.dp, 25.dp, 16.dp, 16.dp)
                                 .size(48.dp)
-                                .shadow(
-                                    elevation = 4.dp,
-                                    shape = CircleShape
-                                )
+                                .shadow(elevation = 4.dp, shape = CircleShape)
                                 .background(
                                     color = Color(0xFF1A1A1A).copy(alpha = 0.8f),
                                     shape = CircleShape

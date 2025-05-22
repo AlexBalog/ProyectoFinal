@@ -36,29 +36,10 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     private val _entrenamiento = MutableStateFlow<Entrenamientos?>(null)
     val entrenamiento: StateFlow<Entrenamientos?> get() = _entrenamiento
 
-    private val _likesCount = MutableStateFlow(0)
-    val likesCount: StateFlow<Int> get() = _likesCount
-
     fun setUsuario(usuario: Usuarios) {
         viewModelScope.launch {
             _usuario.value = usuario
             getAll()
-        }
-    }
-
-    fun updateLikesCount(newCount: Int) {
-        _likesCount.value = newCount
-    }
-
-    fun observarLikes(
-        likesViewModel: LikesViewModel,
-        usuario: Usuarios
-    ) {
-        viewModelScope.launch {
-            entrenamientos.value?.forEach { entrenamiento ->
-                likesViewModel.devolverLikesEntrenamiento(entrenamiento._id, usuario)
-                _likesCount.value = likesViewModel.likesCount.value
-            }
         }
     }
 
@@ -87,22 +68,6 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
         }
     }
 
-    // Modifica esto en EntrenamientosViewModel
-    fun observarLikesDeEntrenamiento(
-        entrenamiento: String,
-        likesViewModel: LikesViewModel,
-        usuario: Usuarios
-    ) {
-        viewModelScope.launch {
-            // Inicialización inicial
-            likesViewModel.devolverLikesEntrenamiento(entrenamiento, usuario)
-
-            // Observa continuamente los cambios en el contador
-            likesViewModel.likesCount.collect { nuevoContador ->
-                _likesCount.value = nuevoContador
-            }
-        }
-    }
 
     suspend fun getAll() {
         viewModelScope.launch {

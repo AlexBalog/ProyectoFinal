@@ -78,24 +78,32 @@ fun Navegador() {
                 DetalleEjercicioScreen(navController, id.toString())
             }
             composable(
-                "buscador?tipoBusqueda={tipoBusqueda}&categoria={categoria}&musculo={musculo}",
+                "buscador?tipoBusqueda={tipoBusqueda}&categoria={categoria}&musculo={musculo}&orden={orden}&ordenAscDesc={ordenAscDesc}",
                 arguments = listOf(
                     navArgument("tipoBusqueda") { nullable = true; defaultValue = null },
                     navArgument("categoria") { nullable = true; defaultValue = null },
-                    navArgument("musculo") { nullable = true; defaultValue = null }
+                    navArgument("musculo") { nullable = true; defaultValue = null },
+                    navArgument("orden") { nullable = true; defaultValue = null },
+                    navArgument("ordenAscDesc") { nullable = true; defaultValue = "asc" }
                 )
             ) { backStackEntry ->
                 val tipoBusqueda = backStackEntry.arguments?.getString("tipoBusqueda")
                 val categoria = backStackEntry.arguments?.getString("categoria")
                 val musculo = backStackEntry.arguments?.getString("musculo")
+                val orden = backStackEntry.arguments?.getString("orden")
+                val ordenAscDesc = backStackEntry.arguments?.getString("ordenAscDesc")
 
                 BuscadorScreen(
                     navController = navController,
                     tipoBusqueda = tipoBusqueda,
                     categoria = categoria,
-                    musculo = musculo
+                    musculo = musculo,
+                    orden = orden,
+                    ordenAscDesc = ordenAscDesc
                 )
             }
+
+
             composable("fitmind") {
                 FitMindScreen(navController = navController)
             }

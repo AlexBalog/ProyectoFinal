@@ -20,6 +20,10 @@ const EjerciciosSchema = new mongoose.Schema({
     consejos: {
         required: true,
         type: [String]
+    },
+    tutorial: {
+        requiered: true,
+        type: String
     }
 }, {__v: false});
 

@@ -135,7 +135,9 @@ fun ComenzarEntrenamientoScreen(
     val usuario by usuariosViewModel.usuario.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     var isAnimatedIn by remember { mutableStateOf(false) }
-    val ejerciciosCargados by ejerciciosViewModel.ejercicios.collectAsState()
+
+    var ejerciciosDelEntrenamiento by remember { mutableStateOf<List<Ejercicios>?>(null) }
+
     val entrenamientoSeleccionado by remember(entrenamientoId) {
         derivedStateOf { entrenamientosViewModel.entrenamientoSeleccionado.value }
     }
@@ -160,6 +162,25 @@ fun ComenzarEntrenamientoScreen(
             entrenamientoRealizadoViewModel.setUsuario(it)
             ejercicioRealizadoViewModel.setUsuario(it)
             serieRealizadaViewModel.setUsuario(it)
+
+            ejerciciosViewModel.setUsuarioSinCargar(it)
+        }
+    }
+
+    LaunchedEffect(entrenamientoSeleccionado, usuario) {
+        val entrenamiento = entrenamientoSeleccionado
+        if (entrenamiento != null && usuario != null) {
+            try {
+                // Cargar solo los ejercicios específicos de este entrenamiento
+                val ejerciciosIds = entrenamiento.ejercicios
+                if (ejerciciosIds.isNotEmpty()) {
+                    val ejerciciosCargados = ejerciciosViewModel.getListaEjerciciosDesdeIds(ejerciciosIds)
+                    ejerciciosDelEntrenamiento = ejerciciosCargados
+                }
+            } catch (e: Exception) {
+                Log.e("ComenzarEntrenamiento", "Error al cargar ejercicios: ${e.message}")
+                ejerciciosDelEntrenamiento = emptyList()
+            }
         }
     }
 
@@ -460,23 +481,23 @@ fun ComenzarEntrenamientoScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // Guardamos la lista en una variable estable
-                        val listaEjercicios = ejerciciosCargados ?: emptyList()
-                        for (ejercicio in listaEjercicios) {
-                            if (ejercicio != null) {
-                                // CAMBIO IMPORTANTE: Comprobamos si el ejercicio ya existe antes de añadirlo
-                                // Usamos also para evitar evaluación repetida
+                        val listaEjercicios = ejerciciosDelEntrenamiento ?: emptyList()
+                        if (ejerciciosDelEntrenamiento == null) {
+                            // Mostrar indicadores de carga mientras se cargan los ejercicios
+                            repeat(3) { // Asumiendo que habrá algunos ejercicios
+                                TarjetaEjercicioCargando()
+                            }
+                        } else {
+                            for (ejercicio in listaEjercicios) {
+                                // Verificamos si el ejercicio ya existe antes de añadirlo
                                 ejercicio.also { ej ->
-                                    // Verificamos si el ejercicio ya está en la lista por su ID
                                     val yaExiste = ejerciciosRealizados?.any { it.ejercicio == ej._id } == true
-
                                     if (!yaExiste) {
                                         ejercicioRealizadoViewModel.guardarALista(ej, entrenamientoId)
                                     }
                                 }
 
                                 EjercicioConSeries(ejercicio, serieRealizadaViewModel)
-                            } else {
-                                TarjetaEjercicioCargando()
                             }
                         }
                         // Espacio al final para el botón flotante

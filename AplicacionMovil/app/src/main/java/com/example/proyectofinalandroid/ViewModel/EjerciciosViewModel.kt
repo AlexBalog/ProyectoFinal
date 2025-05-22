@@ -40,6 +40,25 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
         }
     }
 
+    fun setUsuarioSinCargar(usuario: Usuarios) {
+        // Solo configurar el usuario sin cargar todos los ejercicios
+        _usuario.value = usuario
+    }
+
+    // También puedes hacer este método público si no lo está
+    suspend fun getListaEjerciciosDesdeIds(ids: List<String>): List<Ejercicios> {
+        return withContext(Dispatchers.IO) {
+            val ejercicios = mutableListOf<Ejercicios>()
+            for (id in ids) {
+                val ejercicio = fetchOne(id)
+                if (ejercicio != null) {
+                    ejercicios.add(ejercicio)
+                }
+            }
+            ejercicios
+        }
+    }
+
     suspend fun getAll() {
         viewModelScope.launch {
             try {
@@ -56,17 +75,6 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
                 _ejercicios.value = emptyList()
             }
         }
-    }
-
-    suspend fun getListaEjerciciosDesdeIds(ids: List<String>): List<Ejercicios> {
-        val ejercicios = mutableListOf<Ejercicios>()
-        for (id in ids) {
-            val ejercicio = fetchOne(id)
-            if (ejercicio != null) {
-                ejercicios.add(ejercicio)
-            }
-        }
-        return ejercicios
     }
 
 
