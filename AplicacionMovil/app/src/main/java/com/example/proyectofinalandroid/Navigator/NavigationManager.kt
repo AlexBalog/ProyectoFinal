@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.proyectofinalandroid.View.ForgotPasswordScreen
 import com.example.proyectofinalandroid.View.HistorialMedicionesScreen
 
 
@@ -59,6 +60,7 @@ fun Navegador() {
         navigation(startDestination = "login", route = "auth") {
             composable("login") { LoginScreen(navController) }
             composable("register") { RegisterScreen(navController) }
+            composable("olvidarPass") { ForgotPasswordScreen(navController) }
         }
 
         // Este es el grafo principal después de login

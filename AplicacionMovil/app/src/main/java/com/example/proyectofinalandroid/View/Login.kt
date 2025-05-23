@@ -339,7 +339,7 @@ fun LoginScreen(
                     }
 
                     TextButton(
-                        onClick = { /* Lógica para recuperar contraseña */ },
+                        onClick = { navController.navigate("olvidarPass") },
                         colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
                     ) {
                         Text("¿Olvidaste tu contraseña?", fontSize = 16.sp)

@@ -4,6 +4,8 @@ import android.util.Log
 import com.example.proyectofinalandroid.Model.Usuarios
 import com.example.proyectofinalandroid.Model.LoginResponse
 import com.example.proyectofinalandroid.Remote.UsuariosApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
@@ -61,6 +63,55 @@ class UsuariosRepository @Inject constructor(private val api: UsuariosApi) {
         } catch (e: Exception) {
             Log.e("UsuariosRepository", "Error al verificar token: ${e.message}")
             false
+        }
+    }
+
+
+    // Función para enviar código de verificación
+    suspend fun sendVerificationCode(email: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = mapOf("email" to email)
+                val response = api.sendVerificationCode(request)
+                response.isSuccessful
+            } catch (e: Exception) {
+                Log.e("UsuariosRepository", "Error al enviar código: ${e.message}")
+                false
+            }
+        }
+    }
+
+    // Función para verificar código
+    suspend fun verifyCode(email: String, code: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = mapOf(
+                    "email" to email,
+                    "code" to code
+                )
+                val response = api.verifyCode(request)
+                response.isSuccessful
+            } catch (e: Exception) {
+                Log.e("UsuariosRepository", "Error al verificar código: ${e.message}")
+                false
+            }
+        }
+    }
+
+    // Función para cambiar contraseña
+    suspend fun changePassword(email: String, newPassword: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = mapOf(
+                    "email" to email,
+                    "newPassword" to newPassword
+                )
+                val response = api.changePassword(request)
+                response.isSuccessful
+            } catch (e: Exception) {
+                Log.e("UsuariosRepository", "Error al cambiar contraseña: ${e.message}")
+                false
+            }
         }
     }
 }

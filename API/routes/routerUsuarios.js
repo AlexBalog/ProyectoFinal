@@ -291,4 +291,176 @@ router.get('/verifyToken', verifyToken, (req, res) => {
   res.status(200).json({ valid: true, userId: req.user.userId });
 });
 
+
+// Agregar al router de usuarios existente
+const VerificationCode = require('../models/modelsVerificationCode');
+const { sendVerificationCode, generateVerificationCode } = require('../middlewares/emailService');
+
+// Endpoint para enviar código de verificación
+router.post('/send-verification-code', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ message: "Email es requerido" });
+        }
+
+        // Verificar que el usuario existe
+        const user = await UsuariosSchema.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "No existe un usuario con ese email" });
+        }
+
+        // Eliminar código anterior si existe
+        await VerificationCode.deleteOne({ email });
+
+        // Generar nuevo código
+        const code = generateVerificationCode();
+        
+        // Guardar código en la base de datos
+        const verificationCode = new VerificationCode({
+            email,
+            code
+        });
+        
+        await verificationCode.save();
+
+        // Enviar email
+        const emailSent = await sendVerificationCode(email, code);
+        
+        if (!emailSent) {
+            await VerificationCode.deleteOne({ email });
+            return res.status(500).json({ message: "Error al enviar el email" });
+        }
+
+        res.status(200).json({ message: "Código de verificación enviado" });
+    } catch (error) {
+        console.error('Error en send-verification-code:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Endpoint para verificar código
+router.post('/verify-code', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        
+        if (!email || !code) {
+            return res.status(400).json({ message: "Email y código son requeridos" });
+        }
+
+        // Buscar código de verificación
+        const verificationCode = await VerificationCode.findOne({ email });
+        
+        if (!verificationCode) {
+            return res.status(404).json({ message: "Código no encontrado o expirado" });
+        }
+
+        // Verificar si ya se alcanzó el máximo de intentos
+        if (verificationCode.attempts >= 3) {
+            await VerificationCode.deleteOne({ email });
+            return res.status(429).json({ message: "Máximo de intentos alcanzado. Solicita un nuevo código" });
+        }
+
+        // Verificar si el código ha expirado
+        if (verificationCode.expiresAt < new Date()) {
+            await VerificationCode.deleteOne({ email });
+            return res.status(410).json({ message: "Código expirado. Solicita un nuevo código" });
+        }
+
+        // Verificar código
+        if (verificationCode.code !== code) {
+            // Incrementar intentos
+            verificationCode.attempts += 1;
+            await verificationCode.save();
+            
+            return res.status(400).json({ 
+                message: `Código incorrecto. Intentos restantes: ${3 - verificationCode.attempts}` 
+            });
+        }
+
+        // Código correcto - marcar como verificado
+        verificationCode.verified = true;
+        await verificationCode.save();
+
+        res.status(200).json({ message: "Código verificado correctamente" });
+    } catch (error) {
+        console.error('Error en verify-code:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Endpoint para cambiar contraseña
+router.post('/change-password', async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+        
+        if (!email || !newPassword) {
+            return res.status(400).json({ message: "Email y nueva contraseña son requeridos" });
+        }
+
+        // Verificar que existe un código verificado para este email
+        const verificationCode = await VerificationCode.findOne({ 
+            email, 
+            verified: true 
+        });
+        
+        if (!verificationCode) {
+            return res.status(403).json({ message: "Código no verificado. Completa el proceso de verificación primero" });
+        }
+
+        // Verificar que el código no ha expirado (máximo 30 minutos desde la verificación)
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        if (verificationCode.updatedAt < thirtyMinutesAgo) {
+            await VerificationCode.deleteOne({ email });
+            return res.status(410).json({ message: "Sesión de recuperación expirada. Inicia el proceso nuevamente" });
+        }
+
+        // Validar nueva contraseña
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "La contraseña debe tener al menos 6 caracteres" });
+        }
+
+        // Hashear nueva contraseña
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Actualizar contraseña del usuario
+        const updateResult = await UsuariosSchema.updateOne(
+            { email },
+            { $set: { contrasena: hashedPassword } }
+        );
+
+        if (updateResult.modifiedCount === 0) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        // Eliminar código de verificación usado
+        await VerificationCode.deleteOne({ email });
+
+        res.status(200).json({ message: "Contraseña actualizada correctamente" });
+    } catch (error) {
+        console.error('Error en change-password:', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Endpoint para limpiar códigos expirados (opcional - puede ejecutarse con cron)
+router.delete('/cleanup-codes', async (req, res) => {
+    try {
+        const result = await VerificationCode.deleteMany({
+            $or: [
+                { expiresAt: { $lt: new Date() } },
+                { attempts: { $gte: 3 } }
+            ]
+        });
+        
+        res.status(200).json({ 
+            message: `Limpieza completada. ${result.deletedCount} códigos eliminados` 
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

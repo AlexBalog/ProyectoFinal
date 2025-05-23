@@ -56,6 +56,9 @@ import com.example.proyectofinalandroid.utils.createTempImageUri
 import android.widget.Toast
 import com.example.proyectofinalandroid.utils.PermissionHelper
 import android.Manifest
+import androidx.compose.foundation.border
+import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.ui.text.input.ImeAction
 
 
 
@@ -430,20 +433,28 @@ fun SettingsScreen(navController: NavController) {
                 onDismiss = { showChangePersonalDataDialog = false },
                 onConfirm = { sexo, fechaNacimiento ->
                     scope.launch {
-                        usuariosViewModel.update(
-                            mapOf(
-                                "sexo" to sexo.toString(),
-                                "fechaNacimiento" to fechaNacimiento.toString()
-                            )
+                        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val fechaFormateada = dateFormatter.format(fechaNacimiento)
+
+                        // ✅ NUEVO: Preparar datos personales para combinar
+                        val datosPersonales = mapOf(
+                            "sexo" to sexo,
+                            "fechaNacimiento" to fechaFormateada
                         )
 
-                        delay(500)
+                        // ✅ OPTIMIZADO: Un solo update que incluye datos personales + objetivos calculados
+                        usuariosViewModel.usuario.value?.let { usuarioActual ->
+                            // Crear usuario temporal con los nuevos datos para el cálculo
+                            val usuarioTemp = usuarioActual.copy(
+                                sexo = sexo,
+                                fechaNacimiento = fechaNacimiento
+                            )
 
-                        usuariosViewModel.usuario.value?.let { usuarioActualizado ->
                             calcularObjetivos(
-                                usuario = usuarioActualizado,
+                                usuario = usuarioTemp,
                                 viewModel = usuariosViewModel,
-                                context = context
+                                context = context,
+                                datosAdicionales = datosPersonales // ✅ Combinar con objetivos
                             )
                         }
                     }
@@ -1064,10 +1075,18 @@ fun ChangePersonalDataDialog(
     var selectedSexo by remember { mutableStateOf(sexo ?: "") }
     var selectedDate by remember { mutableStateOf(fechaNacimiento ?: Date()) }
     var expandedSexoMenu by remember { mutableStateOf(false) }
+
+    // Estados para el campo de fecha
+    var dateText by remember {
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        mutableStateOf(formatter.format(fechaNacimiento ?: Date()))
+    }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val sexoOptions = listOf("Masculino", "Femenino")
     val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+    val isFormValid = selectedSexo.isNotEmpty()
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1086,7 +1105,8 @@ fun ChangePersonalDataDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Título
@@ -1166,7 +1186,7 @@ fun ChangePersonalDataDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Selección de fecha de nacimiento
+                // Campo de fecha de nacimiento
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "Fecha de nacimiento",
@@ -1182,6 +1202,11 @@ fun ChangePersonalDataDialog(
                                 color = Color(0xFF252525),
                                 shape = RoundedCornerShape(12.dp)
                             )
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFF3A3A3A),
+                                shape = RoundedCornerShape(12.dp)
+                            )
                             .clip(RoundedCornerShape(12.dp))
                             .clickable { showDatePicker = true }
                     ) {
@@ -1193,23 +1218,19 @@ fun ChangePersonalDataDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = dateFormatter.format(selectedDate),
+                                text = dateText,
                                 fontSize = 16.sp,
                                 color = Color.White
                             )
 
                             Icon(
-                                imageVector = Icons.Default.DateRange,
+                                imageVector = Icons.Default.CalendarToday,
                                 contentDescription = "Seleccionar fecha",
                                 tint = Color(0xFFAB47BC)
                             )
                         }
                     }
                 }
-
-                // Nota: Aquí deberías implementar un DatePicker personalizado o usar una biblioteca.
-                // El DatePickerDialog estándar de Material3 no está completamente implementado en
-                // este ejemplo por brevedad, pero puedes usar bibliotecas como material-dialogs.
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -1231,9 +1252,11 @@ fun ChangePersonalDataDialog(
 
                     Button(
                         onClick = { onConfirm(selectedSexo, selectedDate) },
+                        enabled = isFormValid,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFAB47BC),
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFFAB47BC).copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -1242,6 +1265,102 @@ fun ChangePersonalDataDialog(
                 }
             }
         }
+    }
+
+    // DatePicker Dialog simple
+    if (showDatePicker) {
+        CustomDatePickerDialog(
+            onDateSelected = { date ->
+                selectedDate = date
+                dateText = dateFormatter.format(date)
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false },
+            initialDate = selectedDate
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomDatePickerDialog(
+    onDateSelected: (Date) -> Unit,
+    onDismiss: () -> Unit,
+    initialDate: Date
+) {
+    // Convertir Date a milisegundos para el DatePicker
+    val calendar = Calendar.getInstance().apply {
+        time = initialDate
+    }
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = calendar.timeInMillis,
+        yearRange = 1900..Calendar.getInstance().get(Calendar.YEAR)
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        onDateSelected(Date(millis))
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFAB47BC)
+                )
+            ) {
+                Text("Confirmar", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFFAB47BC)
+                )
+            ) {
+                Text("Cancelar")
+            }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = Color(0xFF1A1A1A),
+        )
+    ) {
+        DatePicker(
+            state = datePickerState,
+            colors = DatePickerDefaults.colors(
+                containerColor = Color(0xFF1A1A1A),
+                titleContentColor = Color.White,
+                headlineContentColor = Color.White,
+                weekdayContentColor = Color.Gray,
+                dayContentColor = Color.White,
+                selectedDayContentColor = Color.White,
+                selectedDayContainerColor = Color(0xFF7B1FA2),
+                todayContentColor = Color(0xFFAB47BC),
+                todayDateBorderColor = Color(0xFFAB47BC),
+                dateTextFieldColors = TextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    disabledTextColor = Color.White,
+                    errorTextColor = Color.Red,
+                    focusedPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                    unfocusedPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                    disabledPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                    errorPlaceholderColor = Color.White.copy(alpha = 0.4f),
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    cursorColor = Color(0xFFAB47BC),
+                    selectionColors = TextSelectionColors(
+                        handleColor = Color(0xFFAB47BC),
+                        backgroundColor = Color(0xFF7B1FA2).copy(alpha = 0.4f)
+                    )
+                )
+            )
+        )
     }
 }
 

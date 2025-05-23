@@ -238,7 +238,7 @@ fun HomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Mis Entrenamientos (solo se muestra si hay entrenamientos disponibles)
-                    if (entrenamientos?.isNotEmpty() == true) {
+                    if (entrenamientos!!.filter { it.creador == usuario!!._id }?.isNotEmpty() == true) {
                         MisEntrenamientosSection(
                             entrenamientos = entrenamientos!!,
                             navController = navController,

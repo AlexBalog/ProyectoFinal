@@ -50,6 +50,9 @@ class UsuariosViewModel @Inject constructor(
     private val _userState = MutableStateFlow<UserState>(UserState.Loading)
     val userState: StateFlow<UserState> = _userState
 
+    val _passwordResetSuccess = MutableStateFlow(false)
+    val passwordResetSuccess: StateFlow<Boolean> get() = _passwordResetSuccess
+
     fun login(email: String, contrasena: String) {
         viewModelScope.launch {
             try {
@@ -77,15 +80,43 @@ class UsuariosViewModel @Inject constructor(
 
     suspend fun update(updatedData: Map<String, String>): Boolean {
         return withContext(Dispatchers.IO) {
-            val currentUser = _usuario.value ?: return@withContext false
+            val currentUser = _usuario.value
+
+            // ✅ AÑADIDO: Verificación detallada
+            if (currentUser == null) {
+                Log.e("UsuariosViewModel", "❌ ERROR: currentUser es null")
+                _errorMessage.value = "Error: Usuario no disponible"
+                return@withContext false
+            }
 
             val _id = currentUser._id
-            val token = currentUser.token ?: return@withContext false
+            val token = currentUser.token
+
+            // ✅ AÑADIDO: Log de debug para verificar valores
+            Log.d("UsuariosViewModel", "🔍 DEBUG Update:")
+            Log.d("UsuariosViewModel", "  - ID: $_id")
+            Log.d("UsuariosViewModel", "  - Token: ${token?.take(10)}...")
+            Log.d("UsuariosViewModel", "  - Datos a actualizar: $updatedData")
+
+            if (token == null) {
+                Log.e("UsuariosViewModel", "❌ ERROR: token es null")
+                _errorMessage.value = "Error: Token no disponible"
+                return@withContext false
+            }
+
+            if (_id.isEmpty()) {
+                Log.e("UsuariosViewModel", "❌ ERROR: _id está vacío")
+                _errorMessage.value = "Error: ID de usuario no válido"
+                return@withContext false
+            }
 
             val success = repository.update(_id, updatedData, token)
 
+            Log.d("UsuariosViewModel", "📥 Resultado repository.update: $success")
+
             if (!success) {
-                _errorMessage.value = "Error al actualizar el usuario"
+                Log.e("UsuariosViewModel", "❌ ERROR: repository.update devolvió false")
+                _errorMessage.value = "Error al actualizar el usuario en el servidor"
                 return@withContext false
             }
 
@@ -98,18 +129,19 @@ class UsuariosViewModel @Inject constructor(
                 apellido = updatedData["apellido"] ?: currentUser.apellido,
                 foto = updatedData["foto"] ?: currentUser.foto,
                 sexo = updatedData["sexo"] ?: currentUser.sexo,
-
                 // Convertir string a Date para fechaNacimiento
                 fechaNacimiento = if (updatedData.containsKey("fechaNacimiento")) {
                     try {
-                        dateFormat.parse(updatedData["fechaNacimiento"]!!)
+                        val fechaString = updatedData["fechaNacimiento"]!!
+                        val parsedDate = dateFormat.parse(fechaString)
+                        parsedDate
                     } catch (e: Exception) {
+                        Log.e("UsuariosViewModel", "Error parseando fecha: ${e.message}")
                         currentUser.fechaNacimiento // En caso de error, mantener el valor actual
                     }
                 } else {
                     currentUser.fechaNacimiento
                 },
-
                 // Convertir strings a Float para los valores numéricos usando toFloatOrNull()
                 altura = updatedData["altura"]?.toFloatOrNull() ?: currentUser.altura,
                 peso = updatedData["peso"]?.toFloatOrNull() ?: currentUser.peso,
@@ -119,11 +151,11 @@ class UsuariosViewModel @Inject constructor(
                 nivelActividad = updatedData["nivelActividad"] ?: currentUser.nivelActividad,
                 objetivoCalorias = updatedData["objetivoCalorias"]?.toFloatOrNull() ?: currentUser.objetivoCalorias,
                 caloriasMantenimiento = updatedData["caloriasMantenimiento"]?.toFloatOrNull() ?: currentUser.caloriasMantenimiento,
-
             )
 
             // Actualizar el estado con el nuevo usuario
             _usuario.value = updatedUser
+            Log.d("UsuariosViewModel", "✅ SUCCESS: Usuario actualizado localmente")
 
             return@withContext success
         }
@@ -288,6 +320,74 @@ class UsuariosViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _userState.value = UserState.Error(e.message ?: "Error desconocido")
+            }
+        }
+    }
+
+
+    // Función para enviar código de verificación
+    fun sendVerificationCode(email: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val success = repository.sendVerificationCode(email)
+                if (success) {
+                    _errorMessage.value = null
+                    onResult(true)
+                } else {
+                    _errorMessage.value = "No se pudo enviar el código. Verifica que el email sea correcto."
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al enviar código: ${e.message}"
+                onResult(false)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Función para verificar código
+    fun verifyCode(email: String, code: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val success = repository.verifyCode(email, code)
+                if (success) {
+                    _errorMessage.value = null
+                    onResult(true)
+                } else {
+                    _errorMessage.value = "Código incorrecto. Inténtalo de nuevo."
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al verificar código: ${e.message}"
+                onResult(false)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // Función para cambiar contraseña
+    fun changePassword(email: String, newPassword: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val success = repository.changePassword(email, newPassword)
+                if (success) {
+                    _errorMessage.value = null
+                    _passwordResetSuccess.value = true
+                    onResult(true)
+                } else {
+                    _errorMessage.value = "No se pudo cambiar la contraseña. Inténtalo de nuevo."
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al cambiar contraseña: ${e.message}"
+                onResult(false)
+            } finally {
+                _isLoading.value = false
             }
         }
     }

@@ -18,6 +18,9 @@ import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,9 +42,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.proyectofinalandroid.R
@@ -63,10 +69,16 @@ fun ForgotPasswordScreen(
     var email by remember { mutableStateOf("") }
     var isAnimatedIn by remember { mutableStateOf(false) }
     var emailSent by remember { mutableStateOf(false) }
+    var showCodeDialog by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    var verificationCode by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
     // Estados del ViewModel
     val errorMessage by usuariosViewModel.errorMessage.collectAsState()
     val isLoading by usuariosViewModel.isLoading.collectAsState()
+    val passwordResetSuccess by usuariosViewModel.passwordResetSuccess.collectAsState()
 
     // Contexto y utilidades
     val context = LocalContext.current
@@ -85,12 +97,46 @@ fun ForgotPasswordScreen(
         animationSpec = tween(durationMillis = 500)
     )
 
-    // Efectos para manejar errores
+    // Efectos para manejar errores y estados
     LaunchedEffect(errorMessage) {
         errorMessage?.let { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-            usuariosViewModel._errorMessage.value = null // Limpiar el mensaje después de mostrarlo
+            usuariosViewModel._errorMessage.value = null
         }
+    }
+
+    LaunchedEffect(passwordResetSuccess) {
+        if (passwordResetSuccess == true) {
+            Toast.makeText(context, "Contraseña cambiada exitosamente", Toast.LENGTH_LONG).show()
+            usuariosViewModel._passwordResetSuccess.value = false
+            navController.popBackStack()
+        }
+    }
+
+    // Diálogo para verificar código
+    if (showCodeDialog) {
+        CodeVerificationDialog(
+            onDismiss = { showCodeDialog = false },
+            onCodeVerified = {
+                showCodeDialog = false
+                showPasswordDialog = true
+            },
+            usuariosViewModel = usuariosViewModel,
+            email = email
+        )
+    }
+
+    // Diálogo para nueva contraseña
+    if (showPasswordDialog) {
+        NewPasswordDialog(
+            onDismiss = { showPasswordDialog = false },
+            onPasswordChanged = {
+                showPasswordDialog = false
+                navController.popBackStack()
+            },
+            usuariosViewModel = usuariosViewModel,
+            email = email
+        )
     }
 
     // UI principal
@@ -193,7 +239,7 @@ fun ForgotPasswordScreen(
                             )
 
                             Text(
-                                text = "Ingresa tu email y te enviaremos las instrucciones para restablecer tu contraseña.",
+                                text = "Ingresa tu email y te enviaremos un código de verificación para restablecer tu contraseña.",
                                 fontSize = 16.sp,
                                 color = Color.Gray,
                                 textAlign = TextAlign.Center,
@@ -219,7 +265,7 @@ fun ForgotPasswordScreen(
                                 keyboardActions = KeyboardActions(
                                     onDone = {
                                         keyboardController?.hide()
-                                        sendPasswordReset(email, context, keyboardController, usuariosViewModel) {
+                                        sendVerificationCode(email, context, usuariosViewModel) {
                                             emailSent = true
                                         }
                                     }
@@ -245,7 +291,7 @@ fun ForgotPasswordScreen(
                             // Botón de enviar
                             Button(
                                 onClick = {
-                                    sendPasswordReset(email, context, keyboardController, usuariosViewModel) {
+                                    sendVerificationCode(email, context, usuariosViewModel) {
                                         emailSent = true
                                     }
                                 },
@@ -266,7 +312,7 @@ fun ForgotPasswordScreen(
                                     )
                                 } else {
                                     Text(
-                                        "Enviar instrucciones",
+                                        "Enviar código",
                                         fontSize = 18.sp,
                                         color = Color.White
                                     )
@@ -284,7 +330,7 @@ fun ForgotPasswordScreen(
                             )
 
                             Text(
-                                text = "Email Enviado",
+                                text = "Código Enviado",
                                 fontSize = 24.sp,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
@@ -292,7 +338,7 @@ fun ForgotPasswordScreen(
                             )
 
                             Text(
-                                text = "Hemos enviado las instrucciones de recuperación a:",
+                                text = "Hemos enviado un código de verificación a:",
                                 fontSize = 16.sp,
                                 color = Color.Gray,
                                 textAlign = TextAlign.Center,
@@ -308,17 +354,9 @@ fun ForgotPasswordScreen(
                                 modifier = Modifier.padding(bottom = 24.dp)
                             )
 
-                            Text(
-                                text = "Revisa tu bandeja de entrada y sigue las instrucciones del email.",
-                                fontSize = 14.sp,
-                                color = Color.Gray,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(bottom = 24.dp)
-                            )
-
-                            // Botón para volver al login
+                            // Botón para verificar código
                             Button(
-                                onClick = { navController.popBackStack() },
+                                onClick = { showCodeDialog = true },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp),
@@ -328,7 +366,7 @@ fun ForgotPasswordScreen(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text(
-                                    "Volver al Login",
+                                    "Verificar código",
                                     fontSize = 18.sp,
                                     color = Color.White
                                 )
@@ -336,14 +374,14 @@ fun ForgotPasswordScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Botón para reenviar email
+                            // Botón para reenviar código
                             TextButton(
                                 onClick = {
-                                    emailSent = false
+                                    sendVerificationCode(email, context, usuariosViewModel) {}
                                 },
                                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFAB47BC))
                             ) {
-                                Text("¿No recibiste el email? Intentar de nuevo", fontSize = 14.sp)
+                                Text("¿No recibiste el código? Reenviar", fontSize = 14.sp)
                             }
                         }
                     }
@@ -365,11 +403,264 @@ fun ForgotPasswordScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CodeVerificationDialog(
+    onDismiss: () -> Unit,
+    onCodeVerified: () -> Unit,
+    usuariosViewModel: UsuariosViewModel,
+    email: String
+) {
+    var code by remember { mutableStateOf("") }
+    val isLoading by usuariosViewModel.isLoading.collectAsState()
+    val context = LocalContext.current
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Verificar Código",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "Ingresa el código de 6 dígitos que enviamos a tu email",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { if (it.length <= 6) code = it },
+                    label = { Text("Código", color = Color.Gray) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFFAB47BC)
+                    ),
+                    textStyle = TextStyle(color = Color.White, textAlign = TextAlign.Center)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFAB47BC))
+                    ) {
+                        Text("Cancelar")
+                    }
+
+                    Button(
+                        onClick = {
+                            verifyCode(email, code, context, usuariosViewModel, onCodeVerified)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2)),
+                        enabled = !isLoading && code.length == 6
+                    ) {
+                        if (isLoading == true) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White
+                            )
+                        } else {
+                            Text("Verificar", color = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewPasswordDialog(
+    onDismiss: () -> Unit,
+    onPasswordChanged: () -> Unit,
+    usuariosViewModel: UsuariosViewModel,
+    email: String
+) {
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var isNewPasswordVisible by remember { mutableStateOf(false) }
+    var isConfirmPasswordVisible by remember { mutableStateOf(false) }
+    val isLoading by usuariosViewModel.isLoading.collectAsState()
+    val context = LocalContext.current
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Nueva Contraseña",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = "Ingresa tu nueva contraseña",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+
+                // Nueva contraseña
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("Nueva contraseña", color = Color.Gray) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Password Icon",
+                            tint = Color(0xFFAB47BC)
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { isNewPasswordVisible = !isNewPasswordVisible }) {
+                            Icon(
+                                imageVector = if (isNewPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = "Toggle password visibility",
+                                tint = Color(0xFFAB47BC)
+                            )
+                        }
+                    },
+                    visualTransformation = if (isNewPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFFAB47BC)
+                    ),
+                    textStyle = TextStyle(color = Color.White),
+                    isError = newPassword.isNotEmpty() && !isPasswordValid(newPassword)
+                )
+
+                // Confirmar contraseña
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirmar contraseña", color = Color.Gray) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Password Icon",
+                            tint = Color(0xFFAB47BC)
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { isConfirmPasswordVisible = !isConfirmPasswordVisible }) {
+                            Icon(
+                                imageVector = if (isConfirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = "Toggle password visibility",
+                                tint = Color(0xFFAB47BC)
+                            )
+                        }
+                    },
+                    visualTransformation = if (isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color(0xFFAB47BC),
+                        unfocusedBorderColor = Color.Gray,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFFAB47BC)
+                    ),
+                    textStyle = TextStyle(color = Color.White),
+                    isError = confirmPassword.isNotEmpty() && newPassword != confirmPassword
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFAB47BC))
+                    ) {
+                        Text("Cancelar")
+                    }
+
+                    Button(
+                        onClick = {
+                            changePassword(email, newPassword, confirmPassword, context, usuariosViewModel, onPasswordChanged)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7B1FA2)),
+                        enabled = !isLoading && isPasswordValid(newPassword) && newPassword == confirmPassword
+                    ) {
+                        if (isLoading == true) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White
+                            )
+                        } else {
+                            Text("Cambiar", color = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Funciones auxiliares
-private fun sendPasswordReset(
+private fun sendVerificationCode(
     email: String,
     context: Context,
-    keyboardController: SoftwareKeyboardController?,
     usuariosViewModel: UsuariosViewModel,
     onSuccess: () -> Unit
 ) {
@@ -378,16 +669,61 @@ private fun sendPasswordReset(
         return
     }
 
-    keyboardController?.hide()
+    usuariosViewModel.sendVerificationCode(email) { success ->
+        if (success) {
+            onSuccess()
+        }
+    }
+}
 
-    // Aquí deberías llamar al método correspondiente en tu ViewModel
-    // Por ejemplo: usuariosViewModel.forgotPassword(email)
-    // Por ahora simulo el envío exitoso
+private fun verifyCode(
+    email: String,
+    code: String,
+    context: Context,
+    usuariosViewModel: UsuariosViewModel,
+    onSuccess: () -> Unit
+) {
+    if (code.length != 6) {
+        Toast.makeText(context, "El código debe tener 6 dígitos", Toast.LENGTH_SHORT).show()
+        return
+    }
 
-    Toast.makeText(context, "Email de recuperación enviado", Toast.LENGTH_LONG).show()
-    onSuccess()
+    usuariosViewModel.verifyCode(email, code) { success ->
+        if (success) {
+            onSuccess()
+        }
+    }
+}
+
+private fun changePassword(
+    email: String,
+    newPassword: String,
+    confirmPassword: String,
+    context: Context,
+    usuariosViewModel: UsuariosViewModel,
+    onSuccess: () -> Unit
+) {
+    if (!isPasswordValid(newPassword)) {
+        Toast.makeText(context, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    if (newPassword != confirmPassword) {
+        Toast.makeText(context, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    usuariosViewModel.changePassword(email, newPassword) { success ->
+        if (success) {
+            onSuccess()
+        }
+    }
 }
 
 private fun isEmailValid(email: String): Boolean {
     return email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+private fun isPasswordValid(password: String): Boolean {
+    return password.length >= 6
 }

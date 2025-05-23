@@ -27,6 +27,8 @@ import com.example.proyectofinalandroid.Model.Entrenamientos
 import com.example.proyectofinalandroid.ViewModel.EntrenamientosViewModel
 import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import android.util.Log
+import com.example.proyectofinalandroid.Model.Usuarios
+import kotlinx.coroutines.flow.filter
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +77,7 @@ fun MisEntrenamientosScreen(
                 entrenamientosFlow.collect { entrenamientosResult ->
                     value = MisEntrenamientosScreenState(
                         isLoading = false,
-                        entrenamientos = entrenamientosResult ?: emptyList()
+                        entrenamientos = entrenamientosResult!!.filter { it.creador == usuario._id } ?: emptyList()
                     )
                 }
             }
@@ -87,7 +89,7 @@ fun MisEntrenamientosScreen(
         state = screenState.value,
         onBackClick = remember { { navController.popBackStack() } },
         onCreateTrainingClick = remember { { navController.navigate("crearEntrenamiento") } },
-        onEntrenamientoClick = remember { { id -> navController.navigate("crearEntrenamiento?id=$id&publicar=true") } }
+        onEntrenamientoClick = remember { { id -> navController.navigate("crearEntrenamiento?id=$id&publicar=true") } },
     )
 }
 
@@ -104,7 +106,7 @@ fun MisEntrenamientosContent(
     state: MisEntrenamientosScreenState,
     onBackClick: () -> Unit,
     onCreateTrainingClick: () -> Unit,
-    onEntrenamientoClick: (String) -> Unit
+    onEntrenamientoClick: (String) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -158,7 +160,7 @@ fun MisEntrenamientosContent(
                 state.entrenamientos.isEmpty() -> EmptyContent(onCreateClick = onCreateTrainingClick)
                 else -> EntrenamientosList(
                     entrenamientos = state.entrenamientos,
-                    onEntrenamientoClick = onEntrenamientoClick
+                    onEntrenamientoClick = onEntrenamientoClick,
                 )
             }
         }
@@ -226,7 +228,7 @@ private fun EmptyContent(onCreateClick: () -> Unit) {
 @Composable
 private fun EntrenamientosList(
     entrenamientos: List<Entrenamientos>,
-    onEntrenamientoClick: (String) -> Unit
+    onEntrenamientoClick: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

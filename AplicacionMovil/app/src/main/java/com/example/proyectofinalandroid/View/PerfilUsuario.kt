@@ -857,19 +857,36 @@ fun GoalsSection(
                 )
 
                 // Botón para agregar medición
-                IconButton(
-                    onClick = { showNuevaMedicionDialog = true },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF7B1FA2).copy(alpha = 0.2f))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Agregar Medición",
-                        tint = Color(0xFFAB47BC)
-                    )
+                if (usuario!!.formulario == true) {
+                    IconButton(
+                        onClick = { showNuevaMedicionDialog = true },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF7B1FA2).copy(alpha = 0.2f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Agregar Medición",
+                            tint = Color(0xFFAB47BC)
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = {  },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF7B1FA2).copy(alpha = 0.2f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Completa el formulario",
+                            tint = Color(0xFFAB47BC)
+                        )
+                    }
                 }
+
             }
 
             // Divider

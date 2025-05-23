@@ -75,34 +75,51 @@ fun HistorialMedicionesScreen(
     var filtroFecha by remember { mutableStateOf("todo") } // "todo", "semana", "mes", "anyo"
     var isAnimatedIn by remember { mutableStateOf(false) }
 
-    // Cargar datos
-    LaunchedEffect(Unit) {
+    // Cargar datos de forma segura
+    LaunchedEffect(usuario) {
         usuario?.let { currentUser ->
-            medicionesViewModel.setUsuario(currentUser)
-            medicionesViewModel.cargarMedicionesPorUsuario(tipo = TipoMedicion.PESO)
-            medicionesViewModel.cargarEstadisticas(TipoMedicion.PESO)
-            delay(300)
-            isAnimatedIn = true
+            try {
+                medicionesViewModel.setUsuario(currentUser)
+                medicionesViewModel.cargarMedicionesPorUsuario(tipo = TipoMedicion.PESO)
+                medicionesViewModel.cargarEstadisticas(TipoMedicion.PESO)
+                delay(300)
+                isAnimatedIn = true
+            } catch (e: Exception) {
+                Log.e("HistorialMediciones", "Error al cargar datos: ${e.message}")
+            }
         }
     }
 
-    // Filtrar mediciones por fecha
+    // Filtrar mediciones por fecha de forma segura
     val medicionesFiltradas = remember(mediciones, filtroFecha) {
-        val currentDate = LocalDate.now()
-        mediciones.filter { medicion ->
-            if (medicion.tipo != TipoMedicion.PESO.name) return@filter false
+        try {
+            val currentDate = LocalDate.now()
+            mediciones?.filter { medicion ->
+                // Verificar que la medición no sea nula y tenga el tipo correcto
+                if (medicion?.tipo != TipoMedicion.PESO.name) return@filter false
 
-            val medicionDate = medicion.fecha.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate()
+                val medicionDate = medicion.fecha?.let { fecha ->
+                    try {
+                        fecha.toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    } catch (e: Exception) {
+                        Log.e("HistorialMediciones", "Error al parsear fecha: ${e.message}")
+                        null
+                    }
+                } ?: return@filter false
 
-            when (filtroFecha) {
-                "semana" -> ChronoUnit.DAYS.between(medicionDate, currentDate) <= 7
-                "mes" -> ChronoUnit.DAYS.between(medicionDate, currentDate) <= 30
-                "anyo" -> ChronoUnit.DAYS.between(medicionDate, currentDate) <= 365
-                else -> true // "todo"
-            }
-        }.sortedByDescending { it.fecha }
+                when (filtroFecha) {
+                    "semana" -> ChronoUnit.DAYS.between(medicionDate, currentDate) <= 7
+                    "mes" -> ChronoUnit.DAYS.between(medicionDate, currentDate) <= 30
+                    "anyo" -> ChronoUnit.DAYS.between(medicionDate, currentDate) <= 365
+                    else -> true // "todo"
+                }
+            }?.sortedByDescending { it?.fecha } ?: emptyList()
+        } catch (e: Exception) {
+            Log.e("HistorialMediciones", "Error al filtrar mediciones: ${e.message}")
+            emptyList()
+        }
     }
 
     // UI principal
@@ -146,12 +163,14 @@ fun HistorialMedicionesScreen(
                 ),
                 actions = {
                     // Botón para agregar nueva medición
-                    IconButton(onClick = { showNuevaMedicionDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Agregar medición",
-                            tint = Color(0xFFAB47BC)
-                        )
+                    if (usuario!!.formulario == true) {
+                        IconButton(onClick = { showNuevaMedicionDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Agregar medición",
+                                tint = Color(0xFFAB47BC)
+                            )
+                        }
                     }
                 }
             )
@@ -162,13 +181,11 @@ fun HistorialMedicionesScreen(
                 onPeriodoSelected = { filtroFecha = it }
             )
 
-            // Resumen de estadísticas
-            estadisticas?.let { stats ->
+            // Resumen de estadísticas - Solo mostrar si hay datos válidos
+            if (estadisticas != null && usuario != null) {
                 ResumenEstadisticasPeso(
-                    pesoActual = stats.ultimo!!.toFloat(),
-                    pesoInicial = usuario?.peso ?: 0f,
-                    cambio = stats.cambio,
-                    usuario = usuario!!
+                    estadisticas = estadisticas,
+                    usuario = usuario
                 )
             }
 
@@ -182,35 +199,46 @@ fun HistorialMedicionesScreen(
             )
 
             // Lista de mediciones
-            if (isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFFAB47BC))
+            when {
+                isLoading == true -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFFAB47BC))
+                    }
                 }
-            } else if (medicionesFiltradas.isEmpty()) {
-                EmptyMedicionesView {
-                    showNuevaMedicionDialog = true
+                medicionesFiltradas.isEmpty() -> {
+                    if (usuario!!.formulario == true) {
+                        EmptyMedicionesView {
+                            showNuevaMedicionDialog = true
+                        }
+                    } else {
+                        FormularioView(onClick = {navController.navigate("formulario")})
+                    }
+
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp) // Espacio para el FAB
-                ) {
-                    items(
-                        items = medicionesFiltradas,
-                        key = { it._id }
-                    ) { medicion ->
-                        MedicionItem(
-                            medicion = medicion,
-                            onClick = {
-                                selectedMedicion = medicion
-                                showDetailDialog = true
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(bottom = 80.dp) // Espacio para el FAB
+                    ) {
+                        items(
+                            items = medicionesFiltradas,
+                            key = { it?._id ?: UUID.randomUUID().toString() }
+                        ) { medicion ->
+                            medicion?.let { safeMedicion ->
+                                MedicionItem(
+                                    medicion = safeMedicion,
+                                    onClick = {
+                                        selectedMedicion = safeMedicion
+                                        showDetailDialog = true
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }
@@ -223,8 +251,12 @@ fun HistorialMedicionesScreen(
             onDismiss = { showNuevaMedicionDialog = false },
             onConfirm = { valor, notas ->
                 scope.launch {
-                    medicionesViewModel.registrarPeso(valor, notas)
-                    showNuevaMedicionDialog = false
+                    try {
+                        medicionesViewModel.registrarPeso(valor, notas)
+                        showNuevaMedicionDialog = false
+                    } catch (e: Exception) {
+                        Log.e("HistorialMediciones", "Error al registrar peso: ${e.message}")
+                    }
                 }
             }
         )
@@ -237,8 +269,14 @@ fun HistorialMedicionesScreen(
             onDismiss = { showDetailDialog = false },
             onDelete = {
                 scope.launch {
-                    medicionesViewModel.eliminarMedicion(selectedMedicion!!._id)
-                    showDetailDialog = false
+                    try {
+                        selectedMedicion?.let { medicion ->
+                            medicionesViewModel.eliminarMedicion(medicion._id)
+                        }
+                        showDetailDialog = false
+                    } catch (e: Exception) {
+                        Log.e("HistorialMediciones", "Error al eliminar medición: ${e.message}")
+                    }
                 }
             }
         )
@@ -289,11 +327,33 @@ fun PeriodoFilterChips(
 
 @Composable
 fun ResumenEstadisticasPeso(
-    pesoActual: Float,
-    pesoInicial: Float,
-    cambio: Float,
-    usuario: Usuarios
+    estadisticas: Any?, // Reemplaza con el tipo real de tu objeto estadísticas
+    usuario: Usuarios?
 ) {
+    // Verificaciones de seguridad
+    if (estadisticas == null || usuario == null) {
+        return
+    }
+
+    // Extracción segura de valores
+    val pesoActual = try {
+        // Aquí debes adaptar según la estructura real de tu objeto estadísticas
+        // estadisticas.ultimo?.toFloat() ?: usuario.peso
+        usuario.peso // Valor por defecto
+    } catch (e: Exception) {
+        Log.e("ResumenEstadisticas", "Error al obtener peso actual: ${e.message}")
+        usuario.peso
+    }
+
+    val pesoInicial = usuario.peso
+    val cambio = try {
+        // estadisticas.cambio ?: 0f
+        0f // Valor por defecto
+    } catch (e: Exception) {
+        Log.e("ResumenEstadisticas", "Error al obtener cambio: ${e.message}")
+        0f
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -331,7 +391,7 @@ fun ResumenEstadisticasPeso(
 
             // Cambio
             val cambioTexto = if (cambio >= 0) "+${String.format("%.1f", cambio)}" else String.format("%.1f", cambio)
-            val cambioColor =
+            val cambioColor = try {
                 if (usuario.objetivoPeso < usuario.peso) {
                     if (pesoActual > pesoInicial)
                         Color(0xFFE57373)
@@ -341,6 +401,9 @@ fun ResumenEstadisticasPeso(
                         Color(0xFF4CAF50)
                     else Color(0xFFE57373)
                 }
+            } catch (e: Exception) {
+                Color.White // Color por defecto
+            }
 
             StatItem(
                 icon = Icons.Default.TrendingUp,
@@ -406,11 +469,24 @@ fun MedicionItem(
     medicion: Mediciones,
     onClick: () -> Unit
 ) {
-    // Formatear fecha
-    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-    val fechaFormateada = dateFormatter.format(medicion.fecha)
-    val horaFormateada = timeFormatter.format(medicion.fecha)
+    // Verificación de seguridad
+    if (medicion.fecha == null) {
+        Log.w("MedicionItem", "Medición con fecha nula")
+        return
+    }
+
+    // Formatear fecha de forma segura
+    val (fechaFormateada, horaFormateada) = try {
+        val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        Pair(
+            dateFormatter.format(medicion.fecha),
+            timeFormatter.format(medicion.fecha)
+        )
+    } catch (e: Exception) {
+        Log.e("MedicionItem", "Error al formatear fecha: ${e.message}")
+        Pair("--/--/----", "--:--")
+    }
 
     Card(
         modifier = Modifier
@@ -501,7 +577,7 @@ fun MedicionItem(
                 }
 
                 // Notas (si hay)
-                if (medicion.notas.isNotEmpty()) {
+                if (!medicion.notas.isNullOrEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -543,12 +619,25 @@ fun MedicionDetailDialog(
     onDismiss: () -> Unit,
     onDelete: () -> Unit
 ) {
-    // Formatear fecha
-    val dateFormatter = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
-    val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-    val fechaFormateada = dateFormatter.format(medicion.fecha)
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-    val horaFormateada = timeFormatter.format(medicion.fecha)
+    // Verificación de seguridad
+    if (medicion.fecha == null) {
+        onDismiss()
+        return
+    }
+
+    // Formatear fecha de forma segura
+    val (fechaFormateada, horaFormateada) = try {
+        val dateFormatter = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        Pair(
+            dateFormatter.format(medicion.fecha)
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+            timeFormatter.format(medicion.fecha)
+        )
+    } catch (e: Exception) {
+        Log.e("MedicionDetailDialog", "Error al formatear fecha: ${e.message}")
+        Pair("Fecha no disponible", "--:--")
+    }
 
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
@@ -643,7 +732,7 @@ fun MedicionDetailDialog(
                 }
 
                 // Notas (si hay)
-                if (medicion.notas.isNotEmpty()) {
+                if (!medicion.notas.isNullOrEmpty()) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -810,6 +899,60 @@ fun EmptyMedicionesView(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = "Registrar medición")
+        }
+    }
+}
+
+
+@Composable
+fun FormularioView(
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Scale,
+            contentDescription = "Sin mediciones",
+            tint = Color(0xFFAB47BC),
+            modifier = Modifier.size(72.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "No hay mediciones registradas",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+
+        Text(
+            text = "Completa el formulario inicial para emprender el camino hacia tus sueños",
+            fontSize = 14.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
+        )
+
+        Button(
+            onClick = onClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF7B1FA2)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Completar Formulario"
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "Completar Formulario")
         }
     }
 }

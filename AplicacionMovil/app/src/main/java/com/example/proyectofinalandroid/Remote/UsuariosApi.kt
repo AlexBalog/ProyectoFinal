@@ -50,4 +50,13 @@ interface UsuariosApi {
     suspend fun verifyToken(
         @Header("Authorization") auth: String
     ): Response<Map<String, Any>>
+
+    @POST("usuarios/send-verification-code")
+    suspend fun sendVerificationCode(@Body request: Map<String, String>): Response<Any>
+
+    @POST("usuarios/verify-code")
+    suspend fun verifyCode(@Body request: Map<String, String>): Response<Any>
+
+    @POST("usuarios/change-password")
+    suspend fun changePassword(@Body request: Map<String, String>): Response<Any>
 }
