@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace ProyectoFinal.Views
@@ -14,6 +13,7 @@ namespace ProyectoFinal.Views
     {
         private TextBox passwordTextBox;
         private bool isPasswordVisible = false;
+        private bool hasPasswordText = false;
 
         public LoginView()
         {
@@ -52,7 +52,7 @@ namespace ProyectoFinal.Views
         // Cerrar la ventana
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Application.Current.Shutdown();
         }
 
         // Minimizar la ventana
@@ -84,11 +84,15 @@ namespace ProyectoFinal.Views
                     passwordTextBox.Foreground = passwordBox.Foreground;
                     passwordTextBox.Background = passwordBox.Background;
                     passwordTextBox.Style = this.FindResource("ModernTextBox") as Style;
+                    passwordTextBox.Tag = "Contraseña";
 
                     // Asegurarnos de que cuando el texto cambie en el TextBox, también actualice el PasswordBox
                     passwordTextBox.TextChanged += (s, args) =>
                     {
-                        passwordBox.Password = passwordTextBox.Text;
+                        if (passwordTextBox.Visibility == Visibility.Visible)
+                        {
+                            passwordBox.Password = passwordTextBox.Text;
+                        }
                     };
 
                     // Agregar el TextBox al panel padre del PasswordBox
@@ -107,6 +111,7 @@ namespace ProyectoFinal.Views
 
                 // Cambiar el icono del ojo
                 EyeIcon.Text = "👁‍🗨"; // Ojo abierto
+                EyeIcon.Foreground = this.FindResource("PrimaryBrush") as System.Windows.Media.Brush;
             }
             else
             {
@@ -120,12 +125,17 @@ namespace ProyectoFinal.Views
 
                 // Cambiar el icono del ojo
                 EyeIcon.Text = "👁"; // Ojo cerrado
+                EyeIcon.Foreground = this.FindResource("TextBrushSecondary") as System.Windows.Media.Brush;
             }
         }
 
         // Método para manejar el cambio de contraseña
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            // Controlar el placeholder
+            hasPasswordText = !string.IsNullOrEmpty(passwordBox.Password);
+            UpdatePasswordPlaceholder();
+
             // Actualizar el TextBox si está visible
             if (isPasswordVisible && passwordTextBox != null && passwordTextBox.Visibility == Visibility.Visible)
             {
@@ -147,33 +157,104 @@ namespace ProyectoFinal.Views
             }
         }
 
-        // Métodos públicos para ser llamados desde el ViewModel (si se necesita)
-
-        // Mostrar mensaje de error
-        public void ShowError(string message)
+        // Método para actualizar el placeholder de la contraseña
+        private void UpdatePasswordPlaceholder()
         {
-            ErrorText.Text = message;
-            ErrorMessage.Visibility = Visibility.Visible;
+            // Buscar el placeholder en el template del PasswordBox
+            if (passwordBox.Template != null)
+            {
+                var placeholder = passwordBox.Template.FindName("PasswordPlaceholder", passwordBox) as TextBlock;
+                if (placeholder != null)
+                {
+                    placeholder.Visibility = hasPasswordText ? Visibility.Collapsed : Visibility.Visible;
+                }
+            }
+        }
+
+        // Métodos públicos para ser llamados desde el ViewModel
+
+        // Mostrar mensaje de error con iconos específicos
+        public void ShowError(string message, string errorType = "general")
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ErrorText.Text = message;
+
+                // Cambiar icono según el tipo de error
+                switch (errorType.ToLower())
+                {
+                    case "user_not_found":
+                        ErrorIcon.Text = "👤";
+                        break;
+                    case "wrong_password":
+                        ErrorIcon.Text = "🔒";
+                        break;
+                    case "connection":
+                        ErrorIcon.Text = "🌐";
+                        break;
+                    case "validation":
+                        ErrorIcon.Text = "❌";
+                        break;
+                    default:
+                        ErrorIcon.Text = "⚠️";
+                        break;
+                }
+
+                ErrorMessage.Visibility = Visibility.Visible;
+            });
         }
 
         // Ocultar mensaje de error
         public void HideError()
         {
-            ErrorMessage.Visibility = Visibility.Collapsed;
+            Dispatcher.Invoke(() =>
+            {
+                ErrorMessage.Visibility = Visibility.Collapsed;
+            });
         }
 
         // Mostrar barra de progreso
         public void ShowProgress()
         {
-            LoginProgress.Visibility = Visibility.Visible;
-            LoginButton.IsEnabled = false;
+            Dispatcher.Invoke(() =>
+            {
+                LoginProgress.Visibility = Visibility.Visible;
+                LoginButton.IsEnabled = false;
+            });
         }
 
         // Ocultar barra de progreso
         public void HideProgress()
         {
-            LoginProgress.Visibility = Visibility.Collapsed;
-            LoginButton.IsEnabled = true;
+            Dispatcher.Invoke(() =>
+            {
+                LoginProgress.Visibility = Visibility.Collapsed;
+                LoginButton.IsEnabled = true;
+            });
+        }
+
+        // Método para limpiar campos del formulario
+        public void ClearForm()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                passwordBox.Clear();
+                hasPasswordText = false;
+                UpdatePasswordPlaceholder();
+
+                if (passwordTextBox != null)
+                {
+                    passwordTextBox.Text = "";
+                }
+
+                // Resetear la visibilidad de la contraseña
+                if (isPasswordVisible)
+                {
+                    ShowPasswordButton_Click(null, null);
+                }
+
+                HideError();
+            });
         }
     }
 }

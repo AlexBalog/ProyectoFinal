@@ -7,13 +7,16 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Views\ForgotPasswordView.xaml.cs">
+    <Compile Update="UserControls\TrainingsControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UserControls\UsersControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\DashboardWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\LoginView.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Views\RegisterView.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -21,13 +24,7 @@
     <Page Update="MainWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
-    <Page Update="Views\ForgotPasswordView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
     <Page Update="Views\LoginView.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Views\RegisterView.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

@@ -11,8 +11,9 @@ namespace ProyectoFinal.Services
     public interface IApiService
     {
         Task<LoginResponse> LoginAsync(LoginRequest loginRequest);
-        Task<ApiResponse> ForgotPasswordAsync(string email);
-        Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest);
+        void SetAuthToken(string token);
+        void ClearAuthToken();
+        Task<bool> VerifyTokenAsync();
     }
 
     public class ApiService : IApiService
@@ -23,145 +24,199 @@ namespace ProyectoFinal.Services
         public ApiService()
         {
             _httpClient = new HttpClient();
-            // Configura la URL base de tu API
-            _baseUrl = "http://localhost:3000/"; // Reemplaza con tu URL real
+            // URL base de tu API Node.js
+            _baseUrl = "http://localhost:3000";
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Configurar timeout
+            _httpClient.Timeout = TimeSpan.FromSeconds(30);
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest loginRequest)
         {
             try
             {
+                // Crear el objeto de solicitud que espera tu API
+                var apiRequest = new
+                {
+                    email = loginRequest.Email,
+                    contrasena = loginRequest.Password  // Tu API usa "contrasena" según el modelo
+                };
+
                 // Serializar el objeto de solicitud a JSON
-                var jsonContent = JsonConvert.SerializeObject(loginRequest);
+                var jsonContent = JsonConvert.SerializeObject(apiRequest);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // Realizar solicitud POST al endpoint de login
                 var response = await _httpClient.PostAsync($"{_baseUrl}/auth/login", content);
 
-                // Leer y deserializar la respuesta
+                // Leer la respuesta
                 var jsonResponse = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Deserializar respuesta exitosa
-                    var loginResponse = JsonConvert.DeserializeObject<LoginResponse>(jsonResponse);
-                    loginResponse.IsSuccess = true;
-                    return loginResponse;
+                    // La API devolvió éxito
+                    try
+                    {
+                        // Intentar deserializar como respuesta de login exitosa
+                        var apiResponse = JsonConvert.DeserializeObject<dynamic>(jsonResponse);
+
+                        // Crear la respuesta de login
+                        var loginResponse = new LoginResponse
+                        {
+                            IsSuccess = true,
+                            Token = apiResponse?.token?.ToString(),
+                            RefreshToken = apiResponse?.refreshToken?.ToString(),
+                            User = new UserData
+                            {
+                                Email = apiResponse?.user?.email?.ToString() ?? loginRequest.Email,
+                                FirstName = apiResponse?.user?.nombre?.ToString(),
+                                LastName = apiResponse?.user?.apellido?.ToString(),
+                                Id = apiResponse?.user?._id?.ToString(),
+                                ProfileImage = apiResponse?.user?.foto?.ToString()
+                            }
+                        };
+
+                        // Si hay token, configurar para futuras peticiones
+                        if (!string.IsNullOrEmpty(loginResponse.Token))
+                        {
+                            SetAuthToken(loginResponse.Token);
+                        }
+
+                        return loginResponse;
+                    }
+                    catch (JsonException)
+                    {
+                        // Si no se puede parsear como objeto, asumir que es exitoso pero sin datos estructurados
+                        return new LoginResponse
+                        {
+                            IsSuccess = true,
+                            Token = null,
+                            ErrorMessage = null
+                        };
+                    }
                 }
                 else
                 {
-                    // Manejar errores
-                    var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(jsonResponse);
-                    return new LoginResponse
+                    // Manejar errores específicos de la API
+                    try
                     {
-                        IsSuccess = false,
-                        ErrorMessage = errorResponse?.Message ?? "Error de autenticación"
-                    };
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(jsonResponse);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error de autenticación";
+
+                        var loginResponse = new LoginResponse
+                        {
+                            IsSuccess = false
+                        };
+
+                        // Determinar el tipo de error específico
+                        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                        {
+                            if (errorMessage.ToLower().Contains("usuario") || errorMessage.ToLower().Contains("encontrado"))
+                            {
+                                loginResponse.ErrorMessage = "Usuario no encontrado";
+                                loginResponse.ErrorType = "user_not_found";
+                            }
+                            else if (errorMessage.ToLower().Contains("contraseña") || errorMessage.ToLower().Contains("credencial"))
+                            {
+                                loginResponse.ErrorMessage = "Contraseña incorrecta";
+                                loginResponse.ErrorType = "wrong_password";
+                            }
+                            else
+                            {
+                                loginResponse.ErrorMessage = "Credenciales inválidas";
+                                loginResponse.ErrorType = "wrong_password";
+                            }
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                        {
+                            loginResponse.ErrorMessage = "Datos de entrada inválidos";
+                            loginResponse.ErrorType = "validation";
+                        }
+                        else
+                        {
+                            loginResponse.ErrorMessage = errorMessage;
+                            loginResponse.ErrorType = "general";
+                        }
+
+                        return loginResponse;
+                    }
+                    catch (JsonException)
+                    {
+                        // Si no se puede parsear el error, usar mensaje genérico
+                        return new LoginResponse
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = $"Error del servidor (Código: {response.StatusCode})",
+                            ErrorType = "general"
+                        };
+                    }
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                // Manejar excepciones
+                // Error de conexión
                 return new LoginResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = $"Error al comunicarse con el servidor: {ex.Message}"
+                    ErrorMessage = "No se pudo conectar con el servidor. Verifique su conexión a internet.",
+                    ErrorType = "connection"
+                };
+            }
+            catch (TaskCanceledException ex)
+            {
+                // Timeout
+                return new LoginResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Tiempo de espera agotado. El servidor no responde.",
+                    ErrorType = "connection"
+                };
+            }
+            catch (Exception ex)
+            {
+                // Error inesperado
+                return new LoginResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Error inesperado: {ex.Message}",
+                    ErrorType = "general"
                 };
             }
         }
 
-        public async Task<ApiResponse> ForgotPasswordAsync(string email)
+        public void SetAuthToken(string token)
         {
-            try
+            if (!string.IsNullOrEmpty(token))
             {
-                // Crear el objeto de solicitud
-                var request = new
-                {
-                    Email = email
-                };
-
-                // Serializar a JSON
-                var jsonContent = JsonConvert.SerializeObject(request);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                // Realizar solicitud POST al endpoint de recuperación de contraseña
-                var response = await _httpClient.PostAsync($"{_baseUrl}/auth/forgot-password", content);
-
-                // Leer y deserializar la respuesta
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return new ApiResponse
-                    {
-                        IsSuccess = true,
-                        Message = "Se ha enviado un enlace de recuperación a su correo electrónico"
-                    };
-                }
-                else
-                {
-                    // Manejar errores
-                    var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(jsonResponse);
-                    return new ApiResponse
-                    {
-                        IsSuccess = false,
-                        Message = errorResponse?.Message ?? "Error al procesar la solicitud"
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                // Manejar excepciones
-                return new ApiResponse
-                {
-                    IsSuccess = false,
-                    Message = $"Error al comunicarse con el servidor: {ex.Message}"
-                };
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
             }
         }
 
-        public async Task<RegisterResponse> RegisterAsync(RegisterRequest registerRequest)
+        public void ClearAuthToken()
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+        }
+
+        // Método para verificar si el token es válido
+        public async Task<bool> VerifyTokenAsync()
         {
             try
             {
-                // Serializar el objeto de solicitud a JSON
-                var jsonContent = JsonConvert.SerializeObject(registerRequest);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                // Realizar solicitud POST al endpoint de registro
-                var response = await _httpClient.PostAsync($"{_baseUrl}/auth/register", content);
-
-                // Leer y deserializar la respuesta
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    // Deserializar respuesta exitosa
-                    var registerResponse = JsonConvert.DeserializeObject<RegisterResponse>(jsonResponse);
-                    registerResponse.IsSuccess = true;
-                    return registerResponse;
-                }
-                else
-                {
-                    // Manejar errores
-                    var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(jsonResponse);
-                    return new RegisterResponse
-                    {
-                        IsSuccess = false,
-                        ErrorMessage = errorResponse?.Message ?? "Error al registrar usuario"
-                    };
-                }
+                var response = await _httpClient.GetAsync($"{_baseUrl}/auth/verify");
+                return response.IsSuccessStatusCode;
             }
-            catch (Exception ex)
+            catch
             {
-                // Manejar excepciones
-                return new RegisterResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = $"Error al comunicarse con el servidor: {ex.Message}"
-                };
+                return false;
             }
+        }
+
+        // Dispose del HttpClient cuando se destruya el servicio
+        public void Dispose()
+        {
+            _httpClient?.Dispose();
         }
     }
 }

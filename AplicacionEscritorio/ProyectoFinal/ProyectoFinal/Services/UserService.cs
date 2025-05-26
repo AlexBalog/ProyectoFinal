@@ -21,7 +21,7 @@ namespace ProyectoFinal.Services
     {
         private readonly string _tokenFileName = "token.dat";
         private readonly string _credentialsFileName = "credentials.dat";
-        private readonly string _encryptionKey = "FitSphere2024SecretKey"; // Clave para encriptar datos
+        private readonly string _encryptionKey = "FitSphereSecretKey"; // Clave para encriptar datos
 
         // Métodos para el token
         public void SaveToken(string token)

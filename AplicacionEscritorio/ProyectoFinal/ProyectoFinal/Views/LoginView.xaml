@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ProyectoFinal.Views"
         xmlns:viewmodels="clr-namespace:ProyectoFinal.ViewModels"
         mc:Ignorable="d"
-        Title="FitSphere - Login" Height="600" Width="450"
+        Title="FitSphere - Login" Height="500" Width="450"
         WindowStyle="None" 
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -24,21 +24,13 @@
 
         <!-- Colores Base -->
         <Color x:Key="PrimaryColor">#8A2BE2</Color>
-        <!-- Morado principal -->
         <Color x:Key="PrimaryLightColor">#B876F1</Color>
-        <!-- Morado claro -->
         <Color x:Key="PrimaryDarkColor">#6A1B9A</Color>
-        <!-- Morado oscuro -->
         <Color x:Key="BackgroundColor">#121212</Color>
-        <!-- Negro fondo -->
         <Color x:Key="SurfaceColor">#1E1E1E</Color>
-        <!-- Negro superficie -->
         <Color x:Key="TextColorPrimary">#FFFFFF</Color>
-        <!-- Texto blanco -->
         <Color x:Key="TextColorSecondary">#E0E0E0</Color>
-        <!-- Texto gris claro -->
         <Color x:Key="ErrorColor">#FF5252</Color>
-        <!-- Rojo error -->
 
         <!-- Brushes -->
         <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
@@ -169,51 +161,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Estilo para botón secundario -->
-        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource PrimaryLightBrush}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Width" Value="200"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-            <Setter Property="RenderTransform">
-                <Setter.Value>
-                    <ScaleTransform ScaleX="1" ScaleY="1"/>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="20"
-                                Padding="15,5">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-                    <Setter Property="RenderTransform">
-                        <Setter.Value>
-                            <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="RenderTransform">
-                        <Setter.Value>
-                            <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
         <!-- Estilo para TextBox -->
         <Style x:Key="ModernTextBox" TargetType="{x:Type TextBox}">
             <Setter Property="Height" Value="45"/>
@@ -258,7 +205,7 @@
             </Setter>
         </Style>
 
-        <!-- Estilo para PasswordBox -->
+        <!-- Estilo para PasswordBox CON PLACEHOLDER -->
         <Style x:Key="ModernPasswordBox" TargetType="{x:Type PasswordBox}">
             <Setter Property="Height" Value="45"/>
             <Setter Property="Foreground" Value="{StaticResource TextBrushPrimary}"/>
@@ -266,7 +213,7 @@
             <Setter Property="CaretBrush" Value="{StaticResource PrimaryBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#333333"/>
-            <Setter Property="Padding" Value="10,0,0,0"/>
+            <Setter Property="Padding" Value="10,0,40,0"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
@@ -277,10 +224,10 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="22.5">
                             <Grid>
-                                <TextBlock x:Name="Placeholder" 
-                                           Text="{TemplateBinding Tag}" 
+                                <TextBlock x:Name="PasswordPlaceholder" 
+                                           Text="Contraseña" 
                                            Foreground="#999999" 
-                                           Visibility="Collapsed"
+                                           Visibility="Visible"
                                            VerticalAlignment="Center"
                                            Margin="10,0,0,0"/>
                                 <ScrollViewer x:Name="PART_ContentHost" 
@@ -292,6 +239,7 @@
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
                                 <Setter Property="BorderThickness" Value="2"/>
+                                <Setter Property="Visibility" TargetName="PasswordPlaceholder" Value="Collapsed"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -344,6 +292,36 @@
             </Setter>
         </Style>
 
+        <!-- Estilo mejorado para el botón del ojo -->
+        <Style x:Key="EyeButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="15"
+                                Padding="5">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#2A2A2A"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#404040"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <!-- Estilo para botón de ventana -->
         <Style x:Key="WindowButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Width" Value="30"/>
@@ -388,27 +366,6 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,20,0,10"/>
         </Style>
-
-        <!-- Estilo para botones simples (TextButton) -->
-        <Style x:Key="TextButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="{StaticResource PrimaryLightBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
 
     <!-- Ventana principal -->
@@ -439,8 +396,6 @@
                     <!-- Título -->
                     <RowDefinition Height="*"/>
                     <!-- Campos de formulario -->
-                    <RowDefinition Height="Auto"/>
-                    <!-- Botones adicionales -->
                 </Grid.RowDefinitions>
 
                 <!-- Logo -->
@@ -455,54 +410,37 @@
                 <TextBlock Grid.Row="1" Text="FitSphere" Style="{StaticResource TitleStyle}" />
 
                 <!-- Campos de formulario -->
-                <StackPanel Grid.Row="2" x:Name="ControlsPanel" Opacity="1" Margin="0,20,0,0">
-                    <TextBlock Text="Correo electrónico" Foreground="{StaticResource TextBrushSecondary}" FontSize="13" Margin="5,0,0,5"/>
+                <StackPanel Grid.Row="2" x:Name="ControlsPanel" Opacity="1" Margin="0,20,0,20" VerticalAlignment="Center">
+                    <TextBlock Text="Correo electrónico" Foreground="{StaticResource TextBrushSecondary}" FontSize="13" Margin="5,5,0,5"/>
                     <TextBox Style="{StaticResource ModernTextBox}" 
                              Tag="Correo electrónico"
                              Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,15"/>
 
                     <TextBlock Text="Contraseña" Foreground="{StaticResource TextBrushSecondary}" FontSize="13" Margin="5,0,0,5"/>
-                    <Grid Margin="0,0,0,10">
+                    <Grid Margin="0,0,0,25">
                         <PasswordBox x:Name="passwordBox" 
                                    Style="{StaticResource ModernPasswordBox}" 
-                                   Tag="Contraseña"
                                    PasswordChanged="PasswordBox_PasswordChanged"/>
                         <Button x:Name="ShowPasswordButton" 
-                                Width="30" Height="45" 
+                                Style="{StaticResource EyeButtonStyle}"
                                 HorizontalAlignment="Right" 
-                                Background="Transparent" 
-                                BorderThickness="0"
                                 Margin="0,0,5,0"
                                 Click="ShowPasswordButton_Click"
                                 Panel.ZIndex="1">
-                            <!-- Colocamos el botón por encima con Panel.ZIndex -->
                             <TextBlock x:Name="EyeIcon" Text="👁" FontSize="16" Foreground="{StaticResource TextBrushSecondary}"/>
                         </Button>
                     </Grid>
 
-                    <!-- Opciones adicionales -->
-                    <Grid Margin="0,5,0,20">
-                        <CheckBox Content="Recordarme" 
-                                 Style="{StaticResource ModernCheckBox}"
-                                 IsChecked="{Binding RememberMe}" 
-                                 HorizontalAlignment="Left"/>
-
-                        <Button Content="¿Olvidó su contraseña?" 
-                                Style="{StaticResource TextButtonStyle}"
-                                Command="{Binding ForgotPasswordCommand}"
-                                HorizontalAlignment="Right"
-                                Width="Auto" 
-                                Height="Auto"
-                                Padding="0"/>
-                    </Grid>
+                   
 
                     <!-- Botón de login -->
                     <Button x:Name="LoginButton" 
                             Content="Iniciar Sesión" 
                             Style="{StaticResource PrimaryButtonStyle}"
                             Command="{Binding LoginCommand}"
-                            CommandParameter="{Binding ElementName=passwordBox}">
+                            CommandParameter="{Binding ElementName=passwordBox}"
+                            HorizontalAlignment="Center">
                         <Button.Triggers>
                             <EventTrigger RoutedEvent="Button.Loaded">
                                 <BeginStoryboard Storyboard="{StaticResource ButtonAnimation}"/>
@@ -520,42 +458,25 @@
                                    Foreground="{StaticResource PrimaryBrush}"
                                    Background="#333333"/>
                     </Grid>
+
+                    <!-- Mensaje de error mejorado -->
+                    <Border x:Name="ErrorMessage" 
+                            Background="#301B1B" 
+                            BorderBrush="#571C1C" 
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10"
+                            Margin="0,15,0,0"
+                            Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="ErrorIcon" Text="⚠️" Margin="0,0,10,0" FontSize="16"/>
+                            <TextBlock x:Name="ErrorText" 
+                                       Text="Credenciales incorrectas. Intente nuevamente."
+                                       Foreground="{StaticResource ErrorBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
-
-                <!-- Botones adicionales -->
-                <StackPanel Grid.Row="3" Orientation="Vertical" Margin="0,0,0,20">
-                    <TextBlock Text="¿Aún no tienes cuenta?" 
-                               Foreground="{StaticResource TextBrushSecondary}" 
-                               FontSize="13" 
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,10"/>
-
-                    <Button Content="Registrarse" 
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Command="{Binding RegisterCommand}"
-                            Width="200"
-                            Height="40"/>
-                </StackPanel>
-
-                <!-- Mensaje de error -->
-                <Border x:Name="ErrorMessage" 
-                        Grid.Row="2" 
-                        Background="#301B1B" 
-                        BorderBrush="#571C1C" 
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="10"
-                        Margin="0,15,0,10"
-                        Visibility="Collapsed"
-                        VerticalAlignment="Bottom">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠️" Margin="0,0,10,0"/>
-                        <TextBlock x:Name="ErrorText" 
-                                   Text="Credenciales incorrectas. Intente nuevamente."
-                                   Foreground="{StaticResource ErrorBrush}"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
             </Grid>
         </Grid>
     </Border>
