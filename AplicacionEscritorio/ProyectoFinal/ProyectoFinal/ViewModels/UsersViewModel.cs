@@ -35,6 +35,9 @@ namespace ProyectoFinal.ViewModels
             // Inicializar colecciones
             Usuarios = new ObservableCollection<Usuario>();
 
+            // Inicializar filtros con valores por defecto
+            InitializeFilters();
+
             // Inicializar comandos
             InitializeCommands();
 
@@ -145,6 +148,7 @@ namespace ProyectoFinal.ViewModels
                 {
                     _filterSexo = value;
                     OnPropertyChanged();
+                    System.Diagnostics.Debug.WriteLine($"FilterSexo changed to: '{_filterSexo}'");
                 }
             }
         }
@@ -158,6 +162,13 @@ namespace ProyectoFinal.ViewModels
                 {
                     _filterPlan = value;
                     OnPropertyChanged();
+                    System.Diagnostics.Debug.WriteLine($"FilterPlan changed to: '{_filterPlan}'");
+
+                    // Debug adicional para el filtro de Plan
+                    if (_filterPlan == "Todos")
+                        System.Diagnostics.Debug.WriteLine("Plan filter set to 'Todos' - should show all users");
+                    else if (!string.IsNullOrEmpty(_filterPlan))
+                        System.Diagnostics.Debug.WriteLine($"Plan filter set to specific value: '{_filterPlan}' - should filter users");
                 }
             }
         }
@@ -183,6 +194,15 @@ namespace ProyectoFinal.ViewModels
         #endregion
 
         #region Métodos
+        private void InitializeFilters()
+        {
+            FilterNombre = string.Empty;
+            FilterApellido = string.Empty;
+            FilterEmail = string.Empty;
+            FilterSexo = "Todos"; // Valor por defecto
+            FilterPlan = "Todos"; // Valor por defecto
+        }
+
         public async Task LoadUsersAsync()
         {
             try
@@ -218,12 +238,22 @@ namespace ProyectoFinal.ViewModels
             {
                 IsLoading = true;
 
-                // Verificar si hay filtros aplicados
-                if (string.IsNullOrWhiteSpace(FilterNombre) &&
-                    string.IsNullOrWhiteSpace(FilterApellido) &&
-                    string.IsNullOrWhiteSpace(FilterEmail) &&
-                    string.IsNullOrWhiteSpace(FilterSexo) &&
-                    string.IsNullOrWhiteSpace(FilterPlan))
+                // Debug: mostrar valores de filtros
+                System.Diagnostics.Debug.WriteLine($"Aplicando filtros:");
+                System.Diagnostics.Debug.WriteLine($"  Nombre: '{FilterNombre}'");
+                System.Diagnostics.Debug.WriteLine($"  Apellido: '{FilterApellido}'");
+                System.Diagnostics.Debug.WriteLine($"  Email: '{FilterEmail}'");
+                System.Diagnostics.Debug.WriteLine($"  Sexo: '{FilterSexo}'");
+                System.Diagnostics.Debug.WriteLine($"  Plan: '{FilterPlan}'");
+
+                // Verificar si hay filtros aplicados (excluyendo "Todos" que representa sin filtro)
+                bool hasFilters = !string.IsNullOrWhiteSpace(FilterNombre) ||
+                                  !string.IsNullOrWhiteSpace(FilterApellido) ||
+                                  !string.IsNullOrWhiteSpace(FilterEmail) ||
+                                  (!string.IsNullOrEmpty(FilterSexo) && FilterSexo != "Todos") ||
+                                  (!string.IsNullOrEmpty(FilterPlan) && FilterPlan != "Todos");
+
+                if (!hasFilters)
                 {
                     // Sin filtros, cargar todos
                     await LoadUsersAsync();
@@ -232,14 +262,47 @@ namespace ProyectoFinal.ViewModels
 
                 var filter = new UsuarioFilter
                 {
-                    nombre = FilterNombre,
-                    apellido = FilterApellido,
-                    email = FilterEmail,
-                    sexo = FilterSexo,
-                    plan = FilterPlan
+                    nombre = string.IsNullOrWhiteSpace(FilterNombre) ? null : FilterNombre,
+                    apellido = string.IsNullOrWhiteSpace(FilterApellido) ? null : FilterApellido,
+                    email = string.IsNullOrWhiteSpace(FilterEmail) ? null : FilterEmail,
+                    sexo = (string.IsNullOrEmpty(FilterSexo) || FilterSexo == "Todos") ? null : FilterSexo,
+                    plan = (string.IsNullOrEmpty(FilterPlan) || FilterPlan == "Todos") ? null : FilterPlan
                 };
 
+                System.Diagnostics.Debug.WriteLine($"Filtro creado:");
+                System.Diagnostics.Debug.WriteLine($"  filter.nombre: '{filter.nombre}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.apellido: '{filter.apellido}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.email: '{filter.email}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.sexo: '{filter.sexo}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.plan: '{filter.plan}'");
+
+                // Debug específico para Plan
+                if (filter.plan != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"PLAN FILTER ACTIVE: Will search for users with plan='{filter.plan}'");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"PLAN FILTER INACTIVE: Will show users with any plan");
+                }
+
                 var users = await _dataService.GetUsuariosFiltradosAsync(filter);
+
+                System.Diagnostics.Debug.WriteLine($"Usuarios encontrados: {users.Count}");
+
+                // Debug de los planes de los usuarios encontrados
+                if (users.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("Planes de usuarios encontrados:");
+                    foreach (var user in users.Take(5)) // Mostrar solo los primeros 5 para no spam
+                    {
+                        System.Diagnostics.Debug.WriteLine($"  {user.NombreCompleto}: Plan='{user.plan}', Sexo='{user.sexo}'");
+                    }
+                }
+                else if (filter.plan != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"NO SE ENCONTRARON USUARIOS CON PLAN '{filter.plan}'");
+                }
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -256,6 +319,7 @@ namespace ProyectoFinal.ViewModels
             {
                 MessageBox.Show($"Error al aplicar filtros: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Error en ApplyFiltersAsync: {ex}");
             }
             finally
             {
@@ -265,12 +329,14 @@ namespace ProyectoFinal.ViewModels
 
         private async Task ClearFiltersAsync()
         {
+            // Limpiar todos los filtros
             FilterNombre = string.Empty;
             FilterApellido = string.Empty;
             FilterEmail = string.Empty;
-            FilterSexo = string.Empty;
-            FilterPlan = string.Empty;
+            FilterSexo = "Todos"; // Volver a "Todos"
+            FilterPlan = "Todos"; // Volver a "Todos"
 
+            // Recargar todos los usuarios
             await LoadUsersAsync();
         }
 

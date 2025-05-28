@@ -67,3 +67,6 @@ C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\Proyect
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\UsersControl.g.cs
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\UsersControl.baml
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\TrainingsControl.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\TrainingsControl.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\ExercisesControl.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\ExercisesControl.baml

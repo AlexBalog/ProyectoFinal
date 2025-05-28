@@ -252,13 +252,11 @@ router.post("/getFilter", verifyToken, async (req, res) => {
   try {
       const condiciones = {};
 
-      if (req.body.dni) condiciones.dni = req.body.dni;
       if (req.body.nombre) condiciones.nombre = req.body.nombre;
       if (req.body.apellido) condiciones.apellido = req.body.apellido;
-      if (req.body.rol) condiciones.rol = req.body.rol;
       if (req.body.email) condiciones.email = req.body.email;
-      if (req.body.ciudad) condiciones.ciudad = req.body.ciudad;
       if (req.body.sexo) condiciones.sexo = req.body.sexo;
+      if (req.body.plan) condiciones.plan = req.body.plan;
 
       const data = await UsuariosSchema.find(condiciones);
       if (data.length === 0) {

@@ -37,6 +37,9 @@ namespace ProyectoFinal.ViewModels
             // Inicializar colecciones
             Entrenamientos = new ObservableCollection<Entrenamiento>();
 
+            // Inicializar filtros con valores por defecto
+            InitializeFilters();
+
             // Inicializar comandos
             InitializeCommands();
 
@@ -121,6 +124,7 @@ namespace ProyectoFinal.ViewModels
                 {
                     _filterCategoria = value;
                     OnPropertyChanged();
+                    System.Diagnostics.Debug.WriteLine($"FilterCategoria changed to: '{_filterCategoria}'");
                 }
             }
         }
@@ -134,6 +138,7 @@ namespace ProyectoFinal.ViewModels
                 {
                     _filterMusculoPrincipal = value;
                     OnPropertyChanged();
+                    System.Diagnostics.Debug.WriteLine($"FilterMusculoPrincipal changed to: '{_filterMusculoPrincipal}'");
                 }
             }
         }
@@ -186,6 +191,7 @@ namespace ProyectoFinal.ViewModels
                 {
                     _filterEstado = value;
                     OnPropertyChanged();
+                    System.Diagnostics.Debug.WriteLine($"FilterEstado changed to: '{_filterEstado}'");
                 }
             }
         }
@@ -215,6 +221,17 @@ namespace ProyectoFinal.ViewModels
         #endregion
 
         #region Métodos
+        private void InitializeFilters()
+        {
+            FilterNombre = string.Empty;
+            FilterCategoria = "Todas"; // Valor por defecto
+            FilterMusculoPrincipal = "Todos"; // Valor por defecto
+            FilterDuracionMin = string.Empty;
+            FilterDuracionMax = string.Empty;
+            FilterCreador = string.Empty;
+            FilterEstado = "Todos"; // Valor por defecto
+        }
+
         public async Task LoadTrainingsAsync()
         {
             try
@@ -250,25 +267,38 @@ namespace ProyectoFinal.ViewModels
             {
                 IsLoading = true;
 
-                // Verificar si hay filtros aplicados
-                if (string.IsNullOrWhiteSpace(FilterNombre) &&
-                    string.IsNullOrWhiteSpace(FilterCategoria) &&
-                    string.IsNullOrWhiteSpace(FilterMusculoPrincipal) &&
-                    string.IsNullOrWhiteSpace(FilterDuracionMin) &&
-                    string.IsNullOrWhiteSpace(FilterDuracionMax) &&
-                    string.IsNullOrWhiteSpace(FilterCreador) &&
-                    string.IsNullOrWhiteSpace(FilterEstado))
+                // Debug: mostrar valores de filtros
+                System.Diagnostics.Debug.WriteLine($"Aplicando filtros de entrenamientos:");
+                System.Diagnostics.Debug.WriteLine($"  Nombre: '{FilterNombre}'");
+                System.Diagnostics.Debug.WriteLine($"  Categoría: '{FilterCategoria}'");
+                System.Diagnostics.Debug.WriteLine($"  Músculo Principal: '{FilterMusculoPrincipal}'");
+                System.Diagnostics.Debug.WriteLine($"  Duración Min: '{FilterDuracionMin}'");
+                System.Diagnostics.Debug.WriteLine($"  Duración Max: '{FilterDuracionMax}'");
+                System.Diagnostics.Debug.WriteLine($"  Creador: '{FilterCreador}'");
+                System.Diagnostics.Debug.WriteLine($"  Estado: '{FilterEstado}'");
+
+                // Verificar si hay filtros aplicados (excluyendo "Todas/Todos" que representa sin filtro)
+                bool hasFilters = !string.IsNullOrWhiteSpace(FilterNombre) ||
+                                  (!string.IsNullOrEmpty(FilterCategoria) && FilterCategoria != "Todas") ||
+                                  (!string.IsNullOrEmpty(FilterMusculoPrincipal) && FilterMusculoPrincipal != "Todos") ||
+                                  !string.IsNullOrWhiteSpace(FilterDuracionMin) ||
+                                  !string.IsNullOrWhiteSpace(FilterDuracionMax) ||
+                                  !string.IsNullOrWhiteSpace(FilterCreador) ||
+                                  (!string.IsNullOrEmpty(FilterEstado) && FilterEstado != "Todos");
+
+                if (!hasFilters)
                 {
+                    // Sin filtros, cargar todos
                     await LoadTrainingsAsync();
                     return;
                 }
 
                 var filter = new EntrenamientoFilter
                 {
-                    nombre = FilterNombre,
-                    categoria = FilterCategoria,
-                    musculoPrincipal = FilterMusculoPrincipal,
-                    creador = FilterCreador
+                    nombre = string.IsNullOrWhiteSpace(FilterNombre) ? null : FilterNombre,
+                    categoria = (string.IsNullOrEmpty(FilterCategoria) || FilterCategoria == "Todas") ? null : FilterCategoria,
+                    musculoPrincipal = (string.IsNullOrEmpty(FilterMusculoPrincipal) || FilterMusculoPrincipal == "Todos") ? null : FilterMusculoPrincipal,
+                    creador = string.IsNullOrWhiteSpace(FilterCreador) ? null : FilterCreador
                 };
 
                 // Manejar duración
@@ -278,24 +308,50 @@ namespace ProyectoFinal.ViewModels
                     filter.duracionMax = durMax;
 
                 // Manejar estado
-                if (!string.IsNullOrWhiteSpace(FilterEstado))
+                if (!string.IsNullOrEmpty(FilterEstado) && FilterEstado != "Todos")
                 {
                     switch (FilterEstado)
                     {
-                        case "aprobado":
+                        case "Aprobados":
                             filter.aprobado = true;
                             break;
-                        case "pendiente":
+                        case "Pendientes":
                             filter.pedido = true;
                             filter.aprobado = false;
                             break;
-                        case "sin_solicitar":
+                        case "Sin solicitar":
                             filter.pedido = false;
                             break;
                     }
                 }
 
+                System.Diagnostics.Debug.WriteLine($"Filtro creado:");
+                System.Diagnostics.Debug.WriteLine($"  filter.nombre: '{filter.nombre}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.categoria: '{filter.categoria}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.musculoPrincipal: '{filter.musculoPrincipal}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.creador: '{filter.creador}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.duracionMin: '{filter.duracionMin}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.duracionMax: '{filter.duracionMax}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.aprobado: '{filter.aprobado}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.pedido: '{filter.pedido}'");
+
                 var trainings = await _dataService.GetEntrenamientosFiltradosAsync(filter);
+
+                System.Diagnostics.Debug.WriteLine($"Entrenamientos encontrados: {trainings.Count}");
+
+                // Debug de los entrenamientos encontrados
+                if (trainings.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("Entrenamientos encontrados:");
+                    foreach (var training in trainings.Take(5)) // Mostrar solo los primeros 5
+                    {
+                        System.Diagnostics.Debug.WriteLine($"  {training.nombre}: Categoría='{training.categoria}', Músculo='{training.musculoPrincipal}', Estado='{training.EstadoAprobacion}'");
+                    }
+                }
+                else if (filter.categoria != null || filter.musculoPrincipal != null || filter.aprobado != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"NO SE ENCONTRARON ENTRENAMIENTOS CON LOS FILTROS APLICADOS");
+                }
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -312,6 +368,7 @@ namespace ProyectoFinal.ViewModels
             {
                 MessageBox.Show($"Error al aplicar filtros: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"Error en ApplyFiltersAsync: {ex}");
             }
             finally
             {
@@ -321,14 +378,16 @@ namespace ProyectoFinal.ViewModels
 
         private async Task ClearFiltersAsync()
         {
+            // Limpiar todos los filtros
             FilterNombre = string.Empty;
-            FilterCategoria = string.Empty;
-            FilterMusculoPrincipal = string.Empty;
+            FilterCategoria = "Todas"; // Volver a "Todas"
+            FilterMusculoPrincipal = "Todos"; // Volver a "Todos"
             FilterDuracionMin = string.Empty;
             FilterDuracionMax = string.Empty;
             FilterCreador = string.Empty;
-            FilterEstado = string.Empty;
+            FilterEstado = "Todos"; // Volver a "Todos"
 
+            // Recargar todos los entrenamientos
             await LoadTrainingsAsync();
         }
 

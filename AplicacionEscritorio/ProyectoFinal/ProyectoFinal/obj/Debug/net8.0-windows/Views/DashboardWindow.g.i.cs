@@ -9,7 +9,6 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-using ProyectoFinal.UserControls;
 using ProyectoFinal.ViewModels;
 using ProyectoFinal.Views;
 using System;
