@@ -70,3 +70,9 @@ C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\Proyect
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\TrainingsControl.baml
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\ExercisesControl.g.cs
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\ExercisesControl.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\EventsControl.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\EventsControl.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\RequestsControl.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\TrainingRequestDetailWindow.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\TrainingRequestDetailWindow.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\RequestsControl.baml

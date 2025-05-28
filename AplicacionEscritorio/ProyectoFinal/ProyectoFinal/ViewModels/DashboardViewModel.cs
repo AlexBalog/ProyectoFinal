@@ -91,13 +91,13 @@ namespace ProyectoFinal.ViewModels
         public void LoadEventsSection()
         {
             CurrentSectionTitle = "Gestión de Eventos";
-           // CurrentContent = new UserControls.EventsControl();
+            CurrentContent = new UserControls.EventsControl();
         }
 
         public void LoadRequestsSection()
         {
             CurrentSectionTitle = "Peticiones Pendientes";
-           //CurrentContent = new UserControls.RequestsControl();
+            CurrentContent = new UserControls.RequestsControl();
         }
 
         public void LoadSettingsSection()

@@ -183,18 +183,18 @@ router.patch("/:id", verifyToken, async (req, res) => {
 
 router.delete('/delete', async (req, res) => {
     try {
-    const id = req.body._id;
-    const data = await modelEntrenamientos.deleteOne({ _id: id })
-    if (data.deletedCount === 0) {
-        return res.status(404).json({ message: 'Documento no encontrado' });
-    }
-
-    res.status(200).json({ message: `Document with ${id} has been deleted..` })
-    }
-    catch (error) {
+        const id = req.body._id;
+        const data = await modelEntrenamientos.findById(id);
+        if (data) {
+            await data.deleteOne();
+        } else {
+            return res.status(404).json({ message: "Documento no encontrado" });
+        }
+        res.status(200).json({ message: `Document with ${id} has been deleted..` })
+    } catch (error) {
         res.status(400).json({ message: error.message })
     }
-    })
+})
 
 router.post('/peticion', async (req, res) => {
     try {

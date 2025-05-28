@@ -401,7 +401,7 @@ namespace ProyectoFinal.Services
                 var json = JsonConvert.SerializeObject(filter);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.GetAsync($"{_baseUrl}/eventos/getFilter");
+                var response = await _httpClient.PostAsync($"{_baseUrl}/eventos/getFilter", content);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseJson = await response.Content.ReadAsStringAsync();

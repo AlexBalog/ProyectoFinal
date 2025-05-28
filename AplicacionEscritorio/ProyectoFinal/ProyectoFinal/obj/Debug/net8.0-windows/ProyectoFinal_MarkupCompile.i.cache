@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\App.xaml
-62047278238
+91889004083
 
-22-957298390
+28485242448
 202-1396254396
-MainWindow.xaml;UserControls\ExercisesControl.xaml;UserControls\TrainingsControl.xaml;UserControls\UsersControl.xaml;Views\DashboardWindow.xaml;Views\LoginView.xaml;
+MainWindow.xaml;UserControls\EventsControl.xaml;UserControls\ExercisesControl.xaml;UserControls\RequestsControl.xaml;UserControls\TrainingsControl.xaml;UserControls\UsersControl.xaml;Views\DashboardWindow.xaml;Views\LoginView.xaml;Views\TrainingRequestDetailWindow.xaml;
 
 False
 

@@ -108,17 +108,19 @@ router.patch("/update", async (req, res) => {
 
 router.delete('/delete', async (req, res) => {
     try {
-    const id = req.body._id;
-    const data = await modelEjercicios.deleteOne({ _id: id })
-    if (data.deletedCount === 0) {
-        return res.status(404).json({ message: 'Documento no encontrado' });
-    }
-
-    res.status(200).json({ message: `Document with ${id} has been deleted..` })
+        const id = req.body._id;
+        const data = await modelEjercicios.findById(id);
+        if (data) {
+            await data.deleteOne();
+        } else {
+            return res.status(404).json({ message: 'Documento no encontrado' });
+        }
+        
+        res.status(200).json({ message: `Document with ${id} has been deleted..` })
     }
     catch (error) {
         res.status(400).json({ message: error.message })
     }
-    })
+})
 
 module.exports = router;

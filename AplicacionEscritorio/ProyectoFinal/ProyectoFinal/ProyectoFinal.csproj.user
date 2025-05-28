@@ -7,7 +7,13 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="UserControls\EventsControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="UserControls\ExercisesControl.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UserControls\RequestsControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="UserControls\TrainingsControl.xaml.cs">
@@ -20,6 +26,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\LoginView.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Views\TrainingRequestDetailWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
