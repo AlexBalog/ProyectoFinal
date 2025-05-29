@@ -74,6 +74,10 @@ namespace ProyectoFinal.Models
         public string ConsejosTexto => string.Join(", ", consejos);
         public string DescripcionCorta => descripcion?.Length > 50 ?
             descripcion.Substring(0, 47) + "..." : descripcion;
+
+        public bool TieneConsejos => consejos != null && consejos.Any() && consejos.Any(c => !string.IsNullOrWhiteSpace(c));
+
+        public bool TieneTutorial => !string.IsNullOrWhiteSpace(tutorial);
     }
 
     // Modelo para Evento

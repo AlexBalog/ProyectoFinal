@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ProyectoFinal.Models;
+using ProyectoFinal.Views;
 using ProyectoFinal.Services;
 using ProyectoFinal.Utilities;
 
@@ -393,16 +394,50 @@ namespace ProyectoFinal.ViewModels
 
         private void AddTraining()
         {
-            MessageBox.Show("Función para agregar entrenamiento", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de creación
+                bool result = Views.TrainingFormWindow.ShowCreateDialog(mainWindow);
+
+                // Si se creó el entrenamiento exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadTrainingsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de creación: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void EditTraining(Entrenamiento training)
+        private void EditTraining(Entrenamiento? training)
         {
             if (training == null) return;
 
-            MessageBox.Show($"Función para editar entrenamiento: {training.nombre}", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de edición
+                bool result = Views.TrainingFormWindow.ShowEditDialog(training, mainWindow);
+
+                // Si se editó el entrenamiento exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadTrainingsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de edición: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async Task DeleteTrainingAsync(Entrenamiento training)
