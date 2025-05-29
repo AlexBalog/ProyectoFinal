@@ -27,6 +27,22 @@
         }
       },
       "Microsoft.VisualBasic/10.3.0": {},
+      "Microsoft.Win32.SystemEvents/9.0.5": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21509"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21509"
+          }
+        }
+      },
       "Microsoft.Xaml.Behaviors.Wpf/1.1.39": {
         "runtime": {
           "lib/net5.0-windows7.0/Microsoft.Xaml.Behaviors.dll": {
@@ -40,6 +56,21 @@
           "lib/net6.0/Newtonsoft.Json.dll": {
             "assemblyVersion": "13.0.0.0",
             "fileVersion": "13.0.3.27908"
+          }
+        }
+      },
+      "System.Drawing.Common/9.0.5": {
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "9.0.5"
+        },
+        "runtime": {
+          "lib/net8.0/System.Drawing.Common.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21601"
+          },
+          "lib/net8.0/System.Private.Windows.Core.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21601"
           }
         }
       }
@@ -67,6 +98,13 @@
       "path": "microsoft.visualbasic/10.3.0",
       "hashPath": "microsoft.visualbasic.10.3.0.nupkg.sha512"
     },
+    "Microsoft.Win32.SystemEvents/9.0.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-D4OYNpmvAsF9MkaY2W8Jue2XuNHDhygvwzo019hs+lP85KaVnOlXmqsjDKr1dHb1DPxDnOKpe6mAgJN7S6ttwg==",
+      "path": "microsoft.win32.systemevents/9.0.5",
+      "hashPath": "microsoft.win32.systemevents.9.0.5.nupkg.sha512"
+    },
     "Microsoft.Xaml.Behaviors.Wpf/1.1.39": {
       "type": "package",
       "serviceable": true,
@@ -80,6 +118,13 @@
       "sha512": "sha512-HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ==",
       "path": "newtonsoft.json/13.0.3",
       "hashPath": "newtonsoft.json.13.0.3.nupkg.sha512"
+    },
+    "System.Drawing.Common/9.0.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-T/6nqx0B7/uTe5JjBwrKZilLuwfhHLOVmNKlT/wr4A9Dna94mgTdz3lTfrdJ72QRx7IHCv/LzoJPmFSfK/N6WA==",
+      "path": "system.drawing.common/9.0.5",
+      "hashPath": "system.drawing.common.9.0.5.nupkg.sha512"
     }
   }
 }

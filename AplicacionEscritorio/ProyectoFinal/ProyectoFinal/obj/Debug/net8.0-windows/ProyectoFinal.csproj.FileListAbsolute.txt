@@ -76,3 +76,9 @@ C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\Proyect
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\TrainingRequestDetailWindow.g.cs
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\TrainingRequestDetailWindow.baml
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\UserControls\RequestsControl.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\UserFormWindow.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\UserFormWindow.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\bin\Debug\net8.0-windows\Microsoft.Win32.SystemEvents.dll
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\bin\Debug\net8.0-windows\System.Drawing.Common.dll
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\bin\Debug\net8.0-windows\System.Private.Windows.Core.dll
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll

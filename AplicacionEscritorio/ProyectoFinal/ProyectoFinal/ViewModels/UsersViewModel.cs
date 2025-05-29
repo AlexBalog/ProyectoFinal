@@ -9,6 +9,7 @@ using System.Windows.Input;
 using ProyectoFinal.Models;
 using ProyectoFinal.Services;
 using ProyectoFinal.Utilities;
+using ProyectoFinal.Views;
 
 namespace ProyectoFinal.ViewModels
 {
@@ -16,7 +17,7 @@ namespace ProyectoFinal.ViewModels
     {
         private readonly IDataService _dataService;
         private ObservableCollection<Usuario> _usuarios;
-        private Usuario _selectedUser;
+        private Usuario? _selectedUser;
         private bool _isLoading;
         private string _statusText;
 
@@ -33,7 +34,15 @@ namespace ProyectoFinal.ViewModels
             _dataService = new DataService(new ApiService());
 
             // Inicializar colecciones
-            Usuarios = new ObservableCollection<Usuario>();
+            _usuarios = new ObservableCollection<Usuario>();
+
+            // Inicializar propiedades con valores por defecto
+            _statusText = "Cargando...";
+            _filterNombre = string.Empty;
+            _filterApellido = string.Empty;
+            _filterEmail = string.Empty;
+            _filterSexo = "Todos";
+            _filterPlan = "Todos";
 
             // Inicializar filtros con valores por defecto
             InitializeFilters();
@@ -53,14 +62,14 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_usuarios != value)
                 {
-                    _usuarios = value;
+                    _usuarios = value ?? throw new ArgumentNullException(nameof(value));
                     OnPropertyChanged();
                     UpdateStatusText();
                 }
             }
         }
 
-        public Usuario SelectedUser
+        public Usuario? SelectedUser
         {
             get => _selectedUser;
             set
@@ -93,7 +102,7 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_statusText != value)
                 {
-                    _statusText = value;
+                    _statusText = value ?? string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -107,7 +116,7 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_filterNombre != value)
                 {
-                    _filterNombre = value;
+                    _filterNombre = value ?? string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -120,7 +129,7 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_filterApellido != value)
                 {
-                    _filterApellido = value;
+                    _filterApellido = value ?? string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -133,7 +142,7 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_filterEmail != value)
                 {
-                    _filterEmail = value;
+                    _filterEmail = value ?? string.Empty;
                     OnPropertyChanged();
                 }
             }
@@ -146,9 +155,8 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_filterSexo != value)
                 {
-                    _filterSexo = value;
+                    _filterSexo = value ?? "Todos";
                     OnPropertyChanged();
-                    System.Diagnostics.Debug.WriteLine($"FilterSexo changed to: '{_filterSexo}'");
                 }
             }
         }
@@ -160,27 +168,20 @@ namespace ProyectoFinal.ViewModels
             {
                 if (_filterPlan != value)
                 {
-                    _filterPlan = value;
+                    _filterPlan = value ?? "Todos";
                     OnPropertyChanged();
-                    System.Diagnostics.Debug.WriteLine($"FilterPlan changed to: '{_filterPlan}'");
-
-                    // Debug adicional para el filtro de Plan
-                    if (_filterPlan == "Todos")
-                        System.Diagnostics.Debug.WriteLine("Plan filter set to 'Todos' - should show all users");
-                    else if (!string.IsNullOrEmpty(_filterPlan))
-                        System.Diagnostics.Debug.WriteLine($"Plan filter set to specific value: '{_filterPlan}' - should filter users");
                 }
             }
         }
         #endregion
 
         #region Comandos
-        public ICommand ApplyFiltersCommand { get; private set; }
-        public ICommand ClearFiltersCommand { get; private set; }
-        public ICommand AddUserCommand { get; private set; }
-        public ICommand EditUserCommand { get; private set; }
-        public ICommand DeleteUserCommand { get; private set; }
-        public ICommand RefreshCommand { get; private set; }
+        public ICommand ApplyFiltersCommand { get; private set; } = null!;
+        public ICommand ClearFiltersCommand { get; private set; } = null!;
+        public ICommand AddUserCommand { get; private set; } = null!;
+        public ICommand EditUserCommand { get; private set; } = null!;
+        public ICommand DeleteUserCommand { get; private set; } = null!;
+        public ICommand RefreshCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -199,8 +200,8 @@ namespace ProyectoFinal.ViewModels
             FilterNombre = string.Empty;
             FilterApellido = string.Empty;
             FilterEmail = string.Empty;
-            FilterSexo = "Todos"; // Valor por defecto
-            FilterPlan = "Todos"; // Valor por defecto
+            FilterSexo = "Todos";
+            FilterPlan = "Todos";
         }
 
         public async Task LoadUsersAsync()
@@ -238,14 +239,6 @@ namespace ProyectoFinal.ViewModels
             {
                 IsLoading = true;
 
-                // Debug: mostrar valores de filtros
-                System.Diagnostics.Debug.WriteLine($"Aplicando filtros:");
-                System.Diagnostics.Debug.WriteLine($"  Nombre: '{FilterNombre}'");
-                System.Diagnostics.Debug.WriteLine($"  Apellido: '{FilterApellido}'");
-                System.Diagnostics.Debug.WriteLine($"  Email: '{FilterEmail}'");
-                System.Diagnostics.Debug.WriteLine($"  Sexo: '{FilterSexo}'");
-                System.Diagnostics.Debug.WriteLine($"  Plan: '{FilterPlan}'");
-
                 // Verificar si hay filtros aplicados (excluyendo "Todos" que representa sin filtro)
                 bool hasFilters = !string.IsNullOrWhiteSpace(FilterNombre) ||
                                   !string.IsNullOrWhiteSpace(FilterApellido) ||
@@ -269,40 +262,7 @@ namespace ProyectoFinal.ViewModels
                     plan = (string.IsNullOrEmpty(FilterPlan) || FilterPlan == "Todos") ? null : FilterPlan
                 };
 
-                System.Diagnostics.Debug.WriteLine($"Filtro creado:");
-                System.Diagnostics.Debug.WriteLine($"  filter.nombre: '{filter.nombre}'");
-                System.Diagnostics.Debug.WriteLine($"  filter.apellido: '{filter.apellido}'");
-                System.Diagnostics.Debug.WriteLine($"  filter.email: '{filter.email}'");
-                System.Diagnostics.Debug.WriteLine($"  filter.sexo: '{filter.sexo}'");
-                System.Diagnostics.Debug.WriteLine($"  filter.plan: '{filter.plan}'");
-
-                // Debug específico para Plan
-                if (filter.plan != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"PLAN FILTER ACTIVE: Will search for users with plan='{filter.plan}'");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"PLAN FILTER INACTIVE: Will show users with any plan");
-                }
-
                 var users = await _dataService.GetUsuariosFiltradosAsync(filter);
-
-                System.Diagnostics.Debug.WriteLine($"Usuarios encontrados: {users.Count}");
-
-                // Debug de los planes de los usuarios encontrados
-                if (users.Count > 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("Planes de usuarios encontrados:");
-                    foreach (var user in users.Take(5)) // Mostrar solo los primeros 5 para no spam
-                    {
-                        System.Diagnostics.Debug.WriteLine($"  {user.NombreCompleto}: Plan='{user.plan}', Sexo='{user.sexo}'");
-                    }
-                }
-                else if (filter.plan != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"NO SE ENCONTRARON USUARIOS CON PLAN '{filter.plan}'");
-                }
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -319,7 +279,6 @@ namespace ProyectoFinal.ViewModels
             {
                 MessageBox.Show($"Error al aplicar filtros: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"Error en ApplyFiltersAsync: {ex}");
             }
             finally
             {
@@ -333,8 +292,8 @@ namespace ProyectoFinal.ViewModels
             FilterNombre = string.Empty;
             FilterApellido = string.Empty;
             FilterEmail = string.Empty;
-            FilterSexo = "Todos"; // Volver a "Todos"
-            FilterPlan = "Todos"; // Volver a "Todos"
+            FilterSexo = "Todos";
+            FilterPlan = "Todos";
 
             // Recargar todos los usuarios
             await LoadUsersAsync();
@@ -342,21 +301,53 @@ namespace ProyectoFinal.ViewModels
 
         private void AddUser()
         {
-            MessageBox.Show("Función para agregar usuario (ventana modal)", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            // Aquí abriríamos una ventana modal para agregar usuario
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de creación
+                bool result = UserFormWindow.ShowCreateDialog(mainWindow);
+
+                // Si se creó el usuario exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadUsersAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de creación: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void EditUser(Usuario user)
+        private void EditUser(Usuario? user)
         {
             if (user == null) return;
 
-            MessageBox.Show($"Función para editar usuario: {user.NombreCompleto}", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            // Aquí abriríamos una ventana modal para editar usuario
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de edición
+                bool result = UserFormWindow.ShowEditDialog(user, mainWindow);
+
+                // Si se editó el usuario exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadUsersAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de edición: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private async Task DeleteUserAsync(Usuario user)
+        private async Task DeleteUserAsync(Usuario? user)
         {
             if (user == null) return;
 
@@ -415,9 +406,9 @@ namespace ProyectoFinal.ViewModels
         #endregion
 
         #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

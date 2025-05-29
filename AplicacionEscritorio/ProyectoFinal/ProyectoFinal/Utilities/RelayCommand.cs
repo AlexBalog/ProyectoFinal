@@ -32,6 +32,14 @@ namespace ProyectoFinal.Utilities
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
+
+        /// <summary>
+        /// Forza la reevaluación del comando
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     /// <summary>
@@ -62,6 +70,14 @@ namespace ProyectoFinal.Utilities
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
+        }
+
+        /// <summary>
+        /// Forza la reevaluación del comando
+        /// </summary>
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 }
