@@ -9,6 +9,7 @@ using System.Windows.Input;
 using ProyectoFinal.Models;
 using ProyectoFinal.Services;
 using ProyectoFinal.Utilities;
+using ProyectoFinal.Views; // Agregado para usar ExerciseFormWindow
 
 namespace ProyectoFinal.ViewModels
 {
@@ -265,18 +266,54 @@ namespace ProyectoFinal.ViewModels
             await LoadExercisesAsync();
         }
 
+        // MÉTODO ACTUALIZADO: Usar la ventana de formulario para agregar ejercicio
         private void AddExercise()
         {
-            MessageBox.Show("Función para agregar ejercicio", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de creación
+                bool result = ExerciseFormWindow.ShowCreateDialog(mainWindow);
+
+                // Si se creó el ejercicio exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadExercisesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de creación: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
+        // MÉTODO ACTUALIZADO: Usar la ventana de formulario para editar ejercicio
         private void EditExercise(Ejercicio exercise)
         {
             if (exercise == null) return;
 
-            MessageBox.Show($"Función para editar ejercicio: {exercise.nombre}", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de edición
+                bool result = ExerciseFormWindow.ShowEditDialog(exercise, mainWindow);
+
+                // Si se editó el ejercicio exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadExercisesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de edición: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async Task DeleteExerciseAsync(Ejercicio exercise)

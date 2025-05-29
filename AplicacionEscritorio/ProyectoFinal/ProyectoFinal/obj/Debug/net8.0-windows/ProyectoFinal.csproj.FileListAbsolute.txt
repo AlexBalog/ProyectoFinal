@@ -86,3 +86,5 @@ C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\Proyect
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\TrainingFormWindow.baml
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\ExerciseSelectionWindow.g.cs
 C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\ExerciseSelectionWindow.baml
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\ExerciseFormWindow.g.cs
+C:\Users\abalog\Desktop\ProyectoFinal\AplicacionEscritorio\ProyectoFinal\ProyectoFinal\obj\Debug\net8.0-windows\Views\ExerciseFormWindow.baml

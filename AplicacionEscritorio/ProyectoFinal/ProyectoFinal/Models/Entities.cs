@@ -78,6 +78,8 @@ namespace ProyectoFinal.Models
         public bool TieneConsejos => consejos != null && consejos.Any() && consejos.Any(c => !string.IsNullOrWhiteSpace(c));
 
         public bool TieneTutorial => !string.IsNullOrWhiteSpace(tutorial);
+
+        public string TutorialTexto => TieneTutorial ? "Disponible" : "No disponible";
     }
 
     // Modelo para Evento

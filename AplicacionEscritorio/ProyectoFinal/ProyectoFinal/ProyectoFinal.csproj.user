@@ -25,6 +25,9 @@
     <Compile Update="Views\DashboardWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\ExerciseFormWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Views\ExerciseSelectionWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
