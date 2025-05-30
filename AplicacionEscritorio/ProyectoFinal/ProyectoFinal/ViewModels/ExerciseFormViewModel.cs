@@ -33,9 +33,9 @@ namespace ProyectoFinal.ViewModels
         // Lista de músculos disponibles
         private readonly List<string> _musculosDisponibles = new List<string>
         {
-            "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps",
-            "Piernas", "Cuádriceps", "Isquiotibiales", "Glúteos",
-            "Pantorrillas", "Abdominales", "Core", "Cardio"
+            "Pecho", "Espalda", "Cuadriceps", "Biceps", "Hombros", 
+            "Triceps", "Gluteos", "Femoral", "Gemelos", "Abdominales", 
+            "Lumbares", "Antebrazos", "Aductores", "Abductores"
         };
 
         public ExerciseFormViewModel()
@@ -463,7 +463,7 @@ namespace ProyectoFinal.ViewModels
                         resizedImage.Save(ms, jpegEncoder, encoderParams);
                         byte[] imageBytes = ms.ToArray();
 
-                        return "data:image/jpeg;base64," + Convert.ToBase64String(imageBytes);
+                        return Convert.ToBase64String(imageBytes);
                     }
                 }
             }

@@ -15,12 +15,17 @@ namespace ProyectoFinal.Services
         void SaveCredentials(UserCredentials credentials);
         UserCredentials GetSavedCredentials();
         void ClearSavedCredentials();
+        // NUEVOS MÉTODOS para datos de usuario
+        void SaveUserData(UserData userData);
+        UserData GetUserData();
+        void ClearUserData();
     }
 
     public class UserService : IUserService
     {
         private readonly string _tokenFileName = "token.dat";
         private readonly string _credentialsFileName = "credentials.dat";
+        private readonly string _userDataFileName = "userdata.dat"; // NUEVO archivo para datos de usuario
         private readonly string _encryptionKey = "FitSphereSecretKey"; // Clave para encriptar datos
 
         // Métodos para el token
@@ -130,6 +135,62 @@ namespace ProyectoFinal.Services
             {
                 // Manejar excepciones (logging, etc.)
                 Console.WriteLine($"Error al eliminar las credenciales: {ex.Message}");
+            }
+        }
+
+        // NUEVOS MÉTODOS para datos de usuario
+        public void SaveUserData(UserData userData)
+        {
+            if (userData == null)
+                return;
+
+            try
+            {
+                // Serializar y encriptar los datos del usuario
+                string json = JsonConvert.SerializeObject(userData);
+                string encryptedJson = EncryptString(json);
+                File.WriteAllText(_userDataFileName, encryptedJson);
+            }
+            catch (Exception ex)
+            {
+                // Manejar excepciones (logging, etc.)
+                Console.WriteLine($"Error al guardar los datos del usuario: {ex.Message}");
+            }
+        }
+
+        public UserData GetUserData()
+        {
+            try
+            {
+                if (File.Exists(_userDataFileName))
+                {
+                    string encryptedJson = File.ReadAllText(_userDataFileName);
+                    string json = DecryptString(encryptedJson);
+                    return JsonConvert.DeserializeObject<UserData>(json);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejar excepciones (logging, etc.)
+                Console.WriteLine($"Error al obtener los datos del usuario: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        public void ClearUserData()
+        {
+            try
+            {
+                if (File.Exists(_userDataFileName))
+                {
+                    File.Delete(_userDataFileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejar excepciones (logging, etc.)
+                Console.WriteLine($"Error al eliminar los datos del usuario: {ex.Message}");
             }
         }
 

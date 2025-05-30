@@ -114,7 +114,7 @@ namespace ProyectoFinal.ViewModels
 
         public List<string> MusculosList { get; } = new List<string>
         {
-            "Todos", "Pecho", "Espalda", "Piernas", "Brazos", "Hombros", "Core", "Glúteos", "Cuádriceps", "Isquiotibiales", "Pantorrillas"
+            "Todos", "Pecho", "Espalda", "Cuadriceps", "Biceps", "Hombros", "Triceps", "Gluteos", "Femoral", "Gemelos", "Abdominales", "Lumbares", "Antebrazos", "Aductores", "Abductores"
         };
 
         public string StatusText => $"Mostrando {FilteredExercises.Count} ejercicios";

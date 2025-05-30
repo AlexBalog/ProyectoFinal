@@ -380,6 +380,7 @@
                         <StackPanel>
                             <TextBlock Text="📋 Información Básica" Style="{StaticResource SectionHeader}"/>
 
+                            <!-- Grid principal MODIFICADO para manejar la visibilidad del creador -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -433,11 +434,13 @@
                                              Style="{StaticResource FormTextBox}"/>
                                 </StackPanel>
 
-                                <!-- Creador -->
-                                <StackPanel Grid.Column="2" Grid.Row="2" Margin="0,0,0,15">
-                                    <TextBlock Text="Creador *" Style="{StaticResource FieldLabel}"/>
-                                    <TextBox Text="{Binding Creador, UpdateSourceTrigger=PropertyChanged}" 
-                                             Style="{StaticResource FormTextBox}"/>
+                                <!-- Creador (solo en modo edición, readonly) -->
+                                <StackPanel Grid.Column="2" Grid.Row="2" Margin="0,0,0,15"
+                                           Visibility="{Binding IsCreadorVisible, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="Creador" Style="{StaticResource FieldLabel}"/>
+                                    <TextBox Text="{Binding Creador}" 
+                                             Style="{StaticResource FormTextBox}" 
+                                             IsEnabled="{Binding IsCreadorEditable}"/>
                                 </StackPanel>
 
                                 <!-- Likes (solo en modo edición) -->
@@ -806,6 +809,12 @@
                                    Foreground="{StaticResource TextBrushSecondary}" 
                                    FontSize="11"
                                    Margin="0,2,0,0"/>
+                        <!-- NUEVO: Texto explicativo para el creador -->
+                        <TextBlock Text="El creador se asigna automáticamente al crear nuevos entrenamientos" 
+                                   Foreground="{StaticResource TextBrushSecondary}" 
+                                   FontSize="11"
+                                   Margin="0,2,0,0"
+                                   Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVis}}"/>
                     </StackPanel>
 
                     <!-- Botones de acción -->

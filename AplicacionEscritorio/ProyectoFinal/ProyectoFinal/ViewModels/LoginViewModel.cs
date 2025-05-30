@@ -280,6 +280,12 @@ namespace ProyectoFinal.ViewModels
                         _userService.SaveToken(result.Token);
                     }
 
+                    // Guardar los datos del usuario
+                    if (result.User != null)
+                    {
+                        _userService.SaveUserData(result.User);
+                    }
+
                     // Navegar a la ventana principal
                     Application.Current.Dispatcher.Invoke(() =>
                     {

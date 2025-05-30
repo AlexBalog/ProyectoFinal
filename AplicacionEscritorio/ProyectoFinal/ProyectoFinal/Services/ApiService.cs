@@ -48,7 +48,7 @@ namespace ProyectoFinal.Services
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // Realizar solicitud POST al endpoint de login
-                var response = await _httpClient.PostAsync($"{_baseUrl}/auth/login", content);
+                var response = await _httpClient.PostAsync($"{_baseUrl}/auth/loginWPF", content);
 
                 // Leer la respuesta
                 var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -69,10 +69,11 @@ namespace ProyectoFinal.Services
                             RefreshToken = apiResponse?.refreshToken?.ToString(),
                             User = new UserData
                             {
+                                Id = apiResponse?.user?._id?.ToString(),
                                 Email = apiResponse?.user?.email?.ToString() ?? loginRequest.Email,
                                 FirstName = apiResponse?.user?.nombre?.ToString(),
                                 LastName = apiResponse?.user?.apellido?.ToString(),
-                                Id = apiResponse?.user?._id?.ToString(),
+                                Plan = apiResponse?.user?.plan?.ToString(),
                                 ProfileImage = apiResponse?.user?.foto?.ToString()
                             }
                         };
@@ -103,6 +104,7 @@ namespace ProyectoFinal.Services
                     {
                         var errorResponse = JsonConvert.DeserializeObject<dynamic>(jsonResponse);
                         var errorMessage = errorResponse?.message?.ToString() ?? "Error de autenticación";
+                        var errorType = errorResponse?.errorType?.ToString();
 
                         var loginResponse = new LoginResponse
                         {
@@ -128,6 +130,12 @@ namespace ProyectoFinal.Services
                                 loginResponse.ErrorType = "wrong_password";
                             }
                         }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                        {
+                            // NUEVO: Manejar error de permisos insuficientes
+                            loginResponse.ErrorMessage = errorMessage;
+                            loginResponse.ErrorType = errorType ?? "insufficient_privileges";
+                        }
                         else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                         {
                             loginResponse.ErrorMessage = "Datos de entrada inválidos";
@@ -136,7 +144,7 @@ namespace ProyectoFinal.Services
                         else
                         {
                             loginResponse.ErrorMessage = errorMessage;
-                            loginResponse.ErrorType = "general";
+                            loginResponse.ErrorType = errorType ?? "general";
                         }
 
                         return loginResponse;

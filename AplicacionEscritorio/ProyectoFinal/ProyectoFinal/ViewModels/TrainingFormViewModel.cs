@@ -18,6 +18,7 @@ namespace ProyectoFinal.ViewModels
     public class TrainingFormViewModel : INotifyPropertyChanged
     {
         private readonly IDataService _dataService;
+        private readonly IUserService _userService; // NUEVO: Servicio para obtener datos del usuario
         private Entrenamiento? _originalTraining;
         private bool _isEditMode;
         private bool _isLoading;
@@ -45,6 +46,7 @@ namespace ProyectoFinal.ViewModels
         public TrainingFormViewModel()
         {
             _dataService = new DataService(new ApiService());
+            _userService = new UserService(); // NUEVO: Inicializar servicio de usuario
             InitializeCommands();
             InitializeDefaults();
         }
@@ -59,6 +61,8 @@ namespace ProyectoFinal.ViewModels
                 {
                     _isEditMode = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsCreadorEditable)); // NUEVO: Notificar cambio en editabilidad
+                    OnPropertyChanged(nameof(IsCreadorVisible)); // NUEVO: Notificar cambio en visibilidad
                     UpdateWindowTitle();
                 }
             }
@@ -243,6 +247,10 @@ namespace ProyectoFinal.ViewModels
             }
         }
 
+        // NUEVAS PROPIEDADES: Para controlar la visibilidad y editabilidad del campo creador
+        public bool IsCreadorVisible => IsEditMode; // Solo visible en modo edición
+        public bool IsCreadorEditable => false; // Nunca editable (siempre readonly)
+
         public bool Aprobado
         {
             get => _aprobado;
@@ -302,12 +310,12 @@ namespace ProyectoFinal.ViewModels
         // Listas para ComboBox
         public List<string> CategoriasList { get; } = new List<string>
         {
-            "Fuerza", "Cardio", "Flexibilidad", "HIIT", "Yoga", "Pilates", "Funcional"
+            "Fuerza", "Cardio", "Flexibilidad", "Resistencia", "Hipertrofia", "Fullbody"
         };
 
         public List<string> MusculosList { get; } = new List<string>
         {
-            "Pecho", "Espalda", "Piernas", "Brazos", "Hombros", "Core", "Glúteos", "Cuádriceps", "Isquiotibiales", "Pantorrillas"
+            "Pecho", "Espalda", "Cuadriceps", "Biceps", "Hombros", "Triceps", "Gluteos", "Femoral", "Gemelos", "Abdominales", "Lumbares", "Antebrazos", "Aductores", "Abductores"
         };
         #endregion
 
@@ -337,12 +345,11 @@ namespace ProyectoFinal.ViewModels
         {
             if (IsLoading) return false;
 
-            // Validaciones básicas
+            // Validaciones básicas - El creador se establece automáticamente, no necesita validación manual
             return !string.IsNullOrWhiteSpace(Nombre) &&
                    !string.IsNullOrWhiteSpace(Categoria) &&
                    !string.IsNullOrWhiteSpace(MusculoPrincipal) &&
                    Duracion > 0 &&
-                   !string.IsNullOrWhiteSpace(Creador) &&
                    EjerciciosDetallados.Count > 0;
         }
 
@@ -402,6 +409,8 @@ namespace ProyectoFinal.ViewModels
             IsEditMode = false;
             _originalTraining = null;
             InitializeDefaults();
+            // NUEVO: Establecer automáticamente el creador al usuario logueado
+            SetCurrentUserAsCreator();
         }
         #endregion
 
@@ -426,6 +435,31 @@ namespace ProyectoFinal.ViewModels
             EjerciciosDetallados.Clear();
 
             UpdateWindowTitle();
+        }
+
+        // NUEVO MÉTODO: Establecer el usuario actual como creador
+        private void SetCurrentUserAsCreator()
+        {
+            try
+            {
+                var userData = _userService.GetUserData();
+                if (userData != null && !string.IsNullOrEmpty(userData.Id))
+                {
+                    Creador = userData.Id;
+                    System.Diagnostics.Debug.WriteLine($"Creador establecido automáticamente: {Creador}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("No se pudo obtener el ID del usuario logueado");
+                    // Fallback: intentar obtener desde token u otra fuente
+                    Creador = "ADMIN"; // Valor por defecto temporal
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al obtener usuario actual: {ex.Message}");
+                Creador = "ADMIN"; // Valor por defecto en caso de error
+            }
         }
 
         private void UpdateWindowTitle()
@@ -565,7 +599,7 @@ namespace ProyectoFinal.ViewModels
                 musculo = Musculo.ToList(),
                 likes = 0, // Siempre empezar con 0 likes
                 ejercicios = Ejercicios.ToList(),
-                creador = Creador,
+                creador = Creador, // Aquí ya está el ID del usuario actual
                 aprobado = Aprobado,
                 pedido = Pedido,
                 motivoRechazo = MotivoRechazo
@@ -594,7 +628,7 @@ namespace ProyectoFinal.ViewModels
                 musculo = Musculo.ToList(),
                 likes = Likes, // Mantener los likes existentes
                 ejercicios = Ejercicios.ToList(),
-                creador = Creador,
+                creador = Creador, // Mantener el creador original
                 aprobado = Aprobado,
                 pedido = Pedido,
                 motivoRechazo = MotivoRechazo

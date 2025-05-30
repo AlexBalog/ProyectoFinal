@@ -880,8 +880,8 @@ namespace ProyectoFinal.ViewModels
                         resizedImage.Save(ms, jpegEncoder, encoderParams);
                         byte[] imageBytes = ms.ToArray();
 
-                        // Crear el string Base64 con el prefijo data:image
-                        return "data:image/jpeg;base64," + Convert.ToBase64String(imageBytes);
+                        // Crear el string Base64
+                        return Convert.ToBase64String(imageBytes);
                     }
                 }
             }

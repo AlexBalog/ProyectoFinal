@@ -189,6 +189,9 @@ namespace ProyectoFinal.Views
                     case "wrong_password":
                         ErrorIcon.Text = "🔒";
                         break;
+                    case "insufficient_privileges":
+                        ErrorIcon.Text = "🚫";
+                        break;
                     case "connection":
                         ErrorIcon.Text = "🌐";
                         break;

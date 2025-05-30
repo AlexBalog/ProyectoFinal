@@ -1248,12 +1248,38 @@ fun EjercicioRecomendadoItem(
                     .fillMaxWidth()
                     .height(120.dp)
             ) {
-                Image(
-                    painter = remember { BitmapPainter(base64ToBitmap(ejercicio.foto)!!.asImageBitmap()) },
-                    contentDescription = "Imagen de ejercicio",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                val imageBitmap = remember(ejercicio.foto) {
+                    if (!ejercicio.foto.isNullOrEmpty()) {
+                        base64ToBitmap(ejercicio.foto)?.asImageBitmap()
+                    } else {
+                        null
+                    }
+                }
+
+                if (imageBitmap != null) {
+                    // Usar Image de Compose para ImageBitmap
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = "Imagen de ejercicio",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // Mostrar placeholder cuando no hay imagen o falla la conversión
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF333333)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = "Ejercicio",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
 
                 Box(
                     modifier = Modifier

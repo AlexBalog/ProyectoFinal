@@ -88,16 +88,18 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
+                                CornerRadius="5"
+                                Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" 
-                                              VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}"/>
+                                              VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -121,6 +123,8 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#571C1C"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -216,25 +220,17 @@
                                 Content="📝  Peticiones" 
                                 Style="{StaticResource NavButtonStyle}"
                                 Click="BtnRequests_Click"/>
-
-                        <!-- Separador -->
-                        <Border Height="1" Background="{StaticResource AccentBrush}" Margin="20,20"/>
-
-                        <Button x:Name="btnSettings" 
-                                Content="⚙️  Configuración" 
-                                Style="{StaticResource NavButtonStyle}"
-                                Click="BtnSettings_Click"/>
                     </StackPanel>
 
                     <!-- Información del usuario CORREGIDA -->
                     <Border Grid.Row="2" Background="{StaticResource AccentBrush}" 
                             Margin="10" Padding="15" CornerRadius="8">
                         <StackPanel>
-                            <!-- Usuario dinámico -->
-                            <TextBlock Text="{Binding LoggedUser.FullName, FallbackValue='Administrador'}" 
+                            <!-- Usuario dinámico con propiedades calculadas -->
+                            <TextBlock Text="{Binding UserDisplayName}" 
                                        FontWeight="SemiBold"
                                        Foreground="{StaticResource TextBrushPrimary}"/>
-                            <TextBlock Text="{Binding LoggedUser.Email, FallbackValue='admin@fitsphere.com'}" 
+                            <TextBlock Text="{Binding UserEmail}" 
                                        FontSize="11"
                                        Foreground="{StaticResource TextBrushSecondary}"/>
                             <Button Content="Cerrar Sesión" 
@@ -263,7 +259,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-
+                        
                         <!-- Título de la sección actual -->
                         <TextBlock Grid.Column="0" 
                                    Text="{Binding CurrentSectionTitle}" 
@@ -273,23 +269,23 @@
 
                         <!-- Botones del header CORREGIDOS -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="🔄 Actualizar" 
-                                    Style="{StaticResource HeaderButtonStyle}"
-                                    Padding="15,8"
-                                    Margin="0,0,10,0"
-                                    Click="BtnRefresh_Click"/>
-
                             <!-- Minimizar CORREGIDO -->
                             <Button Content="_" 
                                     Style="{StaticResource HeaderButtonStyle}"
-                                    Width="35" 
+                                    Width="35"
+                                    Height="35"
                                     Padding="0"
                                     Margin="10,0,5,0"
+                                    VerticalAlignment="Center"
                                     Click="BtnMinimize_Click"/>
 
                             <!-- Cerrar CORREGIDO -->
                             <Button Content="✕" 
                                     Style="{StaticResource CloseButtonStyle}"
+                                    Width="35"
+                                    Height="35"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
                                     Click="BtnClose_Click"/>
                         </StackPanel>
                     </Grid>
@@ -304,8 +300,8 @@
             </Grid>
 
             <!-- Barra de título para mover la ventana -->
-            <Border Grid.ColumnSpan="2" Height="40" VerticalAlignment="Top" 
-                    Background="Transparent" MouseLeftButtonDown="Border_MouseDown"/>
+            <!--<Border Grid.ColumnSpan="2" Height="40" VerticalAlignment="Top" 
+                    Background="Transparent" MouseLeftButtonDown="Border_MouseDown"/>-->
         </Grid>
     </Border>
 </Window>

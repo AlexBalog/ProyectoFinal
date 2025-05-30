@@ -70,7 +70,8 @@ router.post('/new', async (req, res) => {
         musculo: req.body.musculo,
         descripcion: req.body.descripcion,
         foto: req.body.foto,
-        consejos: req.body.consejos
+        consejos: req.body.consejos,
+        tutorial: req.body.tutorial
     })
 
     try {
@@ -92,7 +93,8 @@ router.patch("/update", async (req, res) => {
         musculo: req.body.musculo,
         descripcion: req.body.descripcion,
         foto: req.body.foto,
-        consejos: req.body.consejos
+        consejos: req.body.consejos,
+        tutorial: req.body.tutorial
     }});
     
     if (resultado.modifiedCount === 0) {

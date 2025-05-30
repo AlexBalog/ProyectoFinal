@@ -16,6 +16,7 @@ namespace ProyectoFinal.Views
 
             // Cargar la primera sección (Usuarios) por defecto
             LoadUsersSection();
+            UpdateActiveButton(btnUsers);
         }
 
         // Método para mover la ventana
@@ -67,12 +68,6 @@ namespace ProyectoFinal.Views
             UpdateActiveButton(btnRequests);
         }
 
-        private void BtnSettings_Click(object sender, RoutedEventArgs e)
-        {
-            LoadSettingsSection();
-            UpdateActiveButton(btnSettings);
-        }
-
         // Métodos para cargar diferentes secciones
         private void LoadUsersSection()
         {
@@ -99,10 +94,6 @@ namespace ProyectoFinal.Views
             _viewModel?.LoadRequestsSection();
         }
 
-        private void LoadSettingsSection()
-        {
-            _viewModel?.LoadSettingsSection();
-        }
 
         // Actualizar botón activo
         private void UpdateActiveButton(System.Windows.Controls.Button activeButton)
@@ -113,18 +104,12 @@ namespace ProyectoFinal.Views
             btnExercises.Tag = null;
             btnEvents.Tag = null;
             btnRequests.Tag = null;
-            btnSettings.Tag = null;
 
             // Marcar el botón actual como activo
             activeButton.Tag = "Active";
         }
 
         // Otros botones
-        private void BtnRefresh_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel?.RefreshCurrentSection();
-        }
-
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(

@@ -329,12 +329,18 @@
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Todos</system:String>
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Pecho</system:String>
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Espalda</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Piernas</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Brazos</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Cuadriceps</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Biceps</system:String>
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Hombros</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Core</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Glúteos</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Cardio</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Triceps</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Gluteos</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Femoral</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Gemelos</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Abdominales</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Lumbares</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Antebrazos</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Aductores</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Abductores</system:String>
                             </ComboBox.Items>
                         </ComboBox>
                     </StackPanel>

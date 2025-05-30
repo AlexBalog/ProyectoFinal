@@ -65,9 +65,16 @@ namespace ProyectoFinal.ViewModels
                 {
                     _loggedUser = value;
                     OnPropertyChanged();
+                    // Notificar cambios en propiedades calculadas
+                    OnPropertyChanged(nameof(UserDisplayName));
+                    OnPropertyChanged(nameof(UserEmail));
                 }
             }
         }
+
+        // Propiedades calculadas para binding directo
+        public string UserDisplayName => LoggedUser?.FullName ?? "Administrador";
+        public string UserEmail => LoggedUser?.Email ?? "admin@fitsphere.com";
 
         // Métodos de navegación
         public void LoadUsersSection()
@@ -98,12 +105,6 @@ namespace ProyectoFinal.ViewModels
         {
             CurrentSectionTitle = "Peticiones Pendientes";
             CurrentContent = new UserControls.RequestsControl();
-        }
-
-        public void LoadSettingsSection()
-        {
-            CurrentSectionTitle = "Configuración";
-            CreatePlaceholderContent("⚙️ Configuración", "Aquí se mostrarán las configuraciones del sistema");
         }
 
         // Método temporal para crear contenido placeholder
@@ -142,57 +143,52 @@ namespace ProyectoFinal.ViewModels
         }
 
         // Otros métodos
-        public void RefreshCurrentSection()
-        {
-            // Implementar lógica de actualización según la sección actual
-            MessageBox.Show("Refrescando datos...", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
 
         public void Logout()
         {
             // Limpiar token y datos de usuario
             _userService.ClearToken();
             _userService.ClearSavedCredentials();
+            _userService.ClearUserData(); // NUEVO: Limpiar datos de usuario
             _apiService.ClearAuthToken();
         }
 
-        // NUEVO: Inicializar usuario logueado dinámicamente
-        private async void InitializeLoggedUser()
+        // MODIFICADO: Inicializar usuario logueado dinámicamente desde datos guardados
+        private void InitializeLoggedUser()
         {
             try
             {
-                // Intentar obtener datos del usuario desde el token o API
-                var token = _userService.GetToken();
-                if (!string.IsNullOrEmpty(token))
+                // Intentar obtener datos del usuario desde el servicio
+                var userData = _userService.GetUserData();
+
+                if (userData != null)
                 {
-                    // Decodificar token JWT para obtener información del usuario
-                    // Por ahora, usar datos por defecto, luego puedes implementar JWT decoding
+                    LoggedUser = userData;
+                    System.Diagnostics.Debug.WriteLine($"Usuario cargado: {userData.FullName} - {userData.Email}");
+                }
+                else
+                {
+                    // Fallback si no hay datos de usuario guardados
+                    System.Diagnostics.Debug.WriteLine("No se encontraron datos de usuario guardados, usando valores por defecto");
                     LoggedUser = new UserData
                     {
                         FirstName = "Administrador",
                         LastName = "Sistema",
-                        Email = "admin@fitsphere.com"
-                    };
-                }
-                else
-                {
-                    // Fallback si no hay token
-                    LoggedUser = new UserData
-                    {
-                        FirstName = "Usuario",
-                        LastName = "Desconocido",
-                        Email = "usuario@fitsphere.com"
+                        Email = "admin@fitsphere.com",
+                        Plan = "Admin"
                     };
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error al inicializar usuario: {ex.Message}");
+                // Fallback en caso de error
                 LoggedUser = new UserData
                 {
                     FirstName = "Administrador",
                     LastName = "Sistema",
-                    Email = "admin@fitsphere.com"
+                    Email = "admin@fitsphere.com",
+                    Plan = "Admin"
                 };
             }
         }

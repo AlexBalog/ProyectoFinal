@@ -265,16 +265,50 @@ namespace ProyectoFinal.ViewModels
 
         private void AddEvent()
         {
-            MessageBox.Show("Función para agregar evento", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de creación
+                bool result = Views.EventFormWindow.ShowCreateDialog(mainWindow);
+
+                // Si se creó el evento exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadEventsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de creación: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void EditEvent(Evento eventItem)
         {
             if (eventItem == null) return;
 
-            MessageBox.Show($"Función para editar evento: {eventItem.nombre}", "Información",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                // Obtener la ventana principal para usar como Owner
+                var mainWindow = Application.Current.MainWindow;
+
+                // Mostrar la ventana de edición
+                bool result = Views.EventFormWindow.ShowEditDialog(eventItem, mainWindow);
+
+                // Si se editó el evento exitosamente, refrescar la lista
+                if (result)
+                {
+                    _ = LoadEventsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de edición: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async Task DeleteEventAsync(Evento eventItem)

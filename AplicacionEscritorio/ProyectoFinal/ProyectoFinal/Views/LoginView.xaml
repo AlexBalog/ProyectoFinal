@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ProyectoFinal.Views"
         xmlns:viewmodels="clr-namespace:ProyectoFinal.ViewModels"
         mc:Ignorable="d"
-        Title="FitSphere - Login" Height="500" Width="450"
+        Title="FitSphere - Login" Height="600" Width="450"
         WindowStyle="None" 
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -162,6 +162,7 @@
         </Style>
 
         <!-- Estilo para TextBox -->
+        <!-- Estilo para TextBox CORREGIDO - Reemplazar el existente -->
         <Style x:Key="ModernTextBox" TargetType="{x:Type TextBox}">
             <Setter Property="Height" Value="45"/>
             <Setter Property="Foreground" Value="{StaticResource TextBrushPrimary}"/>
@@ -192,9 +193,15 @@
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="Text" Value="">
+                            <!-- Mostrar placeholder solo cuando esté vacío Y sin foco -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Text" Value=""/>
+                                    <Condition Property="IsFocused" Value="False"/>
+                                </MultiTrigger.Conditions>
                                 <Setter Property="Visibility" TargetName="Placeholder" Value="Visible"/>
-                            </Trigger>
+                            </MultiTrigger>
+                            <!-- Cambiar borde cuando tenga foco -->
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
                                 <Setter Property="BorderThickness" Value="2"/>
@@ -394,7 +401,7 @@
                     <!-- Logo -->
                     <RowDefinition Height="Auto"/>
                     <!-- Título -->
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                     <!-- Campos de formulario -->
                 </Grid.RowDefinitions>
 
@@ -469,11 +476,12 @@
                             Margin="0,15,0,0"
                             Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="ErrorIcon" Text="⚠️" Margin="0,0,10,0" FontSize="16"/>
+                            <TextBlock x:Name="ErrorIcon" Text="⚠️" Margin="0,0,10,0" FontSize="16" Foreground="{StaticResource ErrorBrush}"/>
                             <TextBlock x:Name="ErrorText" 
                                        Text="Credenciales incorrectas. Intente nuevamente."
                                        Foreground="{StaticResource ErrorBrush}"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

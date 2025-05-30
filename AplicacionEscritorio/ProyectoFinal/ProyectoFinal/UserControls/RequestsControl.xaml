@@ -355,8 +355,9 @@
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Fuerza</system:String>
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Cardio</system:String>
                                 <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Flexibilidad</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">HIIT</system:String>
-                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Yoga</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Resistencia</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Hipertrofia</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Fullbody</system:String>
                             </ComboBox.Items>
                         </ComboBox>
                     </StackPanel>
