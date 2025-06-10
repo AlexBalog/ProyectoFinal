@@ -29,6 +29,7 @@ namespace ProyectoFinal.ViewModels
         private string _filterDuracionMax;
         private string _filterCreador;
         private string _filterEstado;
+        private string _filterBaja;
 
         public TrainingsViewModel()
         {
@@ -196,6 +197,20 @@ namespace ProyectoFinal.ViewModels
                 }
             }
         }
+
+        public string FilterBaja
+        {
+            get => _filterBaja;
+            set
+            {
+                if (_filterBaja != value)
+                {
+                    _filterBaja = value;
+                    OnPropertyChanged();
+                    System.Diagnostics.Debug.WriteLine($"FilterBaja changed to: '{_filterBaja}'");
+                }
+            }
+        }
         #endregion
 
         #region Comandos
@@ -207,6 +222,9 @@ namespace ProyectoFinal.ViewModels
         public ICommand ApproveTrainingCommand { get; private set; }
         public ICommand RejectTrainingCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
+        public ICommand DeactivateTrainingCommand { get; private set; }
+        public ICommand ReactivateTrainingCommand { get; private set; }
+
 
         private void InitializeCommands()
         {
@@ -218,6 +236,8 @@ namespace ProyectoFinal.ViewModels
             ApproveTrainingCommand = new RelayCommand<Entrenamiento>(async training => await ApproveTrainingAsync(training));
             RejectTrainingCommand = new RelayCommand<Entrenamiento>(async training => await RejectTrainingAsync(training));
             RefreshCommand = new RelayCommand(async () => await LoadTrainingsAsync());
+            DeactivateTrainingCommand = new RelayCommand<Entrenamiento>(async training => await DeactivateTrainingAsync(training));
+            ReactivateTrainingCommand = new RelayCommand<Entrenamiento>(async training => await ReactivateTrainingAsync(training));
         }
         #endregion
 
@@ -231,6 +251,7 @@ namespace ProyectoFinal.ViewModels
             FilterDuracionMax = string.Empty;
             FilterCreador = string.Empty;
             FilterEstado = "Todos"; // Valor por defecto
+            FilterBaja = "Todos";
         }
 
         public async Task LoadTrainingsAsync()
@@ -262,6 +283,99 @@ namespace ProyectoFinal.ViewModels
             }
         }
 
+        private async Task DeactivateTrainingAsync(Entrenamiento training)
+        {
+            if (training == null) return;
+
+            var result = MessageBox.Show(
+                $"¿Estás seguro de que deseas dar de baja el entrenamiento '{training.nombre}'?\n\nEsta acción se puede revertir posteriormente.",
+                "Confirmar Baja",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    IsLoading = true;
+
+                    // Actualizar el entrenamiento
+                    training.baja = true;
+                    training.fechaBaja = DateTime.Now;
+
+                    var success = await _dataService.UpdateEntrenamientoAsync(training);
+
+                    if (success)
+                    {
+                        MessageBox.Show("Entrenamiento dado de baja exitosamente.", "Éxito",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        await LoadTrainingsAsync(); // Recargar para actualizar vista
+                    }
+                    else
+                    {
+                        MessageBox.Show("Error al dar de baja el entrenamiento.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al dar de baja entrenamiento: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            }
+        }
+
+        // Implementar método para reactivar
+        private async Task ReactivateTrainingAsync(Entrenamiento training)
+        {
+            if (training == null) return;
+
+            var result = MessageBox.Show(
+                $"¿Reactivar el entrenamiento '{training.nombre}'?",
+                "Confirmar Reactivación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    IsLoading = true;
+
+                    // Actualizar el entrenamiento
+                    training.baja = false;
+                    training.fechaBaja = null; // Limpiar fecha de baja
+
+                    var success = await _dataService.UpdateEntrenamientoAsync(training);
+
+                    if (success)
+                    {
+                        MessageBox.Show("Entrenamiento reactivado exitosamente.", "Éxito",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        await LoadTrainingsAsync(); // Recargar para actualizar vista
+                    }
+                    else
+                    {
+                        MessageBox.Show("Error al reactivar el entrenamiento.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al reactivar entrenamiento: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
+            }
+        }
+
         private async Task ApplyFiltersAsync()
         {
             try
@@ -277,6 +391,7 @@ namespace ProyectoFinal.ViewModels
                 System.Diagnostics.Debug.WriteLine($"  Duración Max: '{FilterDuracionMax}'");
                 System.Diagnostics.Debug.WriteLine($"  Creador: '{FilterCreador}'");
                 System.Diagnostics.Debug.WriteLine($"  Estado: '{FilterEstado}'");
+                System.Diagnostics.Debug.WriteLine($"  Baja: '{FilterBaja}'");
 
                 // Verificar si hay filtros aplicados (excluyendo "Todas/Todos" que representa sin filtro)
                 bool hasFilters = !string.IsNullOrWhiteSpace(FilterNombre) ||
@@ -285,7 +400,8 @@ namespace ProyectoFinal.ViewModels
                                   !string.IsNullOrWhiteSpace(FilterDuracionMin) ||
                                   !string.IsNullOrWhiteSpace(FilterDuracionMax) ||
                                   !string.IsNullOrWhiteSpace(FilterCreador) ||
-                                  (!string.IsNullOrEmpty(FilterEstado) && FilterEstado != "Todos");
+                                  (!string.IsNullOrEmpty(FilterEstado) && FilterEstado != "Todos") ||
+                                  (!string.IsNullOrEmpty(FilterBaja) && FilterBaja != "Todos");
 
                 if (!hasFilters)
                 {
@@ -326,6 +442,20 @@ namespace ProyectoFinal.ViewModels
                     }
                 }
 
+                // Manejar baja
+                if (!string.IsNullOrEmpty(FilterBaja) && FilterBaja != "Todos")
+                {
+                    switch (FilterBaja)
+                    {
+                        case "Activos":
+                            filter.baja = false;
+                            break;
+                        case "Dados de baja":
+                            filter.baja = true;
+                            break;
+                    }
+                }
+
                 System.Diagnostics.Debug.WriteLine($"Filtro creado:");
                 System.Diagnostics.Debug.WriteLine($"  filter.nombre: '{filter.nombre}'");
                 System.Diagnostics.Debug.WriteLine($"  filter.categoria: '{filter.categoria}'");
@@ -335,6 +465,7 @@ namespace ProyectoFinal.ViewModels
                 System.Diagnostics.Debug.WriteLine($"  filter.duracionMax: '{filter.duracionMax}'");
                 System.Diagnostics.Debug.WriteLine($"  filter.aprobado: '{filter.aprobado}'");
                 System.Diagnostics.Debug.WriteLine($"  filter.pedido: '{filter.pedido}'");
+                System.Diagnostics.Debug.WriteLine($"  filter.baja: '{filter.baja}'");
 
                 var trainings = await _dataService.GetEntrenamientosFiltradosAsync(filter);
 
@@ -387,6 +518,7 @@ namespace ProyectoFinal.ViewModels
             FilterDuracionMax = string.Empty;
             FilterCreador = string.Empty;
             FilterEstado = "Todos"; // Volver a "Todos"
+            FilterBaja = "Todos";
 
             // Recargar todos los entrenamientos
             await LoadTrainingsAsync();

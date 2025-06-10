@@ -192,6 +192,53 @@ namespace ProyectoFinal.ViewModels
             }
         }
 
+        private bool _baja;
+        private DateTime? _fechaBaja;
+
+        // Propiedades públicas (agregar a las existentes)
+        public bool Baja
+        {
+            get => _baja;
+            set
+            {
+                if (_baja != value)
+                {
+                    _baja = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(FechaBajaTexto));
+
+                    // Si se marca como baja, establecer fecha automáticamente
+                    if (value && !FechaBaja.HasValue)
+                    {
+                        FechaBaja = DateTime.Now;
+                    }
+                    // Si se desmarca, limpiar fecha
+                    else if (!value)
+                    {
+                        FechaBaja = null;
+                    }
+
+                    ((RelayCommand)SaveCommand).RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        public DateTime? FechaBaja
+        {
+            get => _fechaBaja;
+            set
+            {
+                if (_fechaBaja != value)
+                {
+                    _fechaBaja = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(FechaBajaTexto));
+                }
+            }
+        }
+
+        public string FechaBajaTexto => FechaBaja?.ToString("dd/MM/yyyy HH:mm") ?? "No establecida";
+
         public int Likes
         {
             get => _likes;
@@ -380,6 +427,8 @@ namespace ProyectoFinal.ViewModels
             Aprobado = training.aprobado;
             Pedido = training.pedido;
             MotivoRechazo = training.motivoRechazo;
+            Baja = training.baja;
+            FechaBaja = training.fechaBaja;
 
             // Cargar listas
             Musculo.Clear();
@@ -429,6 +478,8 @@ namespace ProyectoFinal.ViewModels
             Pedido = false;
             MotivoRechazo = string.Empty;
             MusculoTemp = string.Empty;
+            Baja = false;
+            FechaBaja = null;
 
             Musculo.Clear();
             Ejercicios.Clear();
@@ -602,6 +653,8 @@ namespace ProyectoFinal.ViewModels
                 creador = Creador, // Aquí ya está el ID del usuario actual
                 aprobado = Aprobado,
                 pedido = Pedido,
+                baja = Baja,
+                fechaBaja = FechaBaja,
                 motivoRechazo = MotivoRechazo
             };
 
@@ -631,6 +684,8 @@ namespace ProyectoFinal.ViewModels
                 creador = Creador, // Mantener el creador original
                 aprobado = Aprobado,
                 pedido = Pedido,
+                baja = Baja,
+                fechaBaja = FechaBaja,
                 motivoRechazo = MotivoRechazo
             };
 
