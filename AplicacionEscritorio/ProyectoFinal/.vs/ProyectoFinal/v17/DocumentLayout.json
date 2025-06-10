@@ -3,6 +3,42 @@
   "WorkspaceRootPath": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\viewmodels\\trainingformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\viewmodels\\trainingformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\viewmodels\\trainingsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\viewmodels\\trainingsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingformwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingformwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\models\\entities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\models\\entities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\models\\models.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\models\\models.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\services\\dataservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\services\\dataservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\proyectofinal.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\proyectofinal.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\dashboardwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\dashboardwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
@@ -23,18 +59,6 @@
       "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\usercontrols\\requestscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\viewmodels\\trainingformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\viewmodels\\trainingformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingformwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingformwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\loginview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\loginview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -45,10 +69,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\services\\apiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\usercontrols\\exercisescontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
@@ -106,7 +126,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 25,
+          "SelectedChildIndex": 21,
           "Children": [
             {
               "$type": "Bookmark",
@@ -118,7 +138,72 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
+              "Title": "TrainingsViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
+              "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
+              "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
+              "RelativeToolTip": "ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
+              "ViewState": "AgIAAEECAAAAAAAAAAAqwE0CAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-10T11:26:46.744Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Entities.cs",
+              "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Models\\Entities.cs",
+              "RelativeDocumentMoniker": "ProyectoFinal\\Models\\Entities.cs",
+              "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Models\\Entities.cs",
+              "RelativeToolTip": "ProyectoFinal\\Models\\Entities.cs",
+              "ViewState": "AgIAADYAAAAAAAAAAAAowEEAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-10T11:17:12.582Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Models.cs",
+              "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Models\\Models.cs",
+              "RelativeDocumentMoniker": "ProyectoFinal\\Models\\Models.cs",
+              "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Models\\Models.cs",
+              "RelativeToolTip": "ProyectoFinal\\Models\\Models.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-10T11:17:09.819Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "DataService.cs",
+              "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Services\\DataService.cs",
+              "RelativeDocumentMoniker": "ProyectoFinal\\Services\\DataService.cs",
+              "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Services\\DataService.cs",
+              "RelativeToolTip": "ProyectoFinal\\Services\\DataService.cs",
+              "ViewState": "AgIAACYAAAAAAAAAAAA3wDUAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-10T10:03:11.029Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ProyectoFinal.csproj",
+              "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ProyectoFinal.csproj",
+              "RelativeDocumentMoniker": "ProyectoFinal\\ProyectoFinal.csproj",
+              "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ProyectoFinal.csproj",
+              "RelativeToolTip": "ProyectoFinal\\ProyectoFinal.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-06-03T12:04:14.67Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "DashboardWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\DashboardWindow.xaml.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\DashboardWindow.xaml.cs",
@@ -126,24 +211,22 @@
               "RelativeToolTip": "ProyectoFinal\\Views\\DashboardWindow.xaml.cs",
               "ViewState": "AgIAAF8AAAAAAAAAAAAAAG8AAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T11:49:42.138Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T11:49:42.138Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 13,
               "Title": "RequestsControl.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\RequestsControl.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\UserControls\\RequestsControl.xaml",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\RequestsControl.xaml",
               "RelativeToolTip": "ProyectoFinal\\UserControls\\RequestsControl.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-05-30T11:45:28.171Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T11:45:28.171Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 2,
               "Title": "TrainingFormWindow.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\TrainingFormWindow.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\TrainingFormWindow.xaml",
@@ -155,7 +238,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 14,
               "Title": "LoginView.xaml.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\LoginView.xaml.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\LoginView.xaml.cs",
@@ -163,12 +246,11 @@
               "RelativeToolTip": "ProyectoFinal\\Views\\LoginView.xaml.cs",
               "ViewState": "AgIAALIAAAAAAAAAAAAAwM8AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T11:23:40.836Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T11:23:40.836Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 12,
               "Title": "DashboardViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\DashboardViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\DashboardViewModel.cs",
@@ -176,12 +258,11 @@
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\DashboardViewModel.cs",
               "ViewState": "AgIAAH8AAAAAAAAAAAAlwJAAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T11:22:35.901Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T11:22:35.901Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 15,
               "Title": "LoginViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\LoginViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\LoginViewModel.cs",
@@ -189,12 +270,11 @@
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\LoginViewModel.cs",
               "ViewState": "AgIAAGMBAAAAAAAAAAAkwH0BAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T11:22:16.127Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T11:22:16.127Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 16,
               "Title": "UserService.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Services\\UserService.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Services\\UserService.cs",
@@ -202,37 +282,35 @@
               "RelativeToolTip": "ProyectoFinal\\Services\\UserService.cs",
               "ViewState": "AgIAAH8AAAAAAAAAAAAAAPoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T11:19:46.89Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T11:19:46.89Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 7,
               "Title": "ApiService.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Services\\ApiService.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Services\\ApiService.cs",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Services\\ApiService.cs",
               "RelativeToolTip": "ProyectoFinal\\Services\\ApiService.cs",
-              "ViewState": "AgIAACEAAAAAAAAAAADwvzIAAABVAAAAAAAAAA==",
+              "ViewState": "AgIAAMMAAAAAAAAAAAAtwNYAAABQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-30T11:03:53.083Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 10,
               "Title": "LoginView.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\LoginView.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\LoginView.xaml",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\LoginView.xaml",
               "RelativeToolTip": "ProyectoFinal\\Views\\LoginView.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-05-30T10:58:18.601Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T10:58:18.601Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 18,
               "Title": "ExerciseSelectionViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\ExerciseSelectionViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\ExerciseSelectionViewModel.cs",
@@ -240,12 +318,11 @@
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\ExerciseSelectionViewModel.cs",
               "ViewState": "AgIAAFoAAAAAAAAAAAAkwHIAAABEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T08:24:08.531Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T08:24:08.531Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 3,
               "Title": "TrainingsControl.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\TrainingsControl.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\UserControls\\TrainingsControl.xaml",
@@ -257,19 +334,18 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 17,
               "Title": "ExercisesControl.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\ExercisesControl.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\UserControls\\ExercisesControl.xaml",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\ExercisesControl.xaml",
               "RelativeToolTip": "ProyectoFinal\\UserControls\\ExercisesControl.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-05-30T08:15:26.539Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T08:15:26.539Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 21,
               "Title": "Base64ToImageConverter.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Converters\\Base64ToImageConverter.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Converters\\Base64ToImageConverter.cs",
@@ -277,12 +353,11 @@
               "RelativeToolTip": "ProyectoFinal\\Converters\\Base64ToImageConverter.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAQwCIAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T07:54:11.28Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T07:54:11.28Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 20,
               "Title": "UserFormViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\UserFormViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\UserFormViewModel.cs",
@@ -290,25 +365,24 @@
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\UserFormViewModel.cs",
               "ViewState": "AgIAACcCAAAAAAAAAAD4vzICAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-30T07:53:57.358Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T07:53:57.358Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 0,
               "Title": "TrainingFormViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
-              "ViewState": "AgIAACcBAAAAAAAAAAAAADYBAABGAAAAAAAAAA==",
+              "ViewState": "AgIAABQBAAAAAAAAAAASwBoBAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-30T07:53:46.395Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 24,
               "Title": "EventsViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\EventsViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\EventsViewModel.cs",
@@ -320,7 +394,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 23,
               "Title": "EventFormWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\EventFormWindow.xaml.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\EventFormWindow.xaml.cs",
@@ -332,19 +406,18 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 22,
               "Title": "EventFormWindow.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\EventFormWindow.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\EventFormWindow.xaml",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\EventFormWindow.xaml",
               "RelativeToolTip": "ProyectoFinal\\Views\\EventFormWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-05-30T06:43:19.775Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-30T06:43:19.775Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 25,
               "Title": "EventFormViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\EventFormViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\EventFormViewModel.cs",
@@ -356,7 +429,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 27,
               "Title": "ExercisesViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\ExercisesViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\ExercisesViewModel.cs",
@@ -368,7 +441,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 28,
               "Title": "ExerciseFormWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\ExerciseFormWindow.xaml.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\ExerciseFormWindow.xaml.cs",
@@ -380,7 +453,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 26,
               "Title": "ExerciseFormWindow.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\ExerciseFormWindow.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\ExerciseFormWindow.xaml",
@@ -391,7 +464,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 19,
               "Title": "ExerciseFormViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\ExerciseFormViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\ExerciseFormViewModel.cs",
@@ -399,20 +472,18 @@
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\ExerciseFormViewModel.cs",
               "ViewState": "AgIAABEAAAAAAAAAAAAkwCUAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-29T12:30:24.971Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-29T12:30:24.971Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 9,
               "Title": "DashboardWindow.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\DashboardWindow.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\DashboardWindow.xaml",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\DashboardWindow.xaml",
               "RelativeToolTip": "ProyectoFinal\\Views\\DashboardWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-05-29T08:54:12.428Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-29T08:54:12.428Z"
             }
           ]
         }

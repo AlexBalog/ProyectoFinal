@@ -44,8 +44,8 @@ class EntrenamientoRealizadoRepository @Inject constructor(private val api: Entr
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun new(entrenar: EntrenamientoRealizado): EntrenamientoRealizado? {
-        val response = api.new(entrenar)
+    suspend fun new(entrenar: EntrenamientoRealizado, token: String): EntrenamientoRealizado? {
+        val response = api.new(entrenar = entrenar, auth = "Bearer $token")
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -55,7 +55,7 @@ class EntrenamientoRealizadoRepository @Inject constructor(private val api: Entr
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<EntrenamientoRealizado>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {

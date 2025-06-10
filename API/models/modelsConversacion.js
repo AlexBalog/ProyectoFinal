@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
 const conversacionSchema = new mongoose.Schema({
     _id: { 
-    type: String, 
+        type: String, 
     },
     usuario: { 
-    type: String,
-    required: true 
+        type: String,
+        required: true 
     },
     titulo: { 
-    type: String, 
-    default: 'Nueva conversación' 
+        type: String, 
+        default: 'Nueva conversación' 
     },
     categoria: { 
         type: String, 

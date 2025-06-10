@@ -29,6 +29,16 @@ import com.example.proyectofinalandroid.ViewModel.UsuariosViewModel
 import android.util.Log
 import com.example.proyectofinalandroid.Model.Usuarios
 import kotlinx.coroutines.flow.filter
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.ImageBitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.ui.graphics.asImageBitmap
 
 @SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,70 +46,120 @@ import kotlinx.coroutines.flow.filter
 fun MisEntrenamientosScreen(
     navController: NavController
 ) {
-    // 1. Usa remember para estabilizar las referencias de ViewModels
     val userEntry = remember(navController) {
         navController.getBackStackEntry("root")
     }
-    val mainEntry = remember(navController) {
+
+    val parentEntry = remember(navController) {
         navController.getBackStackEntry("main")
     }
+
     val usuariosViewModel: UsuariosViewModel = hiltViewModel(userEntry)
-    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(mainEntry)
+    val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
 
     val usuario by usuariosViewModel.usuario.collectAsState()
-    // 2. Estabiliza el scope con remember
+    val entrenamientos by entrenamientosViewModel.entrenamientos.collectAsState()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        // Esto garantiza que siempre se carguen los datos al entrar a la pantalla
-        scope.launch {
-            usuario?.let { currentUser ->
-                val filtros = mapOf("creador" to (currentUser._id ?: ""))
+    // Estados para el diálogo de confirmación
+    var entrenamientoAEliminar by remember { mutableStateOf<Entrenamientos?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // ✅ Filtrar entrenamientos del usuario directamente en el Composable
+    val misEntrenamientos = remember(entrenamientos, usuario) {
+        entrenamientos?.filter {
+            it.creador == usuario?._id && !it.baja // Solo entrenamientos activos del usuario
+        } ?: emptyList()
+    }
+
+    // ✅ Cargar datos cuando el usuario cambie
+    LaunchedEffect(usuario) {
+        usuario?.let { currentUser ->
+            isLoading = true
+            try {
+                entrenamientosViewModel.setUsuario(currentUser)
+                val filtros = mapOf(
+                    "creador" to (currentUser._id ?: ""),
+                    "baja" to "false"
+                )
                 entrenamientosViewModel.getFilter(filtros)
+            } finally {
+                isLoading = false
             }
         }
     }
-    // 3. Define un estado derivado para la UI
-    val screenState = produceState(
-        initialValue = MisEntrenamientosScreenState(isLoading = true, entrenamientos = emptyList())
-    ) {
-        val usuarioFlow = usuariosViewModel.usuario
-        val entrenamientosFlow = entrenamientosViewModel.entrenamientos
 
-        // Usa collectLatest para evitar recolecciones innecesarias
-        usuarioFlow.collect { usuario ->
-            if (usuario != null) {
-                entrenamientosViewModel.setUsuario(usuario)
-                val filtros = mapOf("creador" to (usuario._id ?: ""))
-                entrenamientosViewModel.getFilter(filtros)
+    // Función para manejar la baja del entrenamiento
+    val onDeleteEntrenamiento = remember {
+        { entrenamiento: Entrenamientos ->
+            entrenamientoAEliminar = entrenamiento
+            showDeleteDialog = true
+        }
+    }
 
-                // Actualiza el estado solo cuando los datos cambian realmente
-                entrenamientosFlow.collect { entrenamientosResult ->
-                    value = MisEntrenamientosScreenState(
-                        isLoading = false,
-                        entrenamientos = entrenamientosResult!!.filter { it.creador == usuario._id } ?: emptyList()
+    // ✅ Función para confirmar baja MEJORADA - siempre cierra el diálogo
+    val onConfirmDelete = {
+        entrenamientoAEliminar?.let { entrenamiento ->
+            scope.launch {
+                try {
+                    isLoading = true
+
+                    // 1. Dar de baja
+                    val success = entrenamientosViewModel.darDeBajaEntrenamiento(entrenamiento._id)
+
+                    // 2. SIEMPRE recargar los datos (sin importar si fue exitoso o no)
+                    val filtros = mapOf(
+                        "creador" to (usuario?._id ?: ""),
+                        "baja" to "false"
                     )
+                    entrenamientosViewModel.getFilter(filtros)
+
+                } catch (e: Exception) {
+                    Log.e("MisEntrenamientos", "Error: ${e.message}")
+                } finally {
+                    isLoading = false
+                    showDeleteDialog = false
+                    entrenamientoAEliminar = null
                 }
             }
         }
+        Unit
     }
 
-    // 4. Extrae la UI a componentes estables
+    // ✅ Estado simplificado
+    val screenState = MisEntrenamientosScreenState(
+        isLoading = isLoading,
+        entrenamientos = misEntrenamientos
+    )
+
     MisEntrenamientosContent(
-        state = screenState.value,
+        state = screenState,
         onBackClick = remember { { navController.popBackStack() } },
         onCreateTrainingClick = remember { { navController.navigate("crearEntrenamiento") } },
         onEntrenamientoClick = remember { { id -> navController.navigate("crearEntrenamiento?id=$id&publicar=true") } },
+        onDeleteEntrenamiento = onDeleteEntrenamiento
     )
+
+    // Diálogo de confirmación
+    if (showDeleteDialog && entrenamientoAEliminar != null) {
+        DarDeBajaConfirmationDialog(
+            entrenamiento = entrenamientoAEliminar!!,
+            onConfirm = onConfirmDelete,
+            onDismiss = {
+                showDeleteDialog = false
+                entrenamientoAEliminar = null
+            }
+        )
+    }
 }
 
-// 5. Define un modelo de estado para la UI
+// Modelo de estado para la UI
 data class MisEntrenamientosScreenState(
     val isLoading: Boolean,
     val entrenamientos: List<Entrenamientos>
 )
 
-// 6. Extrae la UI a un componente separado que solo recibe datos inmutables y callbacks estables
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MisEntrenamientosContent(
@@ -107,6 +167,7 @@ fun MisEntrenamientosContent(
     onBackClick: () -> Unit,
     onCreateTrainingClick: () -> Unit,
     onEntrenamientoClick: (String) -> Unit,
+    onDeleteEntrenamiento: (Entrenamientos) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -119,7 +180,6 @@ fun MisEntrenamientosContent(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // TopAppBar estable
             TopAppBar(
                 title = {
                     Text(
@@ -154,20 +214,19 @@ fun MisEntrenamientosContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Contenido principal basado en el estado
             when {
                 state.isLoading -> LoadingContent()
                 state.entrenamientos.isEmpty() -> EmptyContent(onCreateClick = onCreateTrainingClick)
                 else -> EntrenamientosList(
                     entrenamientos = state.entrenamientos,
                     onEntrenamientoClick = onEntrenamientoClick,
+                    onDeleteEntrenamiento = onDeleteEntrenamiento
                 )
             }
         }
     }
 }
 
-// 7. Componentes de UI individuales para cada estado
 @Composable
 private fun LoadingContent() {
     Box(
@@ -196,7 +255,7 @@ private fun EmptyContent(onCreateClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "No has creado entrenamientos",
+                text = "No tienes entrenamientos activos",
                 color = Color.White,
                 fontSize = 20.sp
             )
@@ -229,6 +288,7 @@ private fun EmptyContent(onCreateClick: () -> Unit) {
 private fun EntrenamientosList(
     entrenamientos: List<Entrenamientos>,
     onEntrenamientoClick: (String) -> Unit,
+    onDeleteEntrenamiento: (Entrenamientos) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -237,21 +297,114 @@ private fun EntrenamientosList(
     ) {
         items(
             items = entrenamientos,
-            // 8. Usa una key estable para los items de la lista
             key = { it._id }
         ) { entrenamiento ->
-            // 9. Memoriza la función onClick para cada item
-            val onClick = remember(entrenamiento._id) {
-                { onEntrenamientoClick(entrenamiento._id) }
-            }
-
-            EntrenamientoCard(
+            SwipeToDeleteEntrenamientoCard(
                 entrenamiento = entrenamiento,
-                onClick = onClick
+                onClick = { onEntrenamientoClick(entrenamiento._id) },
+                onDelete = { onDeleteEntrenamiento(entrenamiento) }
             )
         }
         item {
             Spacer(modifier = Modifier.height(100.dp))
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeToDeleteEntrenamientoCard(
+    entrenamiento: Entrenamientos,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val swipeState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            when (dismissValue) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    false // No eliminar automáticamente, esperamos confirmación
+                }
+                else -> false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = swipeState,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Color(0xFFFF9800), // Color naranja para indicar "dar de baja"
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Archive, // Icono más apropiado para "dar de baja"
+                    contentDescription = "Dar de baja",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true
+    ) {
+        EntrenamientoCard(
+            entrenamiento = entrenamiento,
+            onClick = onClick
+        )
+    }
+}
+
+
+@Composable
+private fun DarDeBajaConfirmationDialog(
+    entrenamiento: Entrenamientos,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Dar de baja entrenamiento",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "¿Estás seguro de que quieres dar de baja \"${entrenamiento.nombre}\"? El entrenamiento será ocultado pero no se eliminará definitivamente. Los usuarios que ya lo hayan realizado no se verán afectados.",
+                color = Color.Gray
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFFFF9800) // Color naranja para indicar que es una acción de baja
+                )
+            ) {
+                Text("Dar de baja")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFFAB47BC)
+                )
+            ) {
+                Text("Cancelar")
+            }
+        },
+        containerColor = Color(0xFF1A1A1A),
+        titleContentColor = Color.White,
+        textContentColor = Color.Gray
+    )
 }

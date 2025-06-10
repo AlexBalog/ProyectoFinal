@@ -37,7 +37,7 @@ class SerieRealizadaRepository @Inject constructor(private val api: SerieRealiza
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<SerieRealizada>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {
@@ -46,8 +46,8 @@ class SerieRealizadaRepository @Inject constructor(private val api: SerieRealiza
         }
     }
 
-    suspend fun new(serie: SerieRealizada): SerieRealizada? {
-        val response = api.new(serie)
+    suspend fun new(serie: SerieRealizada, token: String): SerieRealizada? {
+        val response = api.new("Bearer $token", serie)
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)

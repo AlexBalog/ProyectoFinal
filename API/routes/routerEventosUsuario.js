@@ -1,14 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const modelEventosUsuario = require('../models/modelsEventosUsuario'); 
+const verifyToken = require('../middlewares/authMiddleware'); // Middleware de autenticación
+
 //middleware para acceder 
-router.get('/getAll', async (req, res) => {
+router.get('/getAll', verifyToken, async (req, res) => {
     try{
-    const data = await modelEventosUsuario.find();
-    res.status(200).json(data);
+        console.log("Accediendo a eventos de usuario");
+        const data = await modelEventosUsuario.find();
+        res.status(200).json(data);
     }
     catch(error){
-    res.status(500).json({message: error.message});
+        res.status(500).json({message: error.message});
     }
 });
 
@@ -28,7 +31,7 @@ router.get('/getEventosProximos/:usuarioId', async (req, res) => {
     }
 });
 
-router.post('/getOne', async (req, res) => {
+router.post('/getOne', verifyToken, async (req, res) => {
     try{
     const id = req.body._id;
     const data = await modelEventosUsuario.findOne({ _id: id });
@@ -43,7 +46,7 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.post('/getFilter', async (req, res) => {
+router.post('/getFilter', verifyToken, async (req, res) => {
     try {
         const condiciones = {};
 
@@ -68,7 +71,7 @@ router.post('/getFilter', async (req, res) => {
     }
 });
 
-router.post('/new', async (req, res) => {
+router.post('/new', verifyToken, async (req, res) => {
     const data = new modelEventosUsuario({
         evento: req.body.evento,
         usuario: req.body.usuario,
@@ -86,7 +89,7 @@ router.post('/new', async (req, res) => {
     }
     });
 
-router.patch("/update", async (req, res) => {
+router.patch("/update", verifyToken, async (req, res) => {
     try {
     const id = req.body._id;
 
@@ -110,7 +113,7 @@ router.patch("/update", async (req, res) => {
     }
 });
 
-router.delete('/delete', async (req, res) => {
+router.delete('/delete', verifyToken, async (req, res) => {
     try {
     const id = req.body._id;
     const data = await modelEventosUsuario.deleteOne({ _id: id })
@@ -123,23 +126,7 @@ router.delete('/delete', async (req, res) => {
     catch (error) {
         res.status(400).json({ message: error.message })
     }
-    })
+});
 
-    /*router.delete('/delete', async (req, res) => {
-        try {
-        const id = req.body._id;
-        const objeto = await modelEventosUsuario.findById({ id });
-        if (objeto) {
-            await objeto.deleteOne();
-        } else {
-            return res.status(404).json({ message: 'Documento no encontrado' });
-        }
-    
-        res.status(200).json({ message: `Document with ${id} has been deleted..` })
-        }
-        catch (error) {
-            res.status(400).json({ message: error.message })
-        }
-        })*/
 
 module.exports = router;

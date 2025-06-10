@@ -11,7 +11,7 @@ data class SerieRealizada(
     @SerializedName("ejercicio")
     val ejercicio: String,
     @SerializedName("numeroSerie")
-    val numeroSerie: Number,
+    var numeroSerie: Number,
     @SerializedName("repeticiones")
     val repeticiones: Number,
     @SerializedName("peso")

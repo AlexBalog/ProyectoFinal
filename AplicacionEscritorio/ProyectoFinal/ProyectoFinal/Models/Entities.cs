@@ -49,6 +49,8 @@ namespace ProyectoFinal.Models
         public bool aprobado { get; set; } = false;
         public bool pedido { get; set; } = false;
         public string motivoRechazo { get; set; }
+        public bool baja { get; set; } = false;
+        public DateTime? fechaBaja { get; set; }
 
         // Propiedades calculadas
         public string DuracionTexto => $"{duracion} min";
@@ -57,6 +59,23 @@ namespace ProyectoFinal.Models
 
         public bool CanBeApproved => pedido && !aprobado;
         public bool CanBeRejected => pedido && !aprobado;
+        public string EstadoBaja => baja ? "Dado de baja" : "Activo";
+        public string FechaBajaTexto => fechaBaja?.ToString("dd/MM/yyyy") ?? "N/A";
+
+        public string EstadoCompleto
+        {
+            get
+            {
+                if (baja)
+                    return $"Dado de baja ({FechaBajaTexto})";
+
+                return EstadoAprobacion;
+            }
+        }
+
+        public bool CanBeBajado => !baja;
+
+        public bool CanBeReactivated => baja;
     }
 
     // Modelo para Ejercicio
@@ -117,6 +136,7 @@ namespace ProyectoFinal.Models
         public bool? pedido { get; set; }
         public string sortBy { get; set; } = "nombre";
         public string sortDirection { get; set; } = "asc";
+        public bool? baja { get; set; } = false;
     }
 
     public class EjercicioFilter

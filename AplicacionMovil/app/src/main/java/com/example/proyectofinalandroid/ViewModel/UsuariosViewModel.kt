@@ -161,6 +161,54 @@ class UsuariosViewModel @Inject constructor(
         }
     }
 
+
+    suspend fun updateForm(updatedData: Map<String, String>): Boolean {
+        return withContext(Dispatchers.IO) {
+            _usuario.value?.let { currentUser ->
+                val _id = currentUser._id
+                val token = currentUser.token ?: return@withContext false
+                val success = repository.update(_id, updatedData, token)
+                if (!success) {
+                    _errorMessage.value = "Error al actualizar el usuario"
+                }
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val updatedUser = currentUser.copy(
+                    nombre = updatedData["nombre"] ?: currentUser.nombre,
+                    apellido = updatedData["apellido"] ?: currentUser.apellido,
+                    foto = updatedData["foto"] ?: currentUser.foto,
+                    sexo = updatedData["sexo"] ?: currentUser.sexo,
+                    // Convertir string a Date para fechaNacimiento
+                    fechaNacimiento = if (updatedData.containsKey("fechaNacimiento")) {
+                        try {
+                            val fechaString = updatedData["fechaNacimiento"]!!
+                            val parsedDate = dateFormat.parse(fechaString)
+                            parsedDate
+                        } catch (e: Exception) {
+                            Log.e("UsuariosViewModel", "Error parseando fecha: ${e.message}")
+                            currentUser.fechaNacimiento // En caso de error, mantener el valor actual
+                        }
+                    } else {
+                        currentUser.fechaNacimiento
+                    },
+                    // Convertir strings a Float para los valores numéricos usando toFloatOrNull()
+                    altura = updatedData["altura"]?.toFloatOrNull() ?: currentUser.altura,
+                    peso = updatedData["peso"]?.toFloatOrNull() ?: currentUser.peso,
+                    objetivoPeso = updatedData["objetivoPeso"]?.toFloatOrNull() ?: currentUser.objetivoPeso,
+                    objetivoTiempo = updatedData["objetivoTiempo"]?.toFloatOrNull() ?: currentUser.objetivoTiempo,
+                    IMC = updatedData["IMC"]?.toFloatOrNull() ?: currentUser.IMC,
+                    nivelActividad = updatedData["nivelActividad"] ?: currentUser.nivelActividad,
+                    objetivoCalorias = updatedData["objetivoCalorias"]?.toFloatOrNull() ?: currentUser.objetivoCalorias,
+                    caloriasMantenimiento = updatedData["caloriasMantenimiento"]?.toFloatOrNull() ?: currentUser.caloriasMantenimiento,
+                    formulario = true
+                )
+
+                _usuario.value = updatedUser
+                return@withContext success
+            } ?: false
+        }
+    }
+
+
     fun registrar(newUser: Usuarios) {
         viewModelScope.launch {
             try {

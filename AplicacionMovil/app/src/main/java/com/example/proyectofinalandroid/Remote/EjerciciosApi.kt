@@ -10,7 +10,9 @@ interface EjerciciosApi {
 
     // Endpoint para obtener todos los ejercicios
     @GET("ejercicios/getAll")
-    suspend fun getAll(@Header("Authorization") auth: String): Response<List<Ejercicios>>
+    suspend fun getAll(
+        @Header("Authorization") auth: String
+    ): Response<List<Ejercicios>>
 
     // Endpoint para actualizar ejercicio (requiere token)
     @PATCH("ejercicios/update")

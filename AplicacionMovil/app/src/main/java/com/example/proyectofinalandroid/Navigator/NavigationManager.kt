@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.proyectofinalandroid.View.ForgotPasswordScreen
 import com.example.proyectofinalandroid.View.HistorialMedicionesScreen
+import com.example.proyectofinalandroid.View.EntrenamientosGuardadosScreen
 
 
 @Composable
@@ -208,6 +209,10 @@ fun Navegador() {
             }
             composable("verMediciones") {
                 HistorialMedicionesScreen(navController = navController)
+            }
+
+            composable("verGuardados") {
+                EntrenamientosGuardadosScreen(navController)
             }
         }
     }

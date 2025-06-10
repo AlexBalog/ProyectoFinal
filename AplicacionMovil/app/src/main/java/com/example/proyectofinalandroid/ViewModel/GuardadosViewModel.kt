@@ -40,6 +40,10 @@ class GuardadosViewModel @Inject constructor(private val repository: GuardadosRe
         verificarGuardado(usuario._id, entrenamiento._id)
     }
 
+    fun setUsuario(usuario: Usuarios) {
+        _usuario.value = usuario
+    }
+
 
     private val _isSaved = MutableStateFlow(false)
     val isSaved: StateFlow<Boolean> get() = _isSaved
@@ -61,20 +65,61 @@ class GuardadosViewModel @Inject constructor(private val repository: GuardadosRe
     }
 
 
-    private fun getAll() {
+    fun getAll() {
         viewModelScope.launch {
             try {
-                val lista = repository.getAll(token = _usuario.value?.token.toString())
+                _isLoading.value = true
+                val token = _usuario.value?.token.toString()
+                if (token.isNullOrEmpty()) {
+                    _errorMessage.value = "Usuario no autenticado"
+                    _guardados.value = emptyList()
+                    return@launch
+                }
+
+                val lista = repository.getAll(token)
                 if (lista != null) {
                     _guardados.value = lista
-                    Log.d("Habitaciones", "Datos cargados: $lista")
+                    Log.d("GuardadosViewModel", "Datos cargados: ${lista.size} guardados")
                 } else {
                     _guardados.value = emptyList()
-                    Log.d("Habitaciones", "Respuesta nula o lista vacía.")
+                    Log.d("GuardadosViewModel", "Respuesta nula o lista vacía.")
                 }
             } catch (e: Exception) {
-                Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
+                Log.e("GuardadosViewModel", "Error al obtener guardados: ${e.message}")
                 _guardados.value = emptyList()
+                _errorMessage.value = "Error al cargar guardados: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun getGuardadosByUsuario(usuarioId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val token = _usuario.value?.token.toString()
+                if (token.isNullOrEmpty()) {
+                    _errorMessage.value = "Usuario no autenticado"
+                    _guardados.value = emptyList()
+                    return@launch
+                }
+
+                val filtros = mapOf("usuario" to usuarioId)
+                val lista = repository.getFilter(token, filtros)
+                if (lista != null) {
+                    _guardados.value = lista
+                    Log.d("FalloGuardadosViewModel", "Guardados del usuario $usuarioId: ${lista.size}")
+                } else {
+                    _guardados.value = emptyList()
+                    Log.d("FalloGuardadosViewModel", "No se encontraron guardados para el usuario $usuarioId")
+                }
+            } catch (e: Exception) {
+                Log.e("GuardadosViewModel", "Error al obtener guardados del usuario: ${e.message}")
+                _guardados.value = emptyList()
+                _errorMessage.value = "Error al cargar guardados: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -92,7 +137,13 @@ class GuardadosViewModel @Inject constructor(private val repository: GuardadosRe
     fun new(guardado: Guardados) {
         viewModelScope.launch {
             try {
-                val creado = repository.new(guardado)
+                val token = _usuario.value?.token.toString()
+                if (token.isNullOrEmpty()) {
+                    _errorMessage.value = "Usuario no autenticado"
+                    _guardados.value = emptyList()
+                    return@launch
+                }
+                val creado = repository.new(guardado, token)
                 if (creado != null) {
                     _guardadosSeleccionado.value = creado
                     _isSaved.value = true

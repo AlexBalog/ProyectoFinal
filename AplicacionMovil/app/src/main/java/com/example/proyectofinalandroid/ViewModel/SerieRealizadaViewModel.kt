@@ -37,6 +37,33 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
         _usuario.value = usuario
     }
 
+
+    fun eliminarSerieDeLista(serie: SerieRealizada) {
+        val listaActual = _seriesRealizadas.value?.toMutableList() ?: mutableListOf()
+        listaActual.remove(serie)
+        _seriesRealizadas.value = listaActual
+    }
+
+    // También necesitas una función para eliminar por índice si es más conveniente:
+    fun eliminarSeriePorIndiceYEjercicio(ejercicioId: String, indiceSerie: Int) {
+        val listaActual = _seriesRealizadas.value?.toMutableList() ?: mutableListOf()
+        val seriesDelEjercicio = listaActual.filter { it.ejercicio == ejercicioId }
+
+        if (indiceSerie >= 0 && indiceSerie < seriesDelEjercicio.size) {
+            val serieAEliminar = seriesDelEjercicio[indiceSerie]
+            listaActual.remove(serieAEliminar)
+
+            // Reordenar números de serie
+            val seriesRestantes = listaActual.filter { it.ejercicio == ejercicioId }
+            seriesRestantes.forEachIndexed { index, serie ->
+                serie.numeroSerie = index + 1
+            }
+
+            _seriesRealizadas.value = listaActual
+        }
+    }
+
+
     fun vaciarLista() {
         val listaVacia: List<SerieRealizada> = emptyList()
         _seriesRealizadas.value = listaVacia
@@ -103,7 +130,7 @@ class SerieRealizadaViewModel @Inject constructor(private val repository: SerieR
 
     suspend fun new(serieRealizada: SerieRealizada): SerieRealizada? {
         return try {
-            val creado = repository.new(serieRealizada)
+            val creado = repository.new(serieRealizada, _usuario.value?.token.toString())
             if (creado != null) {
                 _serieRealizadaSeleccionado.value = creado
                 _errorMessage.value = null

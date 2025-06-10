@@ -6,7 +6,7 @@ const router = express.Router();
 
 
 // GET ALL: Obtiene todos los documentos de usuarios (ruta protegida) - La uso para cargar la lista de usuarios sin filtrar en WPF
-router.get('/getAll', /*verifyToken,*/ async (req, res) => {
+router.get('/getAll', verifyToken, async (req, res) => {
     try {
         const data = await UsuariosSchema.find();
         res.status(200).json(data);
@@ -17,7 +17,7 @@ router.get('/getAll', /*verifyToken,*/ async (req, res) => {
 
 
 // POST NEW: Crea un nuevo usuario (ruta protegida) - La uso para crear nuevos usuarios en WPF
-router.post('/new', /*verifyToken,*/ async (req, res) => {
+router.post('/new', verifyToken, async (req, res) => {
     try {
       // Hashear la contraseña antes de guardarla
       const saltRounds = 10;
@@ -43,7 +43,7 @@ router.post('/new', /*verifyToken,*/ async (req, res) => {
 // UPDATE: Actualiza un usuario basado en el dni proporcionado (ruta protegida) - La uso para modificar usuarios en WPF
 router.patch('/update', verifyToken, async (req, res) => {
   try {
-
+    console.log("Entra")
     const id = req.body._id;
     if (!id) {
       return res.status(400).json({ message: "Falta el campo 'id'" });
@@ -51,7 +51,6 @@ router.patch('/update', verifyToken, async (req, res) => {
 
     // Se crea un objeto para almacenar solo los campos que se enviaron en el request
     const updateFields = {};
-
 
     if (req.body.email !== undefined) {
       updateFields.email = req.body.email;
@@ -67,8 +66,15 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.contrasena = contrasena;
     }
 
+    // CAMPO FECHA - Convertir a Date
     if (req.body.fechaNacimiento !== undefined) {
-      updateFields.fechaNacimiento = req.body.fechaNacimiento;
+      const fechaStr = req.body.fechaNacimiento;
+      if (fechaStr.includes('/')) {
+        const [dia, mes, ano] = fechaStr.split('/');
+        updateFields.fechaNacimiento = new Date(`${ano}-${mes}-${dia}`);
+      } else {
+        updateFields.fechaNacimiento = new Date(fechaStr);
+      }
     }
 
     if (req.body.nombre !== undefined) {
@@ -87,8 +93,9 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.sexo = req.body.sexo;
     }
 
+    // CAMPOS NUMÉRICOS - Convertir a Number
     if (req.body.IMC !== undefined) {
-      updateFields.IMC = req.body.IMC;
+      updateFields.IMC = Number(req.body.IMC);
     }
 
     if (req.body.nivelActividad !== undefined) {
@@ -96,27 +103,27 @@ router.patch('/update', verifyToken, async (req, res) => {
     }
 
     if (req.body.caloriasMantenimiento !== undefined) {
-      updateFields.caloriasMantenimiento = req.body.caloriasMantenimiento;
+      updateFields.caloriasMantenimiento = Number(req.body.caloriasMantenimiento);
     }
 
     if (req.body.altura !== undefined) {
-      updateFields.altura = req.body.altura;
+      updateFields.altura = Number(req.body.altura);
     }
 
     if (req.body.peso !== undefined) {
-      updateFields.peso = req.body.peso;
+      updateFields.peso = Number(req.body.peso);
     }
 
     if (req.body.objetivoPeso !== undefined) {
-      updateFields.objetivoPeso = req.body.objetivoPeso;
+      updateFields.objetivoPeso = Number(req.body.objetivoPeso);
     }
 
     if (req.body.objetivoTiempo !== undefined) {
-      updateFields.objetivoTiempo = req.body.objetivoTiempo;
+      updateFields.objetivoTiempo = Number(req.body.objetivoTiempo);
     }
 
     if (req.body.objetivoCalorias !== undefined) {
-      updateFields.objetivoCalorias = req.body.objetivoCalorias;
+      updateFields.objetivoCalorias = Number(req.body.objetivoCalorias);
     }
 
     if (req.body.entrenamientosFavoritos !== undefined) {
@@ -127,37 +134,49 @@ router.patch('/update', verifyToken, async (req, res) => {
       updateFields.plan = req.body.plan;
     }
 
+    // CAMPO BOOLEAN - Convertir a Boolean
     if (req.body.formulario !== undefined) {
-      updateFields.formulario = req.body.formulario;
+      updateFields.formulario = req.body.formulario === 'true' || req.body.formulario === true;
     }
     
     if (req.body.entrenamientosRealizados !== undefined) {
-      updateFields.entrenamientosRealizados = req.body.entrenamientosRealizados
+      updateFields.entrenamientosRealizados = req.body.entrenamientosRealizados;
     }
 
+    console.log("ID del usuario a actualizar:", id);
+    console.log("Campos a actualizar:", updateFields);
+    
     // Si no se envía ningún campo para actualizar, se informa
     if (Object.keys(updateFields).length === 0) {
+      console.log("No se proporcionaron campos para actualizar");
       return res.status(400).json({ message: "No se proporcionaron campos para actualizar" });
     }
+    
+    console.log("Pasa del if de campos a actualizar");
+    
     // Se realiza la actualización solo de los campos proporcionados
     const resultado = await UsuariosSchema.updateOne(
       { _id: id },
       { $set: updateFields }
     );
 
+    console.log("Resultado de la actualización:", resultado);
+    
     if (resultado.modifiedCount === 0) {
+      console.log("No se encontró el documento o no se realizaron cambios");
       return res.status(404).json({ message: "Documento no encontrado o datos sin cambios" });
     }
 
     res.status(200).json({ message: "Documento actualizado exitosamente" });
   } catch (error) {
+    console.log("Error en update:", error);
     res.status(400).json({ message: error.message });
   }
 });
 
 
 // DELETE: Elimina un usuario basado en el dni proporcionado (ruta protegida) - La uso para eliminar usuarios en WPF
-router.delete('/delete',/* verifyToken,*/ async (req, res) => {
+router.delete('/delete', verifyToken, async (req, res) => {
     try {
         const id = req.body._id;
         const usuario = await UsuariosSchema.findById(id);
@@ -188,7 +207,7 @@ router.post('/getOneEmail', verifyToken, async (req, res) => {
   
   
 // GET FILTER: Filtra usuarios para la API del intermodular (ruta protegida) - La uso para filtrar usuarios en la lista de WPF
-router.post('/getFilterInter',verifyToken, async (req, res) => {
+router.post('/getFilterInter', verifyToken, async (req, res) => {
     try {
         const condiciones = {};
         if (req.body.rol && req.body.rol.trim() !== "") {
@@ -214,7 +233,6 @@ router.post('/getFilterInter',verifyToken, async (req, res) => {
 });
 
 
-/* Funciones de android */
 
 /*registro para android*/
 router.post('/register', async (req, res) => {
@@ -443,7 +461,7 @@ router.post('/change-password', async (req, res) => {
     }
 });
 
-// Endpoint para limpiar códigos expirados (opcional - puede ejecutarse con cron)
+// Endpoint para limpiar códigos expirados
 router.delete('/cleanup-codes', async (req, res) => {
     try {
         const result = await VerificationCode.deleteMany({

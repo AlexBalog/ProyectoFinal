@@ -1,4 +1,3 @@
-// En tu archivo de rutas de Express (ej: routes/ia.js)
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -7,12 +6,12 @@ const Mensaje = require('../models/modelsMensaje');
 const Usuario = require('../models/modelsUsuarios');
 const verifyToken = require('../middlewares/authMiddleware'); // Middleware para validar el JWT
 
-// Inicializar Gemini AI con tu API key - REEMPLAZA ESTO con tu clave real!
+// Inicializar Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Obtener todas las conversaciones del usuario
-router.get('/conversaciones/:id'/*, verifyToken*/, async (req, res) => {
+router.get('/conversaciones/:id', verifyToken, async (req, res) => {
   try {
     const conversaciones = await Conversacion.find({ usuario: req.params.id })
       .sort({ updatedAt: -1 });
@@ -23,7 +22,7 @@ router.get('/conversaciones/:id'/*, verifyToken*/, async (req, res) => {
 });
 
 // Crear nueva conversación
-router.post('/conversaciones'/*, verifyToken*/, async (req, res) => {
+router.post('/conversaciones', verifyToken, async (req, res) => {
   const { categoria, titulo } = req.body;
   try {
     const nuevaConversacion = new Conversacion({
@@ -40,7 +39,7 @@ router.post('/conversaciones'/*, verifyToken*/, async (req, res) => {
 });
 
 // Obtener mensajes de una conversación
-router.get('/conversaciones/:id/mensajes'/*, verifyToken*/, async (req, res) => {
+router.get('/conversaciones/:id/mensajes', verifyToken, async (req, res) => {
   try {
     const mensajes = await Mensaje.find({ conversacion: req.params.id })
       .sort({ timestamp: 1 });
@@ -51,7 +50,7 @@ router.get('/conversaciones/:id/mensajes'/*, verifyToken*/, async (req, res) => 
 });
 
 // Enviar mensaje y obtener respuesta
-router.post('/conversaciones/:id/mensajes'/*, verifyToken*/, async (req, res) => {
+router.post('/conversaciones/:id/mensajes', verifyToken, async (req, res) => {
   const { contenido } = req.body;
   const conversacionId = req.params.id;
   
@@ -228,7 +227,7 @@ function calcularEdad(fechaNacimiento) {
 }
 
 
-router.patch('/conversaciones/:conversacionid', /*verifyToken,*/ async (req, res) => {
+router.patch('/conversaciones/:conversacionid', verifyToken, async (req, res) => {
   try {
     const id = req.params.conversacionid;
     if (!id) {
@@ -264,7 +263,7 @@ router.patch('/conversaciones/:conversacionid', /*verifyToken,*/ async (req, res
 
 
 // DELETE: Elimina un usuario basado en el dni proporcionado (ruta protegida) - La uso para eliminar usuarios en WPF
-router.delete('/conversaciones/:conversacionid',/* verifyToken,*/ async (req, res) => {
+router.delete('/conversaciones/:conversacionid', verifyToken, async (req, res) => {
     try {
         const id = req.params.conversacionid;
         if (!id) {

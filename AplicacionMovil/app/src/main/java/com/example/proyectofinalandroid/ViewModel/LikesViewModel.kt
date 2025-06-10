@@ -58,7 +58,9 @@ class LikesViewModel @Inject constructor(private val repository: LikesRepository
     /**
      * Carga el contador de likes para un entrenamiento específico
      */
-    fun cargarContadorLikes(entrenamientoId: String) {
+    fun cargarContadorLikes(entrenamientoId: String?) {
+        if (entrenamientoId == null) return
+
         if (currentEntrenamientoId == entrenamientoId) {
             viewModelScope.launch {
                 try {
@@ -108,7 +110,7 @@ class LikesViewModel @Inject constructor(private val repository: LikesRepository
                     entrenamiento = entrenamientoId
                 )
 
-                val likeCreado = repository.new(nuevoLike)
+                val likeCreado = repository.new(nuevoLike, usuarioActual.token.toString())
 
                 if (likeCreado != null) {
                     _isLiked.value = true
@@ -117,7 +119,6 @@ class LikesViewModel @Inject constructor(private val repository: LikesRepository
                 }
             }
 
-            Log.d("FalloLikes", "_likesCount: ${_likesCount.value}")
             entrenamientosViewModel.update(entrenamientoId, mapOf("likes" to _likesCount.value.toString()))
             _errorMessage.value = null
 
@@ -154,7 +155,7 @@ class LikesViewModel @Inject constructor(private val repository: LikesRepository
     fun new(like: Likes) {
         viewModelScope.launch {
             try {
-                val creado = repository.new(like)
+                val creado = repository.new(like, _usuario.value?.token.toString())
                 if (creado != null) {
                     _isLiked.value = true
                     _errorMessage.value = null

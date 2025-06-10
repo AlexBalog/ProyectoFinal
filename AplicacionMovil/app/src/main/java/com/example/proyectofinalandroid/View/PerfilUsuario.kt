@@ -391,18 +391,18 @@ fun ActionButtonsRow(navController: NavController, medicionesViewModel: Medicion
         Spacer(modifier = Modifier.width(8.dp))
 
         ActionButton(
-            icon = Icons.Default.Add,
-            text = "Crear",
-            onClick = { navController.navigate("crearEntrenamiento") },
+            icon = Icons.Default.Straighten,
+            text = "Ver mediciones",
+            onClick = { navController.navigate("verMediciones") },
             modifier = Modifier.weight(1f)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         ActionButton(
-            icon = Icons.Default.Straighten,
-            text = "Ver mediciones",
-            onClick = { navController.navigate("verMediciones") },
+            icon = Icons.Default.Bookmarks,
+            text = "Ver Guardados",
+            onClick = { navController.navigate("verGuardados") },
             modifier = Modifier.weight(1f)
         )
     }

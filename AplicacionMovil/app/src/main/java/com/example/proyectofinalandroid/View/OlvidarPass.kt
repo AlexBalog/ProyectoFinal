@@ -109,7 +109,7 @@ fun ForgotPasswordScreen(
         if (passwordResetSuccess == true) {
             Toast.makeText(context, "Contraseña cambiada exitosamente", Toast.LENGTH_LONG).show()
             usuariosViewModel._passwordResetSuccess.value = false
-            navController.popBackStack()
+            navController.navigate("login")
         }
     }
 
@@ -132,7 +132,7 @@ fun ForgotPasswordScreen(
             onDismiss = { showPasswordDialog = false },
             onPasswordChanged = {
                 showPasswordDialog = false
-                navController.popBackStack()
+                navController.navigate("login")
             },
             usuariosViewModel = usuariosViewModel,
             email = email

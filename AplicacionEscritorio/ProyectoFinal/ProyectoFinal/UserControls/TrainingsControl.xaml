@@ -403,6 +403,20 @@
                             </ComboBox.Items>
                         </ComboBox>
                     </StackPanel>
+                    
+                    <StackPanel Grid.Column="4" Margin="5,0">
+                        <TextBlock Text="Estado Baja" Foreground="{StaticResource TextBrushSecondary}" 
+                                   FontSize="12" Margin="0,0,0,5"/>
+                        <ComboBox Style="{StaticResource FilterComboBox}"
+                                  ItemContainerStyle="{StaticResource ComboBoxItemStyle}"
+                                  SelectedItem="{Binding FilterBaja}">
+                            <ComboBox.Items>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Todos</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Activos</system:String>
+                                <system:String xmlns:system="clr-namespace:System;assembly=mscorlib">Dados de baja</system:String>
+                            </ComboBox.Items>
+                        </ComboBox>
+                    </StackPanel>
 
                     <!-- Segunda fila de filtros -->
                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,10,10,0">
@@ -484,11 +498,14 @@
                 <!-- Estado -->
                 <DataGridTextColumn Header="Estado" Binding="{Binding EstadoAprobacion}" Width="120"/>
 
+                <!-- Estado Baja -->
+                <DataGridTextColumn Header="Estado Baja" Binding="{Binding EstadoBaja}" Width="100"/>
+
                 <!-- Likes -->
                 <DataGridTextColumn Header="Likes" Binding="{Binding likes}" Width="80"/>
 
                 <!-- Acciones -->
-                <DataGridTemplateColumn Header="Acciones" Width="150">
+                <DataGridTemplateColumn Header="Acciones" Width="220">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -510,6 +527,20 @@
                                         Command="{Binding DataContext.RejectTrainingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Visibility="{Binding CanBeRejected, Converter={StaticResource BoolToVis}}"/>
+
+                                <!-- Botón dar de baja (solo si está activo) -->
+                                <Button Style="{StaticResource RejectButton}" 
+                                        Content="⬇️" ToolTip="Dar de baja"
+                                        Command="{Binding DataContext.DeactivateTrainingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Visibility="{Binding CanBeBajado, Converter={StaticResource BoolToVis}}"/>
+
+                                <!-- Botón reactivar (solo si está dado de baja) -->
+                                <Button Style="{StaticResource ApproveButton}" 
+                                        Content="⬆️" ToolTip="Reactivar"
+                                        Command="{Binding DataContext.ReactivateTrainingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Visibility="{Binding CanBeReactivated, Converter={StaticResource BoolToVis}}"/>
 
                                 <Button Style="{StaticResource DeleteButton}" 
                                         Content="🗑️" ToolTip="Eliminar"

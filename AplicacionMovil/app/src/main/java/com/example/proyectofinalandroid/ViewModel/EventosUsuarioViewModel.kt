@@ -67,7 +67,11 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
     fun new(eventosUsuario: EventosUsuario) {
         viewModelScope.launch {
             try {
-                val creado = repository.new(eventosUsuario)
+                val token = _usuario.value?.token ?: run {
+                    _errorMessage.value = "Usuario no autenticado"
+                    return@launch
+                }
+                val creado = repository.new(eventosUsuario, token = token)
                 if (creado != null) {
                     _eventosUsuario.value = creado
                     val actual = _eventosUsuarioLista.value?.toMutableList() ?: mutableListOf()
@@ -122,7 +126,6 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
     val eventosUsuarioSeleccionado: StateFlow<EventosUsuario?> get() = _eventosUsuarioSeleccionado
 
     fun getOne(id: String) {
-        Log.d("Mensaje", "${id} cargado")
         viewModelScope.launch {
             _eventosUsuarioSeleccionado.value = repository.getOne(id, _usuario.value?.token.toString())
         }
@@ -135,13 +138,10 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
                 val lista = repository.getAll(token = _usuario.value?.token.toString())
                 if (lista != null) {
                     _eventosUsuarioLista.value = lista
-                    Log.d("Habitaciones", "Datos cargados: $lista")
                 } else {
                     _eventosUsuarioLista.value = emptyList()
-                    Log.d("Habitaciones", "Respuesta nula o lista vacía.")
                 }
             } catch (e: Exception) {
-                Log.e("Habitaciones", "Error al obtener habitaciones: ${e.message}")
                 _eventosUsuarioLista.value = emptyList()
             }
         }
@@ -150,7 +150,7 @@ class EventosUsuarioViewModel @Inject constructor(private val repository: Evento
     suspend fun getFilter(filtros: Map<String, String>) {
         viewModelScope.launch {
             try {
-                val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
+                val lista = repository.getFilter(token = _usuario.value?.token.toString(), filtros = filtros)
                 if (lista != null) {
                     _eventosUsuarioLista.value = lista
                 } else {

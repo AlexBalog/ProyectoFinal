@@ -42,7 +42,10 @@ interface EjercicioRealizadoApi {
 
     // Endpoint para registrar ejercicio realizado sin token
     @POST("ejercicioRealizado/new")
-    suspend fun new(@Body ejercicioRealizado: EjercicioRealizado): Response<EjercicioRealizado>
+    suspend fun new(
+        @Header ("Authorization") auth: String,
+        @Body ejercicioRealizado: EjercicioRealizado
+    ): Response<EjercicioRealizado>
 
     @POST("ejercicioRealizado/getFilter")
     suspend fun getFilter(

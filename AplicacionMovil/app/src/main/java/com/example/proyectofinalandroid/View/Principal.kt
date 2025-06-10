@@ -773,7 +773,7 @@ fun MisEntrenamientosSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(entrenamientos.filter { it.creador == usuario._id }) { entrenamiento ->
+            items(entrenamientos.filter { it.creador == usuario._id && it.baja == false }) { entrenamiento ->
                 EntrenamientoItem(
                     entrenamiento = entrenamiento,
                     onClick = { navController.navigate("detalleEntrenamiento/${entrenamiento._id}") }
@@ -801,12 +801,38 @@ fun EntrenamientoItem(
                     .fillMaxWidth()
                     .height(100.dp)
             ) {
-                Image(
-                    painter = remember { BitmapPainter(base64ToBitmap(entrenamiento.foto)!!.asImageBitmap()) },
-                    contentDescription = "Imagen de sesión",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                val imageBitmap = remember(entrenamiento.foto) {
+                    if (!entrenamiento.foto.isNullOrEmpty()) {
+                        base64ToBitmap(entrenamiento.foto)?.asImageBitmap()
+                    } else {
+                        null
+                    }
+                }
+
+                if (imageBitmap != null) {
+                    // Usar Image de Compose para ImageBitmap
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = "Imagen de entrenamiento",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // Mostrar placeholder cuando no hay imagen o falla la conversión
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF333333)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FitnessCenter,
+                            contentDescription = "Entrenamiento",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
 
                 Box(
                     modifier = Modifier

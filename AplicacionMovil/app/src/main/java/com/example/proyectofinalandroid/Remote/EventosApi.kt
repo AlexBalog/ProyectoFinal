@@ -10,7 +10,9 @@ interface EventosApi {
 
     // Endpoint para obtener todos los eventos (requiere token)
     @GET("eventos/getAll")
-    suspend fun getAll(@Header("Authorization") auth: String): Response<List<Eventos>>
+    suspend fun getAll(
+        @Header("Authorization") auth: String
+    ): Response<List<Eventos>>
 
     // Endpoint para actualizar eventos (requiere token)
     @PATCH("eventos/update")
@@ -35,7 +37,10 @@ interface EventosApi {
 
     // Endpoint para crear un evento sin token
     @POST("eventos/new")
-    suspend fun new(@Body eventos: Eventos): Response<Eventos>
+    suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body eventos: Eventos
+    ): Response<Eventos>
 
     @POST("eventos/getFilter")
     suspend fun getFilter(

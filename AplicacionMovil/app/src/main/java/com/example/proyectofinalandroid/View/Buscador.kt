@@ -114,7 +114,11 @@ fun BuscadorScreen(
         }
 
         selectedMuscle?.let {
-            filters["musculoPrincipal"] = it
+            if (searchType == "entrenamientos") {
+                filters["musculoPrincipal"] = it
+            } else {
+                filters["musculo"] = it
+            }
         }
 
         if (searchType == "entrenamientos" && (durationRange.start > 0f || durationRange.endInclusive < 180f)) {
@@ -1366,25 +1370,6 @@ fun AnimatedCardEntry(
         )
     ) {
         content()
-    }
-}
-
-
-// Botón de filtro flotante para móviles pequeños
-@Composable
-fun FloatingFilterButton(
-    onClick: () -> Unit,
-    filtersActive: Boolean
-) {
-    FloatingActionButton(
-        onClick = onClick,
-        containerColor = if (filtersActive) Color(0xFFAB47BC) else Color(0xFF7B1FA2),
-        contentColor = Color.White
-    ) {
-        Icon(
-            imageVector = Icons.Default.FilterList,
-            contentDescription = "Filtros"
-        )
     }
 }
 }

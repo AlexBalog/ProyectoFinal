@@ -38,5 +38,8 @@ interface SerieRealizadaApi {
     ): Response<List<SerieRealizada>>
 
     @POST("serieRealizada/new")
-    suspend fun new(@Body serie: SerieRealizada): Response<SerieRealizada>
+    suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body serie: SerieRealizada
+    ): Response<SerieRealizada>
 }

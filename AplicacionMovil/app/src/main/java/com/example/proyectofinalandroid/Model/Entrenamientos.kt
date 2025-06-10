@@ -30,5 +30,9 @@ data class Entrenamientos(
     @SerializedName("pedido")
     var pedido: Boolean,
     @SerializedName("motivoRechazo")
-    var motivoRechazo: String
+    var motivoRechazo: String,
+    @SerializedName("baja")
+    var baja: Boolean = false,
+    @SerializedName("fechaBaja")
+    var fechaBaja: Date? = null
 ) : Serializable

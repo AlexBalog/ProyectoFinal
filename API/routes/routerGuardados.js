@@ -4,7 +4,7 @@ const modelGuardados = require('../models/modelsGuardados');
 const verifyToken = require('../middlewares/authMiddleware'); // Middleware para validar el JWT
 
 //middleware para acceder 
-router.get('/getAll', async (req, res) => {
+router.get('/getAll', verifyToken, async (req, res) => {
     try{
     const data = await modelGuardados.find();
     res.status(200).json(data);
@@ -14,7 +14,7 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOne', async (req, res) => {
+router.post('/getOne', verifyToken, async (req, res) => {
     try{
     const id = req.body._id;
     const data = await modelGuardados.findOne({ _id: id });
@@ -29,18 +29,19 @@ router.post('/getOne', async (req, res) => {
     });
 
 
-router.post('/getFilter', async (req, res) => {
+router.post('/getFilter', verifyToken, async (req, res) => {
     try {
         const condiciones = {};
-
-        if (req.body.entrenamiento !== null && req.body.entrenamiento.trim() !== "") {
-            condiciones.entrenamiento = req.body.entrenamiento ;
-        }
-        if (req.body.usuario !== undefined) {
-            condiciones.usuario = req.body.usuario;
-        }
-        const data = await modelGuardados.find(condiciones);
         
+        if (req.body.entrenamiento && req.body.entrenamiento.trim() !== "") {
+            condiciones.entrenamiento = req.body.entrenamiento.trim();
+        }
+        if (req.body.usuario && req.body.usuario.trim() !== "") {
+            condiciones.usuario = req.body.usuario.trim();
+        }
+
+        const data = await modelGuardados.find(condiciones);
+
         if (data.length === 0) {
             return res.status(404).json({ message: 'No hay ejercicios con tales características' });
         }
@@ -50,7 +51,7 @@ router.post('/getFilter', async (req, res) => {
     }
 });
 
-router.post('/new', async (req, res) => {
+router.post('/new', verifyToken, async (req, res) => {
     const data = new modelGuardados({
         entrenamiento: req.body.entrenamiento,
         usuario: req.body.usuario
@@ -65,7 +66,7 @@ router.post('/new', async (req, res) => {
     }
     });
 
-router.patch("/update", async (req, res) => {
+router.patch("/update", verifyToken, async (req, res) => {
     try {
     const id = req.body._id;
 
@@ -86,7 +87,7 @@ router.patch("/update", async (req, res) => {
     }
 });
 
-router.delete('/delete', async (req, res) => {
+router.delete('/delete', verifyToken, async (req, res) => {
     try {
     const { entrenamiento, usuario } = req.body;
     const data = await modelGuardados.deleteOne({ entrenamiento: entrenamiento, usuario: usuario })

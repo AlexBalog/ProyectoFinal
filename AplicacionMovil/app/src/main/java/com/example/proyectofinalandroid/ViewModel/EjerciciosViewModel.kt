@@ -93,13 +93,10 @@ class EjerciciosViewModel @Inject constructor(private val repository: Ejercicios
                 val lista = repository.getFilter(_usuario.value?.token.toString(), filtros)
                 if (lista != null) {
                     _ejercicios.value = lista
-                    Log.d("Habitaciones", "Datos filtrados cargados: $lista")
                 } else {
                     _ejercicios.value = emptyList()
-                    Log.d("Habitaciones", "No se encontraron habitaciones con esos filtros.")
                 }
             } catch (e: Exception) {
-                Log.e("Habitaciones", "Error al obtener habitaciones filtradas: ${e.message}")
                 _ejercicios.value = emptyList()
             }
         }

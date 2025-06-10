@@ -19,11 +19,11 @@ interface EntrenamientosApi {
     ): Response<Map<String, String>>
 
     // Endpoint para eliminar un entrenamiento (requiere token)
-    @HTTP(method = "DELETE", path = "entrenamientos/delete", hasBody = true)
-    suspend fun delete(
-        @Header("Authorization") auth: String,
-        @Body request: Map<String, String>
-    ): Response<Map<String, String>>
+    @DELETE("entrenamientos/delete")
+    suspend fun eliminarEntrenamiento(
+        @Path("id") entrenamientoId: String,
+        @Header("Authorization") authorization: String
+    ): Response<Unit>
 
     @POST("entrenamientos/new") suspend fun new(
         @Header("Authorization") auth: String,
@@ -46,7 +46,10 @@ interface EntrenamientosApi {
 
     // Endpoint para hacer petición de entrenamiento nuevo
     @POST("entrenamientos/peticion")
-    suspend fun peticion(@Body entrenamientos: Entrenamientos): Response<Entrenamientos>
+    suspend fun peticion(
+        @Header("Authorization") auth: String,
+        @Body entrenamientos: Entrenamientos
+    ): Response<Entrenamientos>
 
     @POST("entrenamientos/getFilter")
     suspend fun getFilter(

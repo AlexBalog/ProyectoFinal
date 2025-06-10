@@ -8,7 +8,9 @@ interface LikesApi {
 
     // Endpoint para obtener todos los likes
     @GET("likes/getAll")
-    suspend fun getAll(@Header("Authorization") auth: String): Response<List<Likes>>
+    suspend fun getAll(
+        @Header("Authorization") auth: String
+    ): Response<List<Likes>>
 
     // Endpoint para actualizar ejercicio (requiere token)
     @PATCH("likes/update")
@@ -18,7 +20,10 @@ interface LikesApi {
     ): Response<Map<String, String>>
 
     @POST("likes/new")
-    suspend fun new(@Body likes: Likes): Response<Likes>
+    suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body likes: Likes
+    ): Response<Likes>
 
     // Endpoint para eliminar ejercicio (requiere token)
     @HTTP(method = "DELETE", path = "likes/delete", hasBody = true)

@@ -18,7 +18,10 @@ interface GuardadosApi {
     ): Response<Map<String, String>>
 
     @POST("guardados/new")
-    suspend fun new(@Body guardados: Guardados): Response<Guardados>
+    suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body guardados: Guardados
+    ): Response<Guardados>
 
     // Endpoint para eliminar ejercicio (requiere token)
     @HTTP(method = "DELETE", path = "guardados/delete", hasBody = true)

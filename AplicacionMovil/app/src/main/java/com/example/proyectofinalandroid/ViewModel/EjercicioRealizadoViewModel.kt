@@ -80,7 +80,7 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
 
     suspend fun new(ejercicioRealizado: EjercicioRealizado): EjercicioRealizado? {
         return try {
-            val creado = repository.new(ejercicioRealizado)
+            val creado = repository.new(ejercicioRealizado, token = _usuario.value?.token.toString())
             if (creado != null) {
                 _ejercicioRealizadoSeleccionado.value = creado
                 _errorMessage.value = null
@@ -101,7 +101,7 @@ class EjercicioRealizadoViewModel @Inject constructor(private val repository: Ej
                 Log.d("FalloViewModel1", "Intentando crear ejercicio: $ejercicioRealizado")
 
                 // Llamada directa al repositorio
-                val creado = repository.new(ejercicioRealizado)
+                val creado = repository.new(ejercicioRealizado, token = _usuario.value?.token.toString())
 
                 if (creado != null) {
                     Log.d("FalloViewModel2", "Ejercicio creado: $creado")

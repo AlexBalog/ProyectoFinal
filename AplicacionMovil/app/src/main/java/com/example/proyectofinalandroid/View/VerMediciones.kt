@@ -185,7 +185,8 @@ fun HistorialMedicionesScreen(
             if (estadisticas != null && usuario != null) {
                 ResumenEstadisticasPeso(
                     estadisticas = estadisticas,
-                    usuario = usuario
+                    usuario = usuario,
+                    medicion = mediciones.take(1).last()
                 )
             }
 
@@ -328,7 +329,8 @@ fun PeriodoFilterChips(
 @Composable
 fun ResumenEstadisticasPeso(
     estadisticas: Any?, // Reemplaza con el tipo real de tu objeto estadísticas
-    usuario: Usuarios?
+    usuario: Usuarios?,
+    medicion: Mediciones?
 ) {
     // Verificaciones de seguridad
     if (estadisticas == null || usuario == null) {
@@ -339,16 +341,17 @@ fun ResumenEstadisticasPeso(
     val pesoActual = try {
         // Aquí debes adaptar según la estructura real de tu objeto estadísticas
         // estadisticas.ultimo?.toFloat() ?: usuario.peso
-        usuario.peso // Valor por defecto
+        medicion?.valor // Valor por defecto
     } catch (e: Exception) {
         Log.e("ResumenEstadisticas", "Error al obtener peso actual: ${e.message}")
         usuario.peso
     }
 
-    val pesoInicial = usuario.peso
+    val pesoInicial = usuario.peso ?: 0f
     val cambio = try {
-        // estadisticas.cambio ?: 0f
-        0f // Valor por defecto
+        val pesoActualSafe = pesoActual ?: 0f
+        val pesoInicialSafe = pesoInicial ?: 0f
+        pesoActualSafe - pesoInicialSafe
     } catch (e: Exception) {
         Log.e("ResumenEstadisticas", "Error al obtener cambio: ${e.message}")
         0f
@@ -392,12 +395,17 @@ fun ResumenEstadisticasPeso(
             // Cambio
             val cambioTexto = if (cambio >= 0) "+${String.format("%.1f", cambio)}" else String.format("%.1f", cambio)
             val cambioColor = try {
-                if (usuario.objetivoPeso < usuario.peso) {
-                    if (pesoActual > pesoInicial)
+                val objetivoPesoSafe = usuario.objetivoPeso ?: 0f
+                val pesoUsuarioSafe = usuario.peso ?: 0f
+                val pesoActualSafe = pesoActual ?: 0f
+                val pesoInicialSafe = pesoInicial ?: 0f
+
+                if (objetivoPesoSafe < pesoUsuarioSafe) {
+                    if (pesoActualSafe > pesoInicialSafe)
                         Color(0xFFE57373)
                     else Color(0xFF4CAF50)
                 } else {
-                    if (pesoActual > pesoInicial)
+                    if (pesoActualSafe > pesoInicialSafe)
                         Color(0xFF4CAF50)
                     else Color(0xFFE57373)
                 }

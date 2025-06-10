@@ -32,8 +32,8 @@ class GuardadosRepository @Inject constructor(private val api: GuardadosApi) {
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun new(guardados: Guardados): Guardados? {
-        val response = api.new(guardados)
+    suspend fun new(guardados: Guardados, token: String): Guardados? {
+        val response = api.new(guardados = guardados, auth = "Bearer $token")
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -43,7 +43,8 @@ class GuardadosRepository @Inject constructor(private val api: GuardadosApi) {
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Guardados>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            Log.d("Fallo", "getFilter: $filtros")
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {

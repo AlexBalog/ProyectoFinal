@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const modelEjercicioRealizado = require('../models/modelsEjercicioRealizado'); 
+const verifyToken = require('../middlewares/authMiddleware'); //middleware para verificar el token
+
 //middleware para acceder 
-router.get('/getAll', async (req, res) => {
+router.get('/getAll', verifyToken, async (req, res) => {
     try{
     const data = await modelEjercicioRealizado.find();
     res.status(200).json(data);
@@ -12,7 +14,7 @@ router.get('/getAll', async (req, res) => {
     }
     });
 
-router.post('/getOne', async (req, res) => {
+router.post('/getOne', verifyToken, async (req, res) => {
     try{
     const id = req.body._id;
     const data = await modelEjercicioRealizado.findOne({ _id: id });
@@ -26,7 +28,7 @@ router.post('/getOne', async (req, res) => {
     }
 });
 
-router.post('/new', async (req, res) => {
+router.post('/new', verifyToken, async (req, res) => {
     const data = new modelEjercicioRealizado({
         entrenamiento: req.body.entrenamiento,
         entrenamientoRealizado: req.body.entrenamientoRealizado,
@@ -43,7 +45,7 @@ router.post('/new', async (req, res) => {
     }
     });
 
-router.patch("/update", async (req, res) => {
+router.patch("/update", verifyToken, async (req, res) => {
     try {
     const id = req.body._id;
 
@@ -68,7 +70,7 @@ router.patch("/update", async (req, res) => {
 });
 
 
-router.patch("/update/:id", async (req, res) => {
+router.patch("/update/:id", verifyToken, async (req, res) => {
     try {
     const id = req.params.id;
 
@@ -94,7 +96,7 @@ router.patch("/update/:id", async (req, res) => {
 
 
 
-router.delete('/delete', async (req, res) => {
+router.delete('/delete', verifyToken, async (req, res) => {
     try {
     const id = req.body._id;
     const data = await modelEjercicioRealizado.deleteOne({ _id: id })
@@ -110,7 +112,7 @@ router.delete('/delete', async (req, res) => {
 });
 
 
-router.post('/getFilter', async (req, res) => {
+router.post('/getFilter', verifyToken, async (req, res) => {
     try {
         const {
             entrenamientoRealizado,

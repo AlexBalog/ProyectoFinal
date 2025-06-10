@@ -279,7 +279,7 @@ fun FormularioScreen(navController: NavController) {
                 }
 
                 val exito = withContext(Dispatchers.Main) {
-                    usuariosViewModel.update(datos)
+                    usuariosViewModel.updateForm(datos)
                 }
 
                 if (exito) {

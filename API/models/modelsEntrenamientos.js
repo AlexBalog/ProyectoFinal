@@ -49,6 +49,14 @@ const EntrenamientosSchema = mongoose.Schema({
     },
     motivoRechazo: {
         type: String
+    },
+    baja: {
+        type: Boolean,
+        default: false
+    },
+    fechaBaja: {
+        type: Date,
+        default: null
     }
 })
 

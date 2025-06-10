@@ -33,8 +33,8 @@ class EventosRepository @Inject constructor(private val api: EventosApi) {
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun new(evento: Eventos): Eventos? {
-        val response = api.new(evento)
+    suspend fun new(evento: Eventos, token: String): Eventos? {
+        val response = api.new(eventos = evento, auth = "Bearer $token")
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -44,7 +44,7 @@ class EventosRepository @Inject constructor(private val api: EventosApi) {
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Eventos>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {

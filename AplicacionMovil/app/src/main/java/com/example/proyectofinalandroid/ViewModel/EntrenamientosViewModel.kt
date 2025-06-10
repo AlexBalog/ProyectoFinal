@@ -16,6 +16,8 @@ import com.example.proyectofinalandroid.Model.SerieRealizada
 import com.example.proyectofinalandroid.Repository.EjerciciosRepository
 import com.example.proyectofinalandroid.Repository.EntrenamientosRepository
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -176,7 +178,7 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
     fun peticion(nuevoEntrenamiento: Entrenamientos) {
         viewModelScope.launch {
             try {
-                val creado = repository.peticion(nuevoEntrenamiento)
+                val creado = repository.peticion(nuevoEntrenamiento, _usuario.value?.token.toString())
                 if (creado != null) {
                     _entrenamiento.value = creado
                     _errorMessage.value = null
@@ -205,6 +207,71 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
             } catch (e: Exception) {
                 _errorMessage.value = e.message
             }
+        }
+    }
+
+    suspend fun eliminarEntrenamiento(entrenamientoId: String): Boolean {
+        return try {
+            _usuario.value?.let { usuario ->
+                val token = usuario.token ?: return false
+
+                val success = repository.eliminarEntrenamiento(entrenamientoId, token)
+
+                if (success) {
+                    // Actualizar la lista local removiendo el entrenamiento eliminado
+                    _entrenamientos.value = _entrenamientos.value?.filter {
+                        it._id != entrenamientoId
+                    }
+
+                    // Si es el entrenamiento seleccionado actualmente, limpiarlo
+                    if (_entrenamientoSeleccionado.value?._id == entrenamientoId) {
+                        _entrenamientoSeleccionado.value = null
+                    }
+
+                    _errorMessage.value = null
+                    true
+                } else {
+                    _errorMessage.value = "Error al eliminar el entrenamiento"
+                    false
+                }
+            } ?: run {
+                _errorMessage.value = "Usuario no autenticado"
+                false
+            }
+        } catch (e: Exception) {
+            _errorMessage.value = "Error: ${e.message}"
+            Log.e("EntrenamientosViewModel", "Error al eliminar entrenamiento: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun darDeBajaEntrenamiento(entrenamientoId: String): Boolean {
+        return try {
+            Log.d("EntrenamientosVM", "darDeBajaEntrenamiento: $entrenamientoId")
+            _usuario.value?.let { usuario ->
+                val token = usuario.token ?: return false
+
+                val updateData = mapOf(
+                    "baja" to "true",
+                    "fechaBaja" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).format(Date())
+                )
+
+                val success = repository.update(entrenamientoId, updateData, token)
+                Log.d("EntrenamientosVM", "repository.update result: $success")
+
+                // ✅ NO TOCAR LA LISTA LOCAL - dejar que la View se encargue de recargar
+                if (success) {
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "Error al dar de baja el entrenamiento"
+                }
+
+                success // ✅ Simplemente devolver el resultado del servidor
+            } ?: false
+        } catch (e: Exception) {
+            _errorMessage.value = "Error: ${e.message}"
+            Log.e("EntrenamientosVM", "Excepción: ${e.message}")
+            false
         }
     }
 }

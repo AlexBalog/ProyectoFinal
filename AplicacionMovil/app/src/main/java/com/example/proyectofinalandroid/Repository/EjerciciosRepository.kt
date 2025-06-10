@@ -35,7 +35,7 @@ class EjerciciosRepository @Inject constructor(private val api: EjerciciosApi) {
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Ejercicios>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {

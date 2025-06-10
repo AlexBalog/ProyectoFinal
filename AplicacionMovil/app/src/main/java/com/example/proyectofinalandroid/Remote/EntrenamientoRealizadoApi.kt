@@ -9,7 +9,9 @@ interface EntrenamientoRealizadoApi {
 
     // Endpoint para obtener todos los entrenos (requiere token)
     @GET("entrenamientoRealizado/getAll")
-    suspend fun getAll(@Header("Authorization") auth: String): Response<List<EntrenamientoRealizado>>
+    suspend fun getAll(
+        @Header("Authorization") auth: String
+    ): Response<List<EntrenamientoRealizado>>
 
     // Endpoint para actualizar entreno (requiere token)
     @PATCH("entrenamientoRealizado/update")
@@ -46,7 +48,10 @@ interface EntrenamientoRealizadoApi {
 
     // Endpoint para registrar entreno sin token
     @POST("entrenamientoRealizado/new")
-    suspend fun new(@Body entrenar: EntrenamientoRealizado): Response<EntrenamientoRealizado>
+    suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body entrenar: EntrenamientoRealizado
+    ): Response<EntrenamientoRealizado>
 
     @POST("entrenamientoRealizado/getFilter")
     suspend fun getFilter(

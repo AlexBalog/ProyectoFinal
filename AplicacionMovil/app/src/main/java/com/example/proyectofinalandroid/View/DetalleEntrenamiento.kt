@@ -103,9 +103,10 @@ fun DetalleEntrenamientoScreen(
         val usuarioActual = usuario
         val entrenamientoActual = entrenamientoSeleccionado
 
-        if (usuarioActual != null && entrenamientoActual != null) {
+        if (usuarioActual != null && entrenamientoActual != null && entrenamientoActual._id != null) {
             likesViewModel.setUsuarioYEntrenamiento(usuarioActual, entrenamientoActual)
             likesViewModel.cargarContadorLikes(entrenamientoActual._id)
+            guardadosViewModel.setUsuarioYEntrenamiento(usuarioActual, entrenamientoActual)
         }
     }
 

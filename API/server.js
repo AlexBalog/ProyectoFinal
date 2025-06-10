@@ -50,7 +50,7 @@ app.use('/serieRealizada', routerSerieRealizada);
 app.use('/likes', routerLikes)
 app.use('/guardados', routerGuardados);
 app.use('/ia', routerIA);
-app.use('/mediciones', /*verifyToken,*/ routerMediciones);
+app.use('/mediciones', routerMediciones);
 
 // Define el puerto y arranca el servidor
 const PORT = process.env.PORT || 3000;

@@ -9,7 +9,9 @@ interface EventosUsuarioApi {
 
     // Endpoint para obtener todos los eventos de usuario (requiere token)
     @GET("eventosUsuario/getAll")
-    suspend fun getAll(@Header("Authorization") auth: String): Response<List<EventosUsuario>>
+    suspend fun getAll(
+        @Header("Authorization") auth: String
+    ): Response<List<EventosUsuario>>
 
     @GET("eventosUsuario/getEventosProximos/{usuarioId}")
     suspend fun getEventosProximos(
@@ -39,7 +41,10 @@ interface EventosUsuarioApi {
 
     // Endpoint para crear un evento de usuario sin token
     @POST("eventosUsuario/new")
-    suspend fun new(@Body eventosUsuario: EventosUsuario): Response<EventosUsuario>
+    suspend fun new(
+        @Header("Authorization") auth: String,
+        @Body eventosUsuario: EventosUsuario
+    ): Response<EventosUsuario>
 
     @POST("eventosUsuario/getFilter")
     suspend fun getFilter(

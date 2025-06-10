@@ -119,7 +119,7 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
     suspend fun new(entrenamientoRealizado: EntrenamientoRealizado) {
         try {
             // Llamamos al repositorio para crear el entrenamiento en la base de datos
-            val creado = repository.new(entrenamientoRealizado) // Esta llamada es suspensiva y debe esperar a completarse
+            val creado = repository.new(entrenamientoRealizado, _usuario.value?.token.toString()) // Esta llamada es suspensiva y debe esperar a completarse
             if (creado != null) {
                 // Si se crea correctamente, actualizamos el valor en el ViewModel
                 _entrenamientoRealizadoSeleccionado.value = creado
@@ -152,7 +152,7 @@ class EntrenamientoRealizadoViewModel @Inject constructor(private val repository
             )
 
             // 2. Guardar el entrenamiento y obtener su ID (espera a que termine)
-            val resultado = repository.new(entrenamientoRealizado)
+            val resultado = repository.new(entrenamientoRealizado, _usuario.value?.token.toString())
                 ?: throw Exception("El servidor no devolvió el entrenamiento creado")
 
             // Evitamos actualizar el StateFlow para no causar recomposiciones innecesarias

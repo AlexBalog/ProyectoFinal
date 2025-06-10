@@ -802,7 +802,19 @@ fun EjercicioConSeries(ejercicio: Ejercicios, serieRealizadaViewModel: SerieReal
 
                                     // Botón para eliminar serie
                                     IconButton(
-                                        onClick = { series.removeAt(index) },
+                                        onClick = {
+                                            // 1. Eliminar de la lista local
+                                            val serieAEliminar = series[index]
+                                            series.removeAt(index)
+
+                                            // 2. Eliminar del ViewModel
+                                            serieRealizadaViewModel.eliminarSerieDeLista(serieAEliminar)
+
+                                            // 3. Reordenar números de serie localmente
+                                            series.forEachIndexed { newIndex, serie ->
+                                                serie.numeroSerie = newIndex + 1
+                                            }
+                                        },
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)

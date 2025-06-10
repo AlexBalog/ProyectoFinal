@@ -44,8 +44,8 @@ class EventosUsuarioRepository @Inject constructor(private val api: EventosUsuar
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun new(eventoUsuario: EventosUsuario): EventosUsuario? {
-        val response = api.new(eventoUsuario)
+    suspend fun new(eventoUsuario: EventosUsuario, token: String): EventosUsuario? {
+        val response = api.new(eventosUsuario = eventoUsuario, auth = "Bearer $token")
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -55,7 +55,7 @@ class EventosUsuarioRepository @Inject constructor(private val api: EventosUsuar
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<EventosUsuario>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {

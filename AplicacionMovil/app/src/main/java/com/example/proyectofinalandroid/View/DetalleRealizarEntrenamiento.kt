@@ -496,9 +496,7 @@ fun ContenidoDetallesRealizarEntrenamiento(
 
         Button(
             onClick = {
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar("Función para repetir entrenamiento")
-                }
+                navController.navigate("realizarEntrenamiento/${entrenamiento!!._id}")
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)

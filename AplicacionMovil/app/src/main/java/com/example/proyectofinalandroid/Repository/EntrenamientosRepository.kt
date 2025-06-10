@@ -26,19 +26,12 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
         return response.isSuccessful
     }
 
-    suspend fun delete(_id: String, token: String): Boolean {
-        val request = mapOf("_id" to _id)
-        val response = api.delete("Bearer $token", request)
-        return response.isSuccessful
-    }
-
     suspend fun getOne(_id: String, token: String): Entrenamientos? {
         val request = mapOf("_id" to _id)
         val response = api.getOne("Bearer $token", request)
         return if (response.isSuccessful) response.body() else null
     }
 
-    // En EntrenamientosRepository.kt
     suspend fun actualizarEntrenamiento(entrenamiento: Entrenamientos, token: String): Entrenamientos? {
         return try {
             val response = api.actualizarEntrenamiento(
@@ -59,8 +52,8 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
         }
     }
 
-    suspend fun peticion(entrenamientos: Entrenamientos): Entrenamientos? {
-        val response = api.peticion(entrenamientos)
+    suspend fun peticion(entrenamientos: Entrenamientos, token: String): Entrenamientos? {
+        val response = api.peticion(entrenamientos = entrenamientos, auth = "Bearer $token")
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -80,12 +73,26 @@ class EntrenamientosRepository @Inject constructor(private val api: Entrenamient
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Entrenamientos>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {
                 null
             }
+        }
+    }
+
+    suspend fun eliminarEntrenamiento(entrenamientoId: String, token: String): Boolean {
+        return try {
+            val response = api.eliminarEntrenamiento(
+                entrenamientoId = entrenamientoId,
+                authorization = "Bearer $token"
+            )
+
+            response.isSuccessful
+        } catch (e: Exception) {
+            Log.e("EntrenamientosRepository", "Error al eliminar entrenamiento: ${e.message}")
+            false
         }
     }
 }

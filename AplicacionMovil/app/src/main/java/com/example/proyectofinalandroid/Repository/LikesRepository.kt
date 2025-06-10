@@ -32,8 +32,8 @@ class LikesRepository @Inject constructor(private val api: LikesApi) {
         return if (response.isSuccessful) response.body() else null
     }
 
-    suspend fun new(likes: Likes): Likes? {
-        val response = api.new(likes)
+    suspend fun new(likes: Likes, token: String): Likes? {
+        val response = api.new(likes = likes,auth = "Bearer $token")
         if (!response.isSuccessful) {
             val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
             throw Exception(errorMsg)
@@ -43,7 +43,7 @@ class LikesRepository @Inject constructor(private val api: LikesApi) {
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Likes>? {
         return withContext(Dispatchers.IO) {
-            val response = api.getFilter(token, filtros)
+            val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()
             } else {
