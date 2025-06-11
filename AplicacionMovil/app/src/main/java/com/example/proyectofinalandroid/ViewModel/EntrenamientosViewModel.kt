@@ -61,9 +61,21 @@ class EntrenamientosViewModel @Inject constructor(private val repository: Entren
             if (it._id == id) return it
         }
 
+        val usuario = _usuario.value
+        if (usuario == null) {
+            Log.e("EntrenamientosViewModel", "No hay usuario loggeado")
+            return null
+        }
+
+        val token = usuario.token
+        if (token.isNullOrBlank()) {
+            Log.e("EntrenamientosViewModel", "Token del usuario es null o vacío")
+            return null
+        }
+
         // Si no lo encontramos en memoria, hacemos la petición al servidor
         return try {
-            repository.getOne(id, _usuario.value?.token.orEmpty())
+            repository.getOne(id, token)
         } catch (e: Exception) {
             Log.e("EntrenamientosViewModel", "Error al obtener entrenamiento por ID: ${e.message}")
             null

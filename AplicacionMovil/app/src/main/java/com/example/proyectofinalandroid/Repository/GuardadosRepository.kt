@@ -43,7 +43,6 @@ class GuardadosRepository @Inject constructor(private val api: GuardadosApi) {
 
     suspend fun getFilter(token: String, filtros: Map<String, String>): List<Guardados>? {
         return withContext(Dispatchers.IO) {
-            Log.d("Fallo", "getFilter: $filtros")
             val response = api.getFilter("Bearer $token", filtros)
             if (response.isSuccessful) {
                 response.body()

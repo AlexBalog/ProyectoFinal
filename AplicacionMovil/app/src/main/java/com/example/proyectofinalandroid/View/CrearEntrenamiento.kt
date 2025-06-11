@@ -1,5 +1,6 @@
 package com.example.proyectofinalandroid.View
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -55,6 +56,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.graphics.SolidColor
 import java.util.*
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTrainingScreen(
@@ -68,7 +70,6 @@ fun CreateTrainingScreen(
     val parentEntry = remember(navController) {
         navController.getBackStackEntry("main")
     }
-
     // ViewModels de la aplicación
     val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(parentEntry)
     val ejerciciosViewModel: EjerciciosViewModel = hiltViewModel(parentEntry)

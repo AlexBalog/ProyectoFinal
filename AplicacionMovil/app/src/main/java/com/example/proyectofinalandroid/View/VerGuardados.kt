@@ -116,7 +116,6 @@ fun EntrenamientosGuardadosScreen(
         onBackClick = remember { { navController.popBackStack() } },
         onEntrenamientoClick = remember { { id -> navController.navigate("detalleEntrenamiento/$id") } }
     )
-    Log.d("Fallo", "${guardados}")
 
 }
 

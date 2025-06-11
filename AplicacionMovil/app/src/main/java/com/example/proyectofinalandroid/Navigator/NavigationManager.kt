@@ -147,8 +147,7 @@ fun Navegador() {
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id")
                 val publicar = backStackEntry.arguments?.getBoolean("publicar") ?: false
-                val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel()
-
+                val entrenamientosViewModel: EntrenamientosViewModel = hiltViewModel(navController.getBackStackEntry("main"))
                 // Modificar produceState para manejar internamente los errores
                 val entrenamientoState = produceState<EntrenamientoLoadState>(
                     initialValue = EntrenamientoLoadState.Loading
