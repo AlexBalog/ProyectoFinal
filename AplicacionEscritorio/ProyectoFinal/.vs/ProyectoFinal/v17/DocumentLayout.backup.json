@@ -3,32 +3,32 @@
   "WorkspaceRootPath": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingrequestdetailwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingrequestdetailwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingrequestdetailwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingrequestdetailwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingformwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingformwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\models\\entities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\models\\entities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\viewmodels\\trainingformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\viewmodels\\trainingformviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\viewmodels\\trainingsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\viewmodels\\trainingsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingrequestdetailwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingrequestdetailwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\usercontrols\\trainingscontrol.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\views\\trainingrequestdetailwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\views\\trainingrequestdetailwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\models\\entities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\models\\entities.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\viewmodels\\trainingsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|solutionrelative:proyectofinal\\viewmodels\\trainingsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{6FE51FC3-3B9A-47CE-8008-6E488A305C03}|ProyectoFinal\\ProyectoFinal.csproj|c:\\users\\abalog\\desktop\\proyectofinal\\aplicacionescritorio\\proyectofinal\\proyectofinal\\models\\models.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -134,7 +134,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 19,
           "Children": [
             {
               "$type": "Bookmark",
@@ -146,20 +146,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "TrainingRequestDetailWindow.xaml.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\TrainingRequestDetailWindow.xaml.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\TrainingRequestDetailWindow.xaml.cs",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\TrainingRequestDetailWindow.xaml.cs",
               "RelativeToolTip": "ProyectoFinal\\Views\\TrainingRequestDetailWindow.xaml.cs",
-              "ViewState": "AgIAAEgBAAAAAAAAAAAqwGwBAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAO4AAAAAAAAAAAAuwP4AAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-10T12:41:39.585Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "TrainingRequestDetailWindow.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\TrainingRequestDetailWindow.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\TrainingRequestDetailWindow.xaml",
@@ -171,7 +171,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "TrainingsViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
@@ -179,12 +179,11 @@
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\TrainingsViewModel.cs",
               "ViewState": "AgIAAOIBAAAAAAAAAAAqwAgCAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-10T11:26:46.744Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-10T11:26:46.744Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Entities.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Models\\Entities.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\Models\\Entities.cs",
@@ -192,8 +191,7 @@
               "RelativeToolTip": "ProyectoFinal\\Models\\Entities.cs",
               "ViewState": "AgIAADAAAAAAAAAAAIAywDgAAABrAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-10T11:17:12.582Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-06-10T11:17:12.582Z"
             },
             {
               "$type": "Document",
@@ -256,7 +254,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "TrainingFormWindow.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\Views\\TrainingFormWindow.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\Views\\TrainingFormWindow.xaml",
@@ -351,14 +349,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 0,
               "Title": "TrainingsControl.xaml",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\TrainingsControl.xaml",
               "RelativeDocumentMoniker": "ProyectoFinal\\UserControls\\TrainingsControl.xaml",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\UserControls\\TrainingsControl.xaml",
               "RelativeToolTip": "ProyectoFinal\\UserControls\\TrainingsControl.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-05-30T08:19:11.09Z"
+              "WhenOpened": "2025-05-30T08:19:11.09Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -397,13 +396,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "TrainingFormViewModel.cs",
               "DocumentMoniker": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
               "RelativeDocumentMoniker": "ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
               "ToolTip": "C:\\Users\\abalog\\Desktop\\ProyectoFinal\\AplicacionEscritorio\\ProyectoFinal\\ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
               "RelativeToolTip": "ProyectoFinal\\ViewModels\\TrainingFormViewModel.cs",
-              "ViewState": "AgIAAJwCAAAAAAAAAAAuwK4CAAAcAAAAAAAAAA==",
+              "ViewState": "AgIAAPYCAAAAAAAAAAA+wAsDAABLAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-05-30T07:53:46.395Z",
               "EditorCaption": ""

@@ -318,10 +318,22 @@
                     <Border Background="{StaticResource SurfaceBrush}" 
                             CornerRadius="10" Padding="20" Margin="0,0,0,20">
                         <StackPanel>
-                            <TextBlock Text="🏋️ Ejercicios Incluidos" Style="{StaticResource SectionHeader}"/>
-                            <StackPanel x:Name="EjerciciosPanel">
-                                <!-- Los ejercicios se cargarán dinámicamente -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <TextBlock Text="🏋️ Ejercicios Incluidos" Style="{StaticResource SectionHeader}"/>
+                                <TextBlock x:Name="EjerciciosCountText" 
+                                           Text="(Cargando...)"
+                                           Foreground="{StaticResource TextBrushSecondary}"
+                                           FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="10,0,0,0"/>
                             </StackPanel>
+
+                            <!-- Contenedor para los ejercicios con scroll -->
+                            <ScrollViewer MaxHeight="400" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="EjerciciosPanel">
+                                    <!-- Los ejercicios se cargarán dinámicamente aquí -->
+                                </StackPanel>
+                            </ScrollViewer>
                         </StackPanel>
                     </Border>
 

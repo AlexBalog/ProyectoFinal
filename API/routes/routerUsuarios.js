@@ -43,7 +43,6 @@ router.post('/new', verifyToken, async (req, res) => {
 // UPDATE: Actualiza un usuario basado en el dni proporcionado (ruta protegida) - La uso para modificar usuarios en WPF
 router.patch('/update', verifyToken, async (req, res) => {
   try {
-    console.log("Entra")
     const id = req.body._id;
     if (!id) {
       return res.status(400).json({ message: "Falta el campo 'id'" });
@@ -142,25 +141,18 @@ router.patch('/update', verifyToken, async (req, res) => {
     if (req.body.entrenamientosRealizados !== undefined) {
       updateFields.entrenamientosRealizados = req.body.entrenamientosRealizados;
     }
-
-    console.log("ID del usuario a actualizar:", id);
-    console.log("Campos a actualizar:", updateFields);
     
     // Si no se envía ningún campo para actualizar, se informa
     if (Object.keys(updateFields).length === 0) {
       console.log("No se proporcionaron campos para actualizar");
       return res.status(400).json({ message: "No se proporcionaron campos para actualizar" });
     }
-    
-    console.log("Pasa del if de campos a actualizar");
-    
+        
     // Se realiza la actualización solo de los campos proporcionados
     const resultado = await UsuariosSchema.updateOne(
       { _id: id },
       { $set: updateFields }
     );
-
-    console.log("Resultado de la actualización:", resultado);
     
     if (resultado.modifiedCount === 0) {
       console.log("No se encontró el documento o no se realizaron cambios");

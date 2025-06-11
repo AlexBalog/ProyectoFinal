@@ -778,7 +778,7 @@ namespace ProyectoFinal.ViewModels
                         byte[] imageBytes = ms.ToArray();
 
                         // Crear el string Base64 con el prefijo data:image
-                        return "data:image/jpeg;base64," + Convert.ToBase64String(imageBytes);
+                        return Convert.ToBase64String(imageBytes);
                     }
                 }
             }
