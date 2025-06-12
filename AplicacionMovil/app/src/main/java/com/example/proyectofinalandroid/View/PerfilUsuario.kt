@@ -80,7 +80,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
 import android.graphics.Paint
 import android.graphics.Typeface
-
+import android.widget.Toast
 
 
 @SuppressLint("UnrememberedGetBackStackEntry")
@@ -222,7 +222,7 @@ fun ProfileScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     // Botones de acción
-                    ActionButtonsRow(navController = navController, medicionesViewModel = medicionesViewModel)
+                    ActionButtonsRow(navController = navController, medicionesViewModel = medicionesViewModel, usuario = usuario as Usuarios, usuariosViewModel = usuariosViewModel)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -376,7 +376,9 @@ fun UserProfileSection(usuario: Usuarios?) {
 }
 
 @Composable
-fun ActionButtonsRow(navController: NavController, medicionesViewModel: MedicionesViewModel) {
+fun ActionButtonsRow(navController: NavController, medicionesViewModel: MedicionesViewModel, usuario: Usuarios, usuariosViewModel: UsuariosViewModel) {
+    var showDialog by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -393,7 +395,12 @@ fun ActionButtonsRow(navController: NavController, medicionesViewModel: Medicion
         ActionButton(
             icon = Icons.Default.Straighten,
             text = "Ver mediciones",
-            onClick = { navController.navigate("verMediciones") },
+            onClick = {
+                if (usuario.formulario == true) {
+                    navController.navigate("verMediciones")
+                } else {
+                    showDialog = true
+                }},
             modifier = Modifier.weight(1f)
         )
 
@@ -405,6 +412,23 @@ fun ActionButtonsRow(navController: NavController, medicionesViewModel: Medicion
             onClick = { navController.navigate("verGuardados") },
             modifier = Modifier.weight(1f)
         )
+        if (showDialog) {
+            FormularioRequiredDialog(
+                onDismiss = { showDialog = false },
+                onGoToForm = {
+                    showDialog = false
+                    navController.navigate("formulario")
+                },
+                onLogout = {
+                    showDialog = false
+                    // Cerrar sesión
+                    usuariosViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo("root") { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }
 

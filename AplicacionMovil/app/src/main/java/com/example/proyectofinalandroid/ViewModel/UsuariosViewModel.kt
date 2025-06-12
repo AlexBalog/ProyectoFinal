@@ -164,47 +164,136 @@ class UsuariosViewModel @Inject constructor(
 
     suspend fun updateForm(updatedData: Map<String, String>): Boolean {
         return withContext(Dispatchers.IO) {
-            _usuario.value?.let { currentUser ->
-                val _id = currentUser._id
-                val token = currentUser.token ?: return@withContext false
-                val success = repository.update(_id, updatedData, token)
-                if (!success) {
-                    _errorMessage.value = "Error al actualizar el usuario"
-                }
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val updatedUser = currentUser.copy(
-                    nombre = updatedData["nombre"] ?: currentUser.nombre,
-                    apellido = updatedData["apellido"] ?: currentUser.apellido,
-                    foto = updatedData["foto"] ?: currentUser.foto,
-                    sexo = updatedData["sexo"] ?: currentUser.sexo,
-                    // Convertir string a Date para fechaNacimiento
-                    fechaNacimiento = if (updatedData.containsKey("fechaNacimiento")) {
-                        try {
-                            val fechaString = updatedData["fechaNacimiento"]!!
-                            val parsedDate = dateFormat.parse(fechaString)
-                            parsedDate
-                        } catch (e: Exception) {
-                            Log.e("UsuariosViewModel", "Error parseando fecha: ${e.message}")
-                            currentUser.fechaNacimiento // En caso de error, mantener el valor actual
-                        }
-                    } else {
-                        currentUser.fechaNacimiento
-                    },
-                    // Convertir strings a Float para los valores numéricos usando toFloatOrNull()
-                    altura = updatedData["altura"]?.toFloatOrNull() ?: currentUser.altura,
-                    peso = updatedData["peso"]?.toFloatOrNull() ?: currentUser.peso,
-                    objetivoPeso = updatedData["objetivoPeso"]?.toFloatOrNull() ?: currentUser.objetivoPeso,
-                    objetivoTiempo = updatedData["objetivoTiempo"]?.toFloatOrNull() ?: currentUser.objetivoTiempo,
-                    IMC = updatedData["IMC"]?.toFloatOrNull() ?: currentUser.IMC,
-                    nivelActividad = updatedData["nivelActividad"] ?: currentUser.nivelActividad,
-                    objetivoCalorias = updatedData["objetivoCalorias"]?.toFloatOrNull() ?: currentUser.objetivoCalorias,
-                    caloriasMantenimiento = updatedData["caloriasMantenimiento"]?.toFloatOrNull() ?: currentUser.caloriasMantenimiento,
-                    formulario = true
-                )
+            try {
+                val currentUser = _usuario.value
 
-                _usuario.value = updatedUser
-                return@withContext success
-            } ?: false
+                // Verificaciones más detalladas
+                if (currentUser == null) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "Error: Usuario no disponible"
+                    }
+                    return@withContext false
+                }
+
+                val _id = currentUser._id
+                val token = currentUser.token
+
+                if (token == null) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "Error: Token no disponible"
+                    }
+                    return@withContext false
+                }
+
+                if (_id.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "Error: ID de usuario no válido"
+                    }
+                    return@withContext false
+                }
+
+                // Llamar al repositorio
+                val success = repository.update(_id, updatedData, token)
+
+                if (!success) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "Error al actualizar el usuario en el servidor"
+                    }
+                    return@withContext false
+                }
+
+                // Crear un formato de fecha para parsear el String a Date
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+                // Actualizar el usuario local con validaciones mejoradas
+                val updatedUser = try {
+                    currentUser.copy(
+                        nombre = updatedData["nombre"] ?: currentUser.nombre,
+                        apellido = updatedData["apellido"] ?: currentUser.apellido,
+                        foto = updatedData["foto"] ?: currentUser.foto,
+                        sexo = updatedData["sexo"] ?: currentUser.sexo,
+
+                        // Mejorar manejo de fecha
+                        fechaNacimiento = if (updatedData.containsKey("fechaNacimiento") && !updatedData["fechaNacimiento"].isNullOrEmpty()) {
+                            try {
+                                val fechaString = updatedData["fechaNacimiento"]!!
+                                dateFormat.parse(fechaString)
+                            } catch (e: Exception) {
+                                Log.e("UsuariosViewModel", "Error parseando fecha: ${e.message}")
+                                currentUser.fechaNacimiento
+                            }
+                        } else {
+                            currentUser.fechaNacimiento
+                        },
+
+                        // Mejorar conversiones numéricas con validación
+                        altura = try {
+                            updatedData["altura"]?.toFloatOrNull() ?: currentUser.altura
+                        } catch (e: Exception) {
+                            currentUser.altura
+                        },
+
+                        peso = try {
+                            updatedData["peso"]?.toFloatOrNull() ?: currentUser.peso
+                        } catch (e: Exception) {
+                            currentUser.peso
+                        },
+
+                        objetivoPeso = try {
+                            updatedData["objetivoPeso"]?.toFloatOrNull() ?: currentUser.objetivoPeso
+                        } catch (e: Exception) {
+                            currentUser.objetivoPeso
+                        },
+
+                        objetivoTiempo = try {
+                            updatedData["objetivoTiempo"]?.toFloatOrNull() ?: currentUser.objetivoTiempo
+                        } catch (e: Exception) {
+                            currentUser.objetivoTiempo
+                        },
+
+                        IMC = try {
+                            updatedData["IMC"]?.toFloatOrNull() ?: currentUser.IMC
+                        } catch (e: Exception) {
+                            currentUser.IMC
+                        },
+
+                        nivelActividad = updatedData["nivelActividad"] ?: currentUser.nivelActividad,
+
+                        objetivoCalorias = try {
+                            updatedData["objetivoCalorias"]?.toFloatOrNull() ?: currentUser.objetivoCalorias
+                        } catch (e: Exception) {
+                            currentUser.objetivoCalorias
+                        },
+
+                        caloriasMantenimiento = try {
+                            updatedData["caloriasMantenimiento"]?.toFloatOrNull() ?: currentUser.caloriasMantenimiento
+                        } catch (e: Exception) {
+                            currentUser.caloriasMantenimiento
+                        },
+
+                        formulario = updatedData["formulario"]?.toBooleanStrictOrNull() ?: true
+                    )
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "Error procesando datos del usuario"
+                    }
+                    return@withContext false
+                }
+
+                // Actualizar el estado en el hilo principal
+                withContext(Dispatchers.Main) {
+                    _usuario.value = updatedUser
+                    _errorMessage.value = null
+                }
+
+                return@withContext true
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _errorMessage.value = "Error inesperado: ${e.message}"
+                }
+                return@withContext false
+            }
         }
     }
 

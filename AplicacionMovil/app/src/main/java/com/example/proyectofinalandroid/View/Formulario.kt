@@ -263,9 +263,20 @@ fun FormularioScreen(navController: NavController) {
 
                 val calcularCalorias = (7700f * (objetivoPeso.toFloat() - peso.toFloat())) / (objetivoTiempo.toFloat() * 7f)
 
+                val fechaFormateada = try {
+                    val inputFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    val outputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    val date = LocalDate.parse(fechaNacimiento, inputFormat)
+                    date.format(outputFormat)
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error en formato de fecha", Toast.LENGTH_LONG).show()
+                    isLoading = false
+                    return
+                }
+
                 val datos = mutableMapOf<String, String>().apply {
                     put("foto", fotoBase64)
-                    put("fechaNacimiento", fechaNacimiento)
+                    put("fechaNacimiento", fechaFormateada)
                     put("sexo", sexo)
                     put("altura", altura)
                     put("peso", peso)
@@ -278,9 +289,8 @@ fun FormularioScreen(navController: NavController) {
                     put("formulario", true.toString())
                 }
 
-                val exito = withContext(Dispatchers.Main) {
-                    usuariosViewModel.updateForm(datos)
-                }
+                val exito = usuariosViewModel.updateForm(datos)
+
 
                 if (exito) {
                     Toast.makeText(context, "Gracias por tu paciencia!!", Toast.LENGTH_SHORT).show()
