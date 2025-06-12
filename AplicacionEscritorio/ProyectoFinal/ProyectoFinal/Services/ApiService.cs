@@ -25,7 +25,7 @@ namespace ProyectoFinal.Services
         {
             _httpClient = new HttpClient();
             // URL base de tu API Node.js
-            _baseUrl = "http://localhost:3000";
+            _baseUrl = "https://api-y9fu.onrender.com";
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             // Configurar timeout

@@ -47,7 +47,7 @@ namespace ProyectoFinal.Services
         public DataService(IApiService apiService)
         {
             _httpClient = new HttpClient();
-            _baseUrl = "http://localhost:3000";
+            _baseUrl = "https://api-y9fu.onrender.com";
             _httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
             // Configurar el token de autorización
